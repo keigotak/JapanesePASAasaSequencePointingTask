@@ -37,6 +37,7 @@ class BertWithJumanModel():
         self.device = device
         self.embedding_dim = self.model.embeddings.word_embeddings.embedding_dim
         self.vocab_size = self.model.embeddings.word_embeddings.num_embeddings
+        self.max_seq_length = 224
 
     def _preprocess_text(self, text):
         return text.replace(" ", "")  # for Juman
@@ -44,7 +45,7 @@ class BertWithJumanModel():
     def get_sentence_embedding(self, text):
         token = self.juman_tokenizer.tokenize(text)
         bert_tokens = self.bert_tokenizer.tokenize(" ".join(token))
-        token = ["[CLS]"] + bert_tokens[:224] + ["[SEP]"]
+        token = ["[CLS]"] + bert_tokens[:self.max_seq_length] + ["[SEP]"]
         id = self.bert_tokenizer.convert_tokens_to_ids(token) # max_seq_len-2
 
         if len(np.array(token).shape) != 2:
@@ -89,11 +90,11 @@ class BertWithJumanModel():
                     tokenized_bert_words.extend(bert_tokens)
                     seq_ids.extend([seq_id] * len(bert_tokens))
                     seq_id += 1
-            token = ["[CLS]"] + tokenized_bert_words[:224] + ["[SEP]"]
+            token = ["[CLS]"] + tokenized_bert_words[:self.max_seq_length] + ["[SEP]"]
             id = self.bert_tokenizer.convert_tokens_to_ids(token)
             batched_bert_words.append(token)
             batched_bert_ids.append(id)
-            batched_bert_seq_ids.append([-1] + seq_ids + [seq_ids[-1] + 1])
+            batched_bert_seq_ids.append([-1] + seq_ids[:self.max_seq_length] + [seq_ids[-1] + 1])
 
             if self.device != "cpu":
                 if torch.cuda.device_count() > 1:
