@@ -264,10 +264,10 @@ if __name__ == '__main__':
 
         print('enlisting')
         listed_data = enlist_feature_and_label_rework(raw_data)
-        # save_data('listed_' + tag + '.pkl', listed_data, with_bccwj=with_bccwj)
+        save_data('listed_' + tag + '.pkl', listed_data, with_bccwj=with_bccwj)
         save_sample('listed_' + tag + '.txt', listed_data, with_bccwj=with_bccwj)
 
-        print('enlisting')
+        # print('enlisting')
         # listed_data = enlist_for_bert(raw_data)
         # save_data('bert_listed_' + tag + '.pkl', listed_data)
         # save_sample('bert_listed_' + tag + '.txt', listed_data)
