@@ -1,0 +1,7 @@
+.idea
+/data
+/results
+/docs
+/src/bigru
+*.txt
+src/utils/utils.json
