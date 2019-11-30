@@ -268,9 +268,13 @@ def get_datasets_in_sentences_test(type, with_bccwj=False, with_bert=False):
         data = f.readlines()
     ret = []
     for line in data:
-        line = [re.sub("\(|\)|\,", '', item) for item in line.strip().split()]
+        line = line.strip().split(", ")
+        line[4] = line[4][1:]
+        line[5] = line[5][:-1]
         if len(line) == 9:
             ret.append([int(line[0]), line[1], line[2], line[3], (int(line[4]), int(line[5])), line[6], int(line[7]), int(line[8])])
+        else:
+            print(line)
     data = ret
 
     label, labels = [], []
