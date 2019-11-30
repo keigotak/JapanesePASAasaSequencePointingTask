@@ -65,7 +65,7 @@ def enlist_feature_and_label(_data):
     return sorted_ret
 
 
-def enlist_feature_and_label_rework(_data):
+def enlist_feature_and_label_rework(_data, ignore_length=None):
     ret = []
 
     ret.extend(
@@ -136,10 +136,20 @@ def make_pairs(_id, _item):
     return _pairs
 
 
-def make_pairs_rework(_id, _item):
+def make_pairs_rework(_id, _item, ignore_length=None):
     target_str = _item[id_string][0]
     _pairs = []
     for t, candidate_info in enumerate(_item[id_string][2]):
+        if ignore_length is not None and len(_item[id_type]) >= ignore_length:
+            flg = False
+            for i in range(3):
+                if i in _item[id_type] and _item[id_type].index(i) >= ignore_length:
+                    flg = True
+                    break
+            if flg:
+                continue
+            if _item[id_distance].index((0, 0)) >= ignore_length:
+                continue
         target_type = _item[id_type][t]
         target_relation = _item[id_relation][t]
         target_distance = _item[id_distance][t]
@@ -263,7 +273,7 @@ if __name__ == '__main__':
         save_data('counted_' + tag + '.pkl', freq_of_words, with_bccwj=with_bccwj)
 
         print('enlisting')
-        listed_data = enlist_feature_and_label_rework(raw_data)
+        listed_data = enlist_feature_and_label_rework(raw_data, ignore_length=None)
         save_data('listed_' + tag + '.pkl', listed_data, with_bccwj=with_bccwj)
         save_sample('listed_' + tag + '.txt', listed_data, with_bccwj=with_bccwj)
 
