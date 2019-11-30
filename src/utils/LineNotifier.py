@@ -5,7 +5,7 @@ import json
 
 class LineNotifier:
     def __init__(self):
-        with open('utils.json') as f:
+        with open('../utils/utils.json') as f:
             self.token = json.load(f)["ln"]["token"]
         self.url = "https://notify-api.line.me/api/notify"
         self.headers = {"Authorization": "Bearer " + self.token}

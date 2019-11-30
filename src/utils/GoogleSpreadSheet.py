@@ -1,7 +1,7 @@
 import json
 import requests
 
-with open('utils.json') as f:
+with open('../utils/utils.json') as f:
     ret = json.load(f)["gs"]
 
 ENDPOINT = {"train": ret["train"],
