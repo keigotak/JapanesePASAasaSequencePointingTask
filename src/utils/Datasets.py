@@ -29,11 +29,13 @@ def get_datasets(type):
     return label, text, prop, vocab
 
 
-def get_datasets_in_sentences(type, with_bccwj=False):
+def get_datasets_in_sentences(type, with_bccwj=False, with_bert=False):
     # list_path = Path("../../data/NTC_dataset/listed_{}_rework_181130.pkl".format(type))
     # list_path = Path("../../data/NTC_dataset/listed_{}_190105.pkl".format(type))
     if with_bccwj:
         type += "_bccwj"
+        if with_bert:
+            type += "_bert"
         if "train2" in type:
             type = type.replace("train2", "train")
         list_path = Path("../../data/BCCWJ-DepParaPAS/BCCWJ-DepParaPAS-3.3.0_1.2.0_20160301/BCCWJ-DepParaPAS-3.3.0_1.2.0_20160301/ntc/listed_{}.pkl".format(type))
@@ -250,11 +252,13 @@ def get_sentences_nozero(type):
     return labels, args, preds, props, vocab, word_poses, ku_poses, modes, word_pos_id, ku_pos_id, modes_id
 
 
-def get_datasets_in_sentences_test(type, with_bccwj=False):
+def get_datasets_in_sentences_test(type, with_bccwj=False, with_bert=False):
     # list_path = Path("../../data/NTC_dataset/listed_{}_rework_181130.txt".format(type))
     # list_path = Path("../../data/NTC_dataset/listed_{}_190105.txt".format(type))
     if with_bccwj:
         type += "_bccwj"
+        if with_bert:
+            type += "_bert"
         if "train2" in type:
             type = type.replace("train2", "train")
         list_path = Path("../../data/BCCWJ-DepParaPAS/BCCWJ-DepParaPAS-3.3.0_1.2.0_20160301/BCCWJ-DepParaPAS-3.3.0_1.2.0_20160301/ntc/listed_{}.txt".format(type))
