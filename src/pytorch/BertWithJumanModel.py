@@ -15,8 +15,10 @@ from utils.HelperFunctions import get_cuda_id
 
 class JumanTokenizer():
     def __init__(self):
-        # self.juman = Juman(command="jumanpp")
-        self.juman = Juman(command="juman")
+        if "D:" in os.getcwd():
+            self.juman = Juman(command="juman")
+        else:
+            self.juman = Juman(command="jumanpp")
 
     def tokenize(self, text):
         result = self.juman.analysis(text)
