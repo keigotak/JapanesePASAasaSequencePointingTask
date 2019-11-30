@@ -119,16 +119,23 @@ class BertWithJumanModel():
             def get_duplicated_index(l, x):
                 return [i for i, _x in enumerate(l) if _x == x]
 
-            for i in range(-1, max(seq_ids) + 1):
+            current_pos = 0
+            for i in range(min(seq_ids), max(seq_ids) + 1):
                 indexes = get_duplicated_index(seq_ids, i)
                 if len(indexes) == 1:
                     dup_id.append(int(ids[indexes[0]]))
                     dup_token.append(tokens[indexes[0]])
                     dup_emb.append(embs[indexes[0]])
                 else:
-                    dup_id.append([int(ids[ii]) for ii in indexes])
-                    dup_token.append([tokens[ii] for ii in indexes])
-                    dup_emb.append(torch.mean(itemgetter(indexes)(embs), dim=0))
+                    if len(indexes) == 0:
+                        pass
+                    else:
+                        dup_id.append([int(ids[ii]) for ii in indexes])
+                        dup_token.append([tokens[ii] for ii in indexes])
+                        dup_emb.append(torch.mean(itemgetter(indexes)(embs), dim=0))
+                if tokens[current_pos] == "[SEP]":
+                    break
+                current_pos += len(indexes)
 
             dup_ids.append(dup_id)
             dup_tokens.append(dup_token)
