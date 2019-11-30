@@ -16,17 +16,15 @@ class Model(nn.Module):
         return embeds
 
     def vocab_zero_padding_bert(self, indexes, embeds):
+        zeros = [0.0] * len(embeds[0][0])
         for bi, index_list in enumerate(indexes):
             if self.vocab_padding_idx in index_list:
-                embeds[bi][np.where(index_list == self.vocab_padding_idx)[0][0]:] = 0.0
+                for wi, item in zip(range(len(index_list)-1, -1, -1), index_list[::-1]):
+                    if item != self.vocab_padding_idx:
+                        break
+                    tensor = torch.tensor(zeros, dtype=torch.float32)
+                    embeds[bi][wi] = tensor
         return embeds
-
-    def vocab_zero_padding_bert_bccwj(self, indexes, embeds):
-        for bi, index_list in enumerate(indexes):
-            if self.vocab_padding_idx in index_list:
-                embeds[bi][np.where(index_list == self.vocab_padding_idx)[0][0]:] = 0.0
-        return embeds
-
 
     def vocab_zero_padding_elmo(self, words, embeds):
         pad_word = '[PAD]'

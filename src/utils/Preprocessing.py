@@ -242,10 +242,12 @@ def freeze_keys(_keys):
 
 
 if __name__ == '__main__':
-    with_bccwj = True
+    with_bccwj = False
 
-    tags = ["train_bccwj", "dev_bccwj", "test_bccwj"]
-    # tags = ['train2', 'test', 'dev']
+    if with_bccwj:
+        tags = ["train_bccwj", "dev_bccwj", "test_bccwj"]
+    else:
+        tags = ['train2', 'test', 'dev']
     # tags = ['train2']
     # tags = ['dev']
     for tag in tags:
