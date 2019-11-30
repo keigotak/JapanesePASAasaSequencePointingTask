@@ -87,8 +87,11 @@ class BertWithJumanModel():
                 else:
                     token = self.juman_tokenizer.tokenize(word)
                     bert_tokens = self.bert_tokenizer.tokenize(" ".join(token))
+                    if len(bert_tokens) == 0:
+                        bert_tokens = [" "]
                     tokenized_bert_words.extend(bert_tokens)
-                    seq_ids.extend([seq_id] * len(bert_tokens))
+                    num_id = 1 if len(bert_tokens) == 0 else len(bert_tokens)
+                    seq_ids.extend([seq_id] * num_id)
                     seq_id += 1
             token = ["[CLS]"] + tokenized_bert_words[:self.max_seq_length] + ["[SEP]"]
             id = self.bert_tokenizer.convert_tokens_to_ids(token)
