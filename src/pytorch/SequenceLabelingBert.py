@@ -317,42 +317,41 @@ def train(batch_size, learning_rate=1e-3, optim="adam",  dropout_ratio=0.4, null
 
             vw_train_loss.add(float(loss))
 
-        else:
-            # Make sure network is in eval mode for inference
-            model.eval()
+        # Make sure network is in eval mode for inference
+        model.eval()
 
-            # Turn off gradients for validation, saves memory and computations
-            tp_history = []
-            fp_history = []
-            fn_history = []
-            with torch.no_grad():
-                for d_batch in range(len(dev_batcher)):
-                    # output shape: Batch, Sentence_length
-                    d_args, d_preds, d_labels, d_props, d_word_pos, d_ku_pos, d_mode = dev_batcher.get_batch()
+        # Turn off gradients for validation, saves memory and computations
+        tp_history = []
+        fp_history = []
+        fn_history = []
+        with torch.no_grad():
+            for d_batch in range(len(dev_batcher)):
+                # output shape: Batch, Sentence_length
+                d_args, d_preds, d_labels, d_props, d_word_pos, d_ku_pos, d_mode = dev_batcher.get_batch()
 
-                    # output shape: Batch, Sentence_length
-                    d_word_pos = torch.from_numpy(d_word_pos).long().to(device)
-                    d_ku_pos = torch.from_numpy(d_ku_pos).long().to(device)
-                    d_mode = torch.from_numpy(d_mode).long().to(device)
+                # output shape: Batch, Sentence_length
+                d_word_pos = torch.from_numpy(d_word_pos).long().to(device)
+                d_ku_pos = torch.from_numpy(d_ku_pos).long().to(device)
+                d_mode = torch.from_numpy(d_mode).long().to(device)
 
-                    # output shape: 3, Batch, Sentence_length+1
-                    prediction = model(d_args, d_preds, d_word_pos, d_ku_pos, d_mode)
+                # output shape: 3, Batch, Sentence_length+1
+                prediction = model(d_args, d_preds, d_word_pos, d_ku_pos, d_mode)
 
-                    # output shape: Batch, Sentence_length+1
-                    d_size = prediction.shape[2]
-                    d_labels = torch.from_numpy(d_labels).long().to(device)
-                    dev_loss = criterion(prediction.view(-1, d_size), d_labels.view(-1))
-                    vw_dev_loss.add(float(dev_loss))
+                # output shape: Batch, Sentence_length+1
+                d_size = prediction.shape[2]
+                d_labels = torch.from_numpy(d_labels).long().to(device)
+                dev_loss = criterion(prediction.view(-1, d_size), d_labels.view(-1))
+                vw_dev_loss.add(float(dev_loss))
 
-                    _, prediction = torch.max(prediction, 2)
-                    tp, fp, fn = get_pr_numbers(prediction, d_labels, d_props)
+                _, prediction = torch.max(prediction, 2)
+                tp, fp, fn = get_pr_numbers(prediction, d_labels, d_props)
 
-                    tp_history.append(tp)
-                    fp_history.append(fp)
-                    fn_history.append(fn)
-                    if arguments.overfit:
-                        break
-                dev_batcher.reset()
+                tp_history.append(tp)
+                fp_history.append(fp)
+                fn_history.append(fn)
+                if arguments.overfit:
+                    break
+            dev_batcher.reset()
 
             num_tp = np.sum(tp_history, axis=0)
             num_fp = np.sum(fp_history, axis=0)
