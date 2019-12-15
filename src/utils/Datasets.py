@@ -52,8 +52,9 @@ def get_datasets_in_sentences(type, with_bccwj=False, with_bert=False):
     mode, modes = [], []
 
     count = 0
+    bef_count = 0
     for i in range(len(data)):
-        if data[i][6] == count + 1:
+        if data[i][6] != bef_count:
             labels.append(label)
             args.append(arg)
             preds.append(pred)
@@ -70,6 +71,7 @@ def get_datasets_in_sentences(type, with_bccwj=False, with_bert=False):
             ku_pos = [data[i][POS_ID][1]]
             mode = [data[i][MODE_ID]]
 
+            bef_count = data[i][6]
             count += 1
         else:
             label.append(data[i][LABEL_ID])
@@ -286,8 +288,9 @@ def get_datasets_in_sentences_test(type, with_bccwj=False, with_bert=False):
     mode, modes = [], []
 
     count = 0
+    bef_count = 0
     for i in range(len(data)):
-        if data[i][6] == count + 1:
+        if data[i][6] != bef_count:
             labels.append(label)
             args.append(arg)
             preds.append(pred)
@@ -304,6 +307,7 @@ def get_datasets_in_sentences_test(type, with_bccwj=False, with_bert=False):
             ku_pos = [data[i][POS_ID][1]]
             mode = [data[i][MODE_ID]]
 
+            bef_count = data[i][6]
             count += 1
         else:
             label.append(data[i][LABEL_ID])
