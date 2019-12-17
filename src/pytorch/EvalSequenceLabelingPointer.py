@@ -45,13 +45,13 @@ DEV = "dev"
 TEST = "test"
 
 if arguments.test:
-    train_label, train_args, train_preds, train_prop, train_vocab, train_word_pos, train_ku_pos, train_modes, train_word_pos_id, train_ku_pos_id, train_modes_id = get_datasets_in_sentences_test(TRAIN)
-    dev_label, dev_args, dev_preds, dev_prop, dev_vocab, dev_word_pos, dev_ku_pos, dev_modes, dev_word_pos_id, dev_ku_pos_id, dev_modes_id = get_datasets_in_sentences_test(DEV)
-    test_label, test_args, test_preds, test_prop, test_vocab, test_word_pos, test_ku_pos, test_modes, test_word_pos_id, test_ku_pos_id, test_modes_id = get_datasets_in_sentences_test(TEST)
+    train_label, train_args, train_preds, train_prop, train_vocab, train_word_pos, train_ku_pos, train_modes, train_word_pos_id, train_ku_pos_id, train_modes_id = get_datasets_in_sentences_test(TRAIN, with_bccwj=arguments.with_bccwj, with_bert=False)
+    dev_label, dev_args, dev_preds, dev_prop, dev_vocab, dev_word_pos, dev_ku_pos, dev_modes, dev_word_pos_id, dev_ku_pos_id, dev_modes_id = get_datasets_in_sentences_test(DEV, with_bccwj=arguments.with_bccwj, with_bert=False)
+    test_label, test_args, test_preds, test_prop, test_vocab, test_word_pos, test_ku_pos, test_modes, test_word_pos_id, test_ku_pos_id, test_modes_id = get_datasets_in_sentences_test(TEST, with_bccwj=arguments.with_bccwj, with_bert=False)
 else:
-    train_label, train_args, train_preds, train_prop, train_vocab, train_word_pos, train_ku_pos, train_modes, train_word_pos_id, train_ku_pos_id, train_modes_id = get_datasets_in_sentences(TRAIN)
-    dev_label, dev_args, dev_preds, dev_prop, dev_vocab, dev_word_pos, dev_ku_pos, dev_modes, dev_word_pos_id, dev_ku_pos_id, dev_modes_id = get_datasets_in_sentences(DEV)
-    test_label, test_args, test_preds, test_prop, test_vocab, test_word_pos, test_ku_pos, test_modes, test_word_pos_id, test_ku_pos_id, test_modes_id = get_datasets_in_sentences(TEST)
+    train_label, train_args, train_preds, train_prop, train_vocab, train_word_pos, train_ku_pos, train_modes, train_word_pos_id, train_ku_pos_id, train_modes_id = get_datasets_in_sentences(TRAIN, with_bccwj=arguments.with_bccwj, with_bert=False)
+    dev_label, dev_args, dev_preds, dev_prop, dev_vocab, dev_word_pos, dev_ku_pos, dev_modes, dev_word_pos_id, dev_ku_pos_id, dev_modes_id = get_datasets_in_sentences(DEV, with_bccwj=arguments.with_bccwj, with_bert=False)
+    test_label, test_args, test_preds, test_prop, test_vocab, test_word_pos, test_ku_pos, test_modes, test_word_pos_id, test_ku_pos_id, test_modes_id = get_datasets_in_sentences(TEST, with_bccwj=arguments.with_bccwj, with_bert=False)
 
 vocab = Vocab()
 vocab.fit(train_vocab, arguments.vocab_thresh)
@@ -185,7 +185,8 @@ def eval(batch_size=1, null_weight=None, loss_weight=None):
                'add_null_word: {}'.format(arguments.add_null_word),
                'add_null_weight: {}'.format(arguments.add_null_weight),
                'add_loss_weight: {}'.format(arguments.add_loss_weight),
-               'git sha: {}'.format(gm.sha)
+               'git sha: {}'.format(gm.sha),
+               "with_bccwj: {}".format(arguments.with_bccwj)
                ]
 
     sw.start()
@@ -413,7 +414,8 @@ def eval(batch_size=1, null_weight=None, loss_weight=None):
                       + [gm.sha] \
                       + [arguments.without_linear] \
                       + [num_params]\
-                      + [arguments.decode]
+                      + [arguments.decode]\
+                      + [arguments.with_bccwj]
         write_spreadsheet(_spreadline, type="test")
 
 

@@ -183,7 +183,8 @@ def eval(batch_size=1, null_weight=None, loss_weight=None):
                'add_null_word: {}'.format(arguments.add_null_word),
                'add_null_weight: {}'.format(arguments.add_null_weight),
                'add_loss_weight: {}'.format(arguments.add_loss_weight),
-               'git sha: {}'.format(gm.sha)
+               'git sha: {}'.format(gm.sha),
+               "with_bccwj: {}".format(arguments.with_bccwj)
                ]
 
     sw.start()
@@ -349,7 +350,9 @@ def eval(batch_size=1, null_weight=None, loss_weight=None):
                       + [arguments.init_checkpoint] \
                       + [gm.sha] \
                       + [arguments.without_linear] \
-                      + [num_params]
+                      + [num_params]\
+                      + [""]\
+                      + [arguments.with_bccwj]
         write_spreadsheet(_spreadline, type="test")
 
 
