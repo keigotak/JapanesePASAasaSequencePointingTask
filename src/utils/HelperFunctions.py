@@ -58,7 +58,7 @@ def get_argparser():
     parser.add_argument('--add_loss_weight', action='store_true')
     parser.add_argument('--decode', type=str, default='global_argmax', choices=['ordered', 'global_argmax', 'no_decoder'])
     parser.add_argument('--seed', type=int, default=1)
-    parser.add_argument('--without_linear', action='store_true')
+    parser.add_argument('--with_linear', action='store_true')
     parser.add_argument('--num_data', type=int, default=-1)
     parser.add_argument('--save_output', action='store_true')
     parser.add_argument('--with_bccwj', action='store_true')
@@ -249,3 +249,5 @@ if __name__ == "__main__":
     print(ret_ga)
     print(ret_ni)
     print(ret_wo)
+
+    print(get_argparser())

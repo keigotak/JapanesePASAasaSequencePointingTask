@@ -96,9 +96,9 @@ if arguments.tensorboard:
 # @profile
 def eval(batch_size=1, null_weight=None, loss_weight=None):
     batch_size = int(batch_size)
-    fc1_size = arguments.fc1_size
-    if arguments.without_linear:
-        fc1_size = 0
+    fc1_size = 0
+    if arguments.with_linear:
+        fc1_size = arguments.fc1_size
     fc2_size = 0
 
     if arguments.embed == 'original':
@@ -115,7 +115,7 @@ def eval(batch_size=1, null_weight=None, loss_weight=None):
                                      mode_padding_idx=mode_indexer.get_pad_id(),
                                      device=device,
                                      add_null_word=arguments.add_null_word,
-                                     without_linear=arguments.without_linear)
+                                     with_linear=arguments.with_linear)
     else:
         model = PointerNetworksModel(target_size=1,
                                      l1_size=fc1_size,
@@ -132,7 +132,7 @@ def eval(batch_size=1, null_weight=None, loss_weight=None):
                                      pretrained_weights=vocab.weights,
                                      device=device,
                                      add_null_word=arguments.add_null_word,
-                                     without_linear=arguments.without_linear)
+                                     with_linear=arguments.with_linear)
     embedding_dim = model.embedding_dim
     hidden_size = model.hidden_size
 
@@ -412,7 +412,7 @@ def eval(batch_size=1, null_weight=None, loss_weight=None):
                       + str_loss_weight\
                       + [arguments.init_checkpoint] \
                       + [gm.sha] \
-                      + [arguments.without_linear] \
+                      + [arguments.with_linear] \
                       + [num_params]\
                       + [arguments.decode]\
                       + [arguments.with_bccwj]

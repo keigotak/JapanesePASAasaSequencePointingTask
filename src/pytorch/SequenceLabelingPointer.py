@@ -144,9 +144,9 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
     random.seed(arguments.seed)
 
     batch_size = int(batch_size)
-    fc1_size = int(fc1_size)
-    if arguments.without_linear:
-        fc1_size = 0
+    fc1_size = 0
+    if arguments.with_linear:
+        fc1_size = int(fc1_size)
     fc2_size = 0
     dropout_ratio = round(dropout_ratio, 2)
 
@@ -165,7 +165,7 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                                      device=device,
                                      add_null_word=arguments.add_null_word,
                                      seed=arguments.seed,
-                                     without_linear=arguments.without_linear)
+                                     with_linear=arguments.with_linear)
     else:
         model = PointerNetworksModel(target_size=1,
                                      l1_size=fc1_size,
@@ -183,7 +183,7 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                                      device=device,
                                      add_null_word=arguments.add_null_word,
                                      seed=arguments.seed,
-                                     without_linear=arguments.without_linear)
+                                     with_linear=arguments.with_linear)
     embedding_dim = model.embedding_dim
     hidden_size = model.hidden_size
 
@@ -303,7 +303,7 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                'add_loss_weight: {}'.format(arguments.add_loss_weight),
                'git sha: {}'.format(gm.sha),
                'seed: {}'.format(arguments.seed),
-               'without_linear: {}'.format(arguments.without_linear),
+               'with_linear: {}'.format(arguments.with_linear),
                "with_bccwj: {}".format(arguments.with_bccwj)
                ]
 
@@ -612,7 +612,7 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                       + [best_model_path]\
                       + [arguments.seed]\
                       + [gm.sha]\
-                      + [arguments.without_linear]\
+                      + [arguments.with_linear]\
                       + [num_params]\
                       + [arguments.num_data]\
                       + [arguments.decode]\

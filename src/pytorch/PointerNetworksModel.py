@@ -6,7 +6,7 @@ from Model import Model
 
 class PointerNetworksModel(Model):
     def __init__(self, vocab_size, word_pos_size, ku_pos_size, mode_size, target_size,
-                 l1_size, device, without_linear=False,
+                 l1_size, device, with_linear=False,
                  embedding_dim=32, pos_embedding_dim=10, mode_embedding_dim=2,
                  vocab_padding_idx=-1, word_pos_padding_idx=-1, ku_pos_padding_idx=-1, mode_padding_idx=-1,
                  vocab_null_idx=-1, vocab_unk_idx=-1,
@@ -57,7 +57,7 @@ class PointerNetworksModel(Model):
         self.return_seq = return_seq
         self.continue_seq = continue_seq
         self.add_null_word = add_null_word
-        self.without_linear = without_linear
+        self.with_linear = with_linear
 
         self.f_lstm1 = nn.GRU(input_size=self.hidden_size,
                               hidden_size=self.hidden_size,
@@ -82,7 +82,7 @@ class PointerNetworksModel(Model):
 
         self.target_size = target_size
 
-        if not self.without_linear:
+        if self.with_linear:
             self.l1_size = l1_size
             self.linear_ga1 = nn.Linear(self.hidden_size, self.l1_size)
             self.linear_ni1 = nn.Linear(self.hidden_size, self.l1_size)
@@ -152,7 +152,7 @@ class PointerNetworksModel(Model):
             lstm_out = self.dropout(lstm_out)
         lstm_out = self._reverse_tensor(lstm_out)
 
-        if not self.without_linear:
+        if self.with_linear:
             # output shape: Batch, Sentence_length, l1_size
             linear_ga1 = torch.tanh(self.linear_ga1(lstm_out))
             linear_ni1 = torch.tanh(self.linear_ni1(lstm_out))
