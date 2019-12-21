@@ -146,6 +146,17 @@ class BertSequenceLabelingModel(Model):
         tag_space = self.hidden2tag(lstm_out)
         return tag_space
 
+    def load_weights(self, path):
+        if '.h5' in path:
+            path = path.replace('.h5', '')
+        state_dict = torch.load(path + '.h5')
+        self.load_state_dict(state_dict)
+        state_dict = torch.load(path + '_bert.h5')
+        self.word_embeddings.load_state_dict(state_dict)
+
 
 if __name__ == "__main__":
     model = BertSequenceLabelingModel()
+    for k, v in model.named_parameters():
+        print("{}, {}, {}".format(v.requires_grad, v.size(), k))
+    model.load_weights('../../results/pasa-bertsl-20191207-150951/model-0/epoch14-f0.8620.h5')
