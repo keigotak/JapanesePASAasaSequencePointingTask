@@ -25,13 +25,16 @@ class JumanTokenizer():
         return [mrph.midasi for mrph in result.mrph_list()]
 
 
-class BertWithJumanModel():
+class BertWithJumanModel(nn.Module):
     def __init__(self, bert_path=Path("../../data/bert-kyoto/Japanese_L-12_H-768_A-12_E-30_BPE").resolve(),
                  vocab_file_name="vocab.txt",
-                 device='cpu'):
+                 device='cpu',
+                 trainable=False):
+        super().__init__()
         self.juman_tokenizer = JumanTokenizer()
         self.model = BertModel.from_pretrained(bert_path)
-        self.model.training = True
+        for k, v in self.model.named_parameters():
+            v.requires_grad = trainable
         self.bert_tokenizer = BertTokenizer(Path(bert_path) / vocab_file_name,
                                             do_lower_case=False, do_basic_tokenize=False)
         self.device = device
@@ -65,10 +68,7 @@ class BertWithJumanModel():
         self.model.to(self.device)
         all_encoder_layers, _ = self.model(id_tensor)
 
-        embedding = all_encoder_layers.numpy()
-        embedding = torch.tensor(embedding)
-
-        return {"embedding": embedding, "token": token_tensor, "id": id_tensor}
+        return {"embedding": all_encoder_layers, "token": token_tensor, "id": id_tensor}
 
     def get_word_embedding(self, batched_words):
         batched_bert_words = []
@@ -185,5 +185,10 @@ class BertWithJumanModel():
 
 if __name__ == "__main__":
     _path = Path("../../data/bert-kyoto/Japanese_L-12_H-768_A-12_E-30_BPE").resolve()
-    bert = BertWithJumanModel(_path)
-    ret = bert.get_embedding(u"どういたしまして．")
+    model = BertWithJumanModel(_path, trainable=True)
+    ret = model.get_word_embedding(u"どういたしまして．")
+    print(ret)
+    for k, v in model.named_parameters():
+        print("{}, {}, {}".format(v.requires_grad, v.size(), k))
+
+

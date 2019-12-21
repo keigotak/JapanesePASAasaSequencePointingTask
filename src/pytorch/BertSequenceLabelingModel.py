@@ -22,7 +22,8 @@ class BertSequenceLabelingModel(Model):
                  dropout_ratio=.1,
                  seed=1,
                  bidirectional=True, return_seq=False,
-                 batch_first=True, continue_seq=False):
+                 batch_first=True, continue_seq=False,
+                 trainbert=False):
         super(BertSequenceLabelingModel, self).__init__()
         torch.manual_seed(seed)
 
@@ -38,7 +39,7 @@ class BertSequenceLabelingModel(Model):
         self.vocab_size = None
         self.embedding_dim = None
         self.word_embeddings = None
-        self.word_embeddings = BertWithJumanModel(device=device)
+        self.word_embeddings = BertWithJumanModel(device=device, trainable=trainbert)
         self.embedding_dim = self.word_embeddings.embedding_dim
         self.vocab_padding_idx = self.word_embeddings.get_padding_idx()
 
@@ -156,7 +157,7 @@ class BertSequenceLabelingModel(Model):
 
 
 if __name__ == "__main__":
-    model = BertSequenceLabelingModel()
+    model = BertSequenceLabelingModel(trainbert=False)
     for k, v in model.named_parameters():
         print("{}, {}, {}".format(v.requires_grad, v.size(), k))
-    model.load_weights('../../results/pasa-bertsl-20191207-150951/model-0/epoch14-f0.8620.h5')
+    # model.load_weights('../../results/pasa-bertsl-20191207-150951/model-0/epoch14-f0.8620.h5')

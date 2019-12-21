@@ -170,7 +170,8 @@ def train(batch_size, learning_rate=1e-3, optim="adam",  dropout_ratio=0.4, null
                                           ku_pos_padding_idx=ku_pos_indexer.get_pad_id(),
                                           mode_padding_idx=mode_indexer.get_pad_id(),
                                           device=device,
-                                          seed=arguments.seed)
+                                          seed=arguments.seed,
+                                          trainbert=arguments.trainbert)
 
     embedding_dim = model.embedding_dim
     hidden_size = model.hidden_size
@@ -277,7 +278,8 @@ def train(batch_size, learning_rate=1e-3, optim="adam",  dropout_ratio=0.4, null
                'optim: {}'.format(optim),
                'git sha: {}'.format(gm.sha),
                'seed: {}'.format(arguments.seed),
-               "with_bccwj: {}".format(arguments.with_bccwj)
+               "with_bccwj: {}".format(arguments.with_bccwj),
+               "trainbert: {}".format(arguments.trainbert)
                ]
 
     model_dir, _ = op.get_model_save_dir(tag, now)
@@ -446,9 +448,9 @@ def train(batch_size, learning_rate=1e-3, optim="adam",  dropout_ratio=0.4, null
 
     _log_path = save_dir_base.joinpath('optlog_{0:%Y%m%d-%H%M%S}.txt'.format(now))
     with _log_path.open(mode='a') as f:
-        _line = '{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}, {21}, {22}' \
+        _line = '{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}, {21}, {22}, {23}' \
             .format("{:%Y%m%d-%H%M%S} ".format(get_now()), best_e, max_all_score, best_dep_score, best_zero_score, best_num_tp, best_num_fp, best_num_fn, best_f1s, optim, learning_rate, batch_size, fc1_size, fc2_size,
-                    embedding_dim, hidden_size, clip, weight_decay, dropout_ratio, null_weight, loss_weight, best_model_path, arguments.seed)
+                    embedding_dim, hidden_size, clip, weight_decay, dropout_ratio, null_weight, loss_weight, best_model_path, arguments.seed, arguments.trainbert)
         f.write(_line + '\n')
 
     if arguments.spreadsheet:
@@ -496,7 +498,8 @@ def train(batch_size, learning_rate=1e-3, optim="adam",  dropout_ratio=0.4, null
                       + [arguments.num_data]\
                       + ["no_decoder"]\
                       + [arguments.model]\
-                      + [arguments.with_bccwj]
+                      + [arguments.with_bccwj]\
+                      + [arguments.trainbert]
         write_spreadsheet(_spreadline)
 
     op.count_up()
