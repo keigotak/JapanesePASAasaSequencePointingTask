@@ -30,7 +30,7 @@ def get_argparser():
     parser.add_argument('--vocab_thresh', type=int, default=-1)
     parser.add_argument('--embed_size', type=int, default=100)
     parser.add_argument('--hidden_size', type=int, default=100)
-    parser.add_argument('--fc1_size', type=int, default=128)
+    parser.add_argument('--fc1_size', type=int, default=88)
     parser.add_argument('--fc2_size', type=int, default=64)
     parser.add_argument('--overfit', action='store_true')
     parser.add_argument('--hyp', action='store_false')
