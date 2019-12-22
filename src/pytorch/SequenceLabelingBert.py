@@ -188,6 +188,9 @@ def train(batch_size, learning_rate=1e-3, optim="adam",  dropout_ratio=0.4, null
         num_params += len(parameter)
     print_b(num_params)
 
+    for k, v in model.named_parameters():
+        print("{}, {}, {}".format(v.requires_grad, v.size(), k))
+
     if arguments.device != "cpu":
         if torch.cuda.device_count() > 1:
             print("Let's use", torch.cuda.device_count(), "GPUs!")
