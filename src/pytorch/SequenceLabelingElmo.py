@@ -35,6 +35,8 @@ from utils.ServerManager import ServerManager
 from utils.HelperFunctions import get_argparser, get_pasa, get_now, get_save_dir, add_null, get_pointer_label, concat_labels, get_cuda_id, translate_score_and_loss, print_b
 from utils.GoogleSpreadSheet import write_spreadsheet
 from utils.ParallelTrials import ParallelTrials
+
+from PretrainedEmbeddings import PretrainedEmbedding
 from ElmoSequenceLabelingModel import ElmoSequenceLabelingModel
 
 from Loss import *
