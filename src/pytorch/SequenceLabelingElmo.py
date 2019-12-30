@@ -38,7 +38,7 @@ from utils.ParallelTrials import ParallelTrials
 from ElmoSequenceLabelingModel import ElmoSequenceLabelingModel
 
 from Loss import *
-from Batcher import SequenceBatcherBert
+from Batcher import SequenceBatcher
 from Validation import get_pr_numbers, get_f_score
 
 
@@ -57,13 +57,13 @@ TEST = "test"
 PADDING_ID = 4
 
 if arguments.test:
-    train_label, train_args, train_preds, train_prop, train_vocab, train_word_pos, train_ku_pos, train_modes, train_word_pos_id, train_ku_pos_id, train_modes_id = get_datasets_in_sentences_test(TRAIN)
-    dev_label, dev_args, dev_preds, dev_prop, dev_vocab, dev_word_pos, dev_ku_pos, dev_modes, dev_word_pos_id, dev_ku_pos_id, dev_modes_id = get_datasets_in_sentences_test(DEV)
-    test_label, test_args, test_preds, test_prop, test_vocab, test_word_pos, test_ku_pos, test_modes, test_word_pos_id, test_ku_pos_id, test_modes_id = get_datasets_in_sentences_test(TEST)
+    train_label, train_args, train_preds, train_prop, train_vocab, train_word_pos, train_ku_pos, train_modes, train_word_pos_id, train_ku_pos_id, train_modes_id = get_datasets_in_sentences_test(TRAIN, with_bccwj=arguments.with_bccwj, with_bert=False)
+    dev_label, dev_args, dev_preds, dev_prop, dev_vocab, dev_word_pos, dev_ku_pos, dev_modes, dev_word_pos_id, dev_ku_pos_id, dev_modes_id = get_datasets_in_sentences_test(DEV, with_bccwj=arguments.with_bccwj, with_bert=False)
+    test_label, test_args, test_preds, test_prop, test_vocab, test_word_pos, test_ku_pos, test_modes, test_word_pos_id, test_ku_pos_id, test_modes_id = get_datasets_in_sentences_test(TEST, with_bccwj=arguments.with_bccwj, with_bert=False)
 else:
-    train_label, train_args, train_preds, train_prop, train_vocab, train_word_pos, train_ku_pos, train_modes, train_word_pos_id, train_ku_pos_id, train_modes_id = get_datasets_in_sentences(TRAIN)
-    dev_label, dev_args, dev_preds, dev_prop, dev_vocab, dev_word_pos, dev_ku_pos, dev_modes, dev_word_pos_id, dev_ku_pos_id, dev_modes_id = get_datasets_in_sentences(DEV)
-    test_label, test_args, test_preds, test_prop, test_vocab, test_word_pos, test_ku_pos, test_modes, test_word_pos_id, test_ku_pos_id, test_modes_id = get_datasets_in_sentences(TEST)
+    train_label, train_args, train_preds, train_prop, train_vocab, train_word_pos, train_ku_pos, train_modes, train_word_pos_id, train_ku_pos_id, train_modes_id = get_datasets_in_sentences(TRAIN, with_bccwj=arguments.with_bccwj, with_bert=False)
+    dev_label, dev_args, dev_preds, dev_prop, dev_vocab, dev_word_pos, dev_ku_pos, dev_modes, dev_word_pos_id, dev_ku_pos_id, dev_modes_id = get_datasets_in_sentences(DEV, with_bccwj=arguments.with_bccwj, with_bert=False)
+    test_label, test_args, test_preds, test_prop, test_vocab, test_word_pos, test_ku_pos, test_modes, test_word_pos_id, test_ku_pos_id, test_modes_id = get_datasets_in_sentences(TEST, with_bccwj=arguments.with_bccwj, with_bert=False)
 
 if arguments.num_data != -1 and arguments.num_data < len(train_label):
     np.random.seed(71)
@@ -195,44 +195,44 @@ def train(batch_size, learning_rate=1e-3, optim="adam",  dropout_ratio=0.4, null
     elif optim == 'adabound':
         optimizer = adabound.AdaBound(model.parameters(), lr=learning_rate, final_lr=0.1)
 
-    train_batcher = SequenceBatcherBert(batch_size,
-                                        train_args,
-                                        train_preds,
-                                        train_label,
-                                        train_prop,
-                                        train_word_pos,
-                                        train_ku_pos,
-                                        train_modes,
-                                        vocab_pad_id=vocab.get_pad_id(),
-                                        word_pos_pad_id=word_pos_indexer.get_pad_id(),
-                                        ku_pos_pad_id=ku_pos_indexer.get_pad_id(),
-                                        mode_pad_id=mode_indexer.get_pad_id(), shuffle=True)
+    train_batcher = SequenceBatcher(batch_size,
+                                    train_args,
+                                    train_preds,
+                                    train_label,
+                                    train_prop,
+                                    train_word_pos,
+                                    train_ku_pos,
+                                    train_modes,
+                                    vocab_pad_id=vocab.get_pad_id(),
+                                    word_pos_pad_id=word_pos_indexer.get_pad_id(),
+                                    ku_pos_pad_id=ku_pos_indexer.get_pad_id(),
+                                    mode_pad_id=mode_indexer.get_pad_id(), shuffle=True)
     if arguments.overfit:
-        dev_batcher = SequenceBatcherBert(arguments.dev_size,
-                                          train_args,
-                                          train_preds,
-                                          train_label,
-                                          train_prop,
-                                          train_word_pos,
-                                          train_ku_pos,
-                                          train_modes,
-                                          vocab_pad_id=vocab.get_pad_id(),
-                                          word_pos_pad_id=word_pos_indexer.get_pad_id(),
-                                          ku_pos_pad_id=ku_pos_indexer.get_pad_id(),
-                                          mode_pad_id=mode_indexer.get_pad_id(), shuffle=True)
+        dev_batcher = SequenceBatcher(arguments.dev_size,
+                                      train_args,
+                                      train_preds,
+                                      train_label,
+                                      train_prop,
+                                      train_word_pos,
+                                      train_ku_pos,
+                                      train_modes,
+                                      vocab_pad_id=vocab.get_pad_id(),
+                                      word_pos_pad_id=word_pos_indexer.get_pad_id(),
+                                      ku_pos_pad_id=ku_pos_indexer.get_pad_id(),
+                                      mode_pad_id=mode_indexer.get_pad_id(), shuffle=True)
     else:
-        dev_batcher = SequenceBatcherBert(arguments.dev_size,
-                                          dev_args,
-                                          dev_preds,
-                                          dev_label,
-                                          dev_prop,
-                                          dev_word_pos,
-                                          dev_ku_pos,
-                                          dev_modes,
-                                          vocab_pad_id=vocab.get_pad_id(),
-                                          word_pos_pad_id=word_pos_indexer.get_pad_id(),
-                                          ku_pos_pad_id=ku_pos_indexer.get_pad_id(),
-                                          mode_pad_id=mode_indexer.get_pad_id(), shuffle=True)
+        dev_batcher = SequenceBatcher(arguments.dev_size,
+                                      dev_args,
+                                      dev_preds,
+                                      dev_label,
+                                      dev_prop,
+                                      dev_word_pos,
+                                      dev_ku_pos,
+                                      dev_modes,
+                                      vocab_pad_id=vocab.get_pad_id(),
+                                      word_pos_pad_id=word_pos_indexer.get_pad_id(),
+                                      ku_pos_pad_id=ku_pos_indexer.get_pad_id(),
+                                      mode_pad_id=mode_indexer.get_pad_id(), shuffle=True)
 
     if len(trials) != 1 and not arguments.hyp:
         hyp_max_score.set(translate_score_and_loss(trials.best_trial['result']['loss']))
@@ -263,7 +263,9 @@ def train(batch_size, learning_rate=1e-3, optim="adam",  dropout_ratio=0.4, null
                'dropout_ratio: {}'.format(dropout_ratio),
                'optim: {}'.format(optim),
                'git sha: {}'.format(gm.sha),
-               'seed: {}'.format(arguments.seed)
+               'seed: {}'.format(arguments.seed),
+               "with_bccwj: {}".format(arguments.with_bccwj),
+               "trainbert: {}".format(arguments.trainbert)
                ]
 
     model_dir, _ = op.get_model_save_dir(tag, now)
@@ -482,7 +484,8 @@ def train(batch_size, learning_rate=1e-3, optim="adam",  dropout_ratio=0.4, null
                       + [num_params]\
                       + [arguments.num_data]\
                       + ["no_decoder"]\
-                      + [arguments.model]
+                      + [arguments.model]\
+                      + [arguments.with_bccwj]
         write_spreadsheet(_spreadline)
 
     op.count_up()
