@@ -202,8 +202,8 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
         optimizer = adabound.AdaBound(model.parameters(), lr=learning_rate, final_lr=0.1)
 
     train_batcher = SequenceBatcher(batch_size,
-                                    train_arg_id,
-                                    train_pred_id,
+                                    train_args,
+                                    train_preds,
                                     train_label,
                                     train_prop,
                                     train_word_pos,
@@ -215,8 +215,8 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                                     mode_pad_id=mode_indexer.get_pad_id(), shuffle=True)
     if arguments.overfit:
         dev_batcher = SequenceBatcher(arguments.dev_size,
-                                      train_arg_id,
-                                      train_pred_id,
+                                      train_args,
+                                      train_preds,
                                       train_label,
                                       train_prop,
                                       train_word_pos,
@@ -228,8 +228,8 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                                       mode_pad_id=mode_indexer.get_pad_id(), shuffle=True)
     else:
         dev_batcher = SequenceBatcher(arguments.dev_size,
-                                      dev_arg_id,
-                                      dev_pred_id,
+                                      dev_args,
+                                      dev_preds,
                                       dev_label,
                                       dev_prop,
                                       dev_word_pos,
@@ -312,8 +312,6 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                 t_mode = add_null(t_mode, mode_indexer.get_null_id())
 
             # output shape: Batch, Sentence_length, 1
-            t_args = torch.from_numpy(t_args).long().to(device)
-            t_preds = torch.from_numpy(t_preds).long().to(device)
             t_word_pos = torch.from_numpy(t_word_pos).long().to(device)
             t_ku_pos = torch.from_numpy(t_ku_pos).long().to(device)
             t_mode = torch.from_numpy(t_mode).long().to(device)
@@ -375,8 +373,6 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                         d_mode = add_null(d_mode, mode_indexer.get_null_id())
 
                     # output shape: Batch, Sentence_length
-                    d_args = torch.from_numpy(d_args).long().to(device)
-                    d_preds = torch.from_numpy(d_preds).long().to(device)
                     d_word_pos = torch.from_numpy(d_word_pos).long().to(device)
                     d_ku_pos = torch.from_numpy(d_ku_pos).long().to(device)
                     d_mode = torch.from_numpy(d_mode).long().to(device)
