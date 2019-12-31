@@ -165,6 +165,16 @@ class BertSequencePointingModel(Model):
 
         return output_ga, output_ni, output_wo
 
+    def load_weights(self, path):
+        path = str(path.resolve())
+        if '.h5' in path:
+            path = path.replace('.h5', '')
+        state_dict = torch.load(path + '.h5')
+        self.load_state_dict(state_dict)
+        state_dict = torch.load(path + '_bert.h5')
+        self.word_embeddings.load_state_dict(state_dict)
+
+
 
 if __name__ == "__main__":
     model = BertSequencePointingModel()

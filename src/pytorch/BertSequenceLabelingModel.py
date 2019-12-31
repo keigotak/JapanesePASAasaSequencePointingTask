@@ -148,6 +148,7 @@ class BertSequenceLabelingModel(Model):
         return tag_space
 
     def load_weights(self, path):
+        path = str(path.resolve())
         if '.h5' in path:
             path = path.replace('.h5', '')
         state_dict = torch.load(path + '.h5')
