@@ -16,6 +16,7 @@ class ElmoSequencePointingModel(Model):
                  embedding_dim=32,
                  pos_embedding_dim=10,
                  mode_embedding_dim=2,
+                 word_pos_pred_idx=0,
                  vocab_padding_idx=-1,
                  word_pos_padding_idx=-1,
                  ku_pos_padding_idx=-1,
@@ -50,6 +51,8 @@ class ElmoSequencePointingModel(Model):
         self.ku_pos_embedding = nn.Embedding(ku_pos_size, self.pos_embedding_dim, padding_idx=ku_pos_padding_idx)
         self.mode_embedding_dim = mode_embedding_dim
         self.mode_embedding = nn.Embedding(mode_size, self.mode_embedding_dim, padding_idx=mode_padding_idx)
+
+        self.word_pos_pred_idx = word_pos_pred_idx
 
         self.hidden_size = 2 * self.embedding_dim + 2 * self.pos_embedding_dim + self.mode_embedding_dim
         self.num_layers = num_layers
