@@ -41,8 +41,6 @@ def save_sample(_filename, _data, with_bccwj=False):
         path_to_data = Path('../../data/NTC_dataset').joinpath(_filename)
     with path_to_data.open(mode='w', encoding='utf-8') as f:
         for items in _data:
-            if items[6] == 101:
-                break
             f.write(', '.join(map(str, items)))
             f.write('\n')
 
@@ -264,9 +262,9 @@ if __name__ == '__main__':
         raw_data = load_data('raw_' + tag + '.pkl', with_bccwj=with_bccwj)
         # raw_data = load_data('train/train_event_noun.pkl')
 
-        print('counting')
-        freq_of_words = count_words(raw_data)
-        save_data('counted_' + tag + '.pkl', freq_of_words, with_bccwj=with_bccwj)
+        # print('counting')
+        # freq_of_words = count_words(raw_data)
+        # save_data('counted_' + tag + '.pkl', freq_of_words, with_bccwj=with_bccwj)
 
         print('enlisting')
         listed_data = enlist_feature_and_label_rework(raw_data, ignore_length=None)
@@ -278,13 +276,13 @@ if __name__ == '__main__':
         # save_data('bert_listed_' + tag + '.pkl', listed_data)
         # save_sample('bert_listed_' + tag + '.txt', listed_data)
 
-        property_data = enlist_property(listed_data)
-        save_data('property_' + tag + '.pkl', property_data, with_bccwj=with_bccwj)
-
-        keys = freq_of_words.keys()
-        key_ids = freeze_keys(keys)
-        save_data('key_ids_' + tag + '.pkl', key_ids, with_bccwj=with_bccwj)
-
-        print('set id')
-        ided_data = one_hot_ids(listed_data, key_ids)
-        save_data('ided_' + tag + '.pkl', ided_data, with_bccwj=with_bccwj)
+        # property_data = enlist_property(listed_data)
+        # save_data('property_' + tag + '.pkl', property_data, with_bccwj=with_bccwj)
+        #
+        # keys = freq_of_words.keys()
+        # key_ids = freeze_keys(keys)
+        # save_data('key_ids_' + tag + '.pkl', key_ids, with_bccwj=with_bccwj)
+        #
+        # print('set id')
+        # ided_data = one_hot_ids(listed_data, key_ids)
+        # save_data('ided_' + tag + '.pkl', ided_data, with_bccwj=with_bccwj)
