@@ -199,6 +199,8 @@ class ElmoModel:
         else:
             root_path = Path('../../data/elmo')
             self.embedding = Embedder(root_path)
+            if device != 'cpu':
+                self.embedding.use_cuda = True
             self.embedding_dim = self.embedding.config['encoder']['projection_dim'] * 2
 
     def get_word_embedding(self, batch_words):
@@ -216,7 +218,9 @@ class ElmoModel:
     def get_pred_embedding(self, batch_arg_embedding, batch_word_pos, word_pos_pred_idx):
         preds = []
         for arg, word_pos in zip(batch_arg_embedding, batch_word_pos):
-            pred_pos = word_pos.tolist().index(word_pos_pred_idx)
+            if type(word_pos) != list:
+                word_pos = word_pos.tolist()
+            pred_pos = word_pos.index(word_pos_pred_idx)
             pred_vec = arg[pred_pos].tolist()
             preds.append([pred_vec for _ in range(len(arg))])
         preds = torch.tensor(preds)
