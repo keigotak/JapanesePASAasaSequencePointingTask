@@ -169,9 +169,9 @@ class BertSequencePointingModel(Model):
         path = str(path.resolve())
         if '.h5' in path:
             path = path.replace('.h5', '')
-        state_dict = torch.load(path + '.h5')
+        state_dict = torch.load(path + '.h5', map_location='cpu')
         self.load_state_dict(state_dict)
-        state_dict = torch.load(path + '_bert.h5')
+        state_dict = torch.load(path + '_bert.h5', map_location='cpu')
         self.word_embeddings.load_state_dict(state_dict)
 
 
