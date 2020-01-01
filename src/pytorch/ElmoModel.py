@@ -1,4 +1,7 @@
 from pathlib import Path
+import logging
+logging.basicConfig(level=logging.FATAL,
+                    format='%(asctime)-15s %(levelname)s: %(message)s')
 
 import numpy as np
 import torch
