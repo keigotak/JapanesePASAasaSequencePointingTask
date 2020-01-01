@@ -207,6 +207,7 @@ class ElmoModel:
                 self.embedding.model.use_cuda = True
                 self.embedding.model.encoder.use_cuda = True
                 self.embedding.model.token_embedder.use_cuda = True
+                self.embedding.model.to(device)
             self.embedding_dim = self.embedding.config['encoder']['projection_dim'] * 2
 
     def get_word_embedding(self, batch_words):
@@ -237,7 +238,7 @@ class ElmoModel:
 
 
 if __name__ == "__main__":
-    model = ElmoModel(device='cpu', with_train=False)
+    model = ElmoModel(device='0', with_train=False)
     sentences = np.array([["猫", "が", "好き", "です", "。", "　", "[PAD]"], ["私", "の", "父", "は", "カモ", "です", "。"], ["友人", "は", "ウサギ", "が", "好き", "です", "。"]])
     pos = [[3, 2, 1, 0, 1, 2, 3], [5, 4, 3, 2, 1, 0, 1], [5, 4, 3, 2, 1, 0, 1]]
     pred_idx = 0
