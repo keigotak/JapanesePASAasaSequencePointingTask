@@ -1,16 +1,10 @@
 import subprocess
-import shlex
 import os
 from concurrent import futures
-import time
 
-env = os.environ.copy()
-env["PATH"] = "/usr/bin:/usr/local/bin/:" + env['PATH']
-
-device = "2"
+device = "1"
 if device != 'cpu':
-    subprocess.call(['export', 'CUDA_VISIBLE_DEVICES={}'.format(device)])
-
+    os.environ["CUDA_VISIBLE_DEVICES"] = device
 
 base_list = ["--model", "elmosl", "--epochs", "20", "--max_eval", "38", "--embed", "glove-retrofitting", "--earlystop", "5", "--save_model", "--spreadsheet", "--line"]
 processes = [
