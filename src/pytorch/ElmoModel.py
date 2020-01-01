@@ -201,6 +201,9 @@ class ElmoModel:
             self.embedding = Embedder(root_path)
             if device != 'cpu':
                 self.embedding.use_cuda = True
+                self.embedding.model.use_cuda = True
+                self.embedding.model.encoder.use_cuda = True
+                self.embedding.model.token_embedder.use_cuda = True
             self.embedding_dim = self.embedding.config['encoder']['projection_dim'] * 2
 
     def get_word_embedding(self, batch_words):
