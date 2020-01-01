@@ -16,6 +16,7 @@ processes = [
 ]
 
 with futures.ProcessPoolExecutor(max_workers=2) as executor:
-    results = executor.map(subprocess.Popen, processes)
+    results = executor.map(subprocess.call, processes)
+
 
 print('completed.')
