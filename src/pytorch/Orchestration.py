@@ -12,7 +12,7 @@ device = arguments.device
 if device != 'cpu':
     os.environ["CUDA_VISIBLE_DEVICES"] = device
 
-base_list = ["--model", "bertsp",
+base_list = ["--model", "bertptr",
              "--epochs", "20",
              "--max_eval", "38",
              "--earlystop", "5",
