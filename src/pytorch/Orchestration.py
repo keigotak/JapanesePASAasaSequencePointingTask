@@ -40,7 +40,7 @@ processes = [
 
 ]
 
-with futures.ProcessPoolExecutor(max_workers=arguments.device) as executor:
+with futures.ProcessPoolExecutor(max_workers=arguments.num_worker) as executor:
     results = executor.map(subprocess.call, processes)
 
 print('completed.')
