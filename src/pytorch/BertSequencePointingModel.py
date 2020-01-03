@@ -4,6 +4,8 @@ import torch.nn as nn
 from Model import Model
 from BertWithJumanModel import BertWithJumanModel
 
+from collections import OrderedDict
+
 
 class BertSequencePointingModel(Model):
     def __init__(self, word_pos_size=20,
@@ -170,9 +172,12 @@ class BertSequencePointingModel(Model):
         if '.h5' in path:
             path = path.replace('.h5', '')
         state_dict = torch.load(path + '.h5', map_location='cpu')
+        state_dict_bert = torch.load(path + '_bert.h5', map_location='cpu')
+        modified_state_dict_bert = OrderedDict()
+        for k, v in state_dict_bert.items():
+            modified_state_dict_bert['word_embeddings.model.' + k] = v
+        state_dict.update(modified_state_dict_bert)
         self.load_state_dict(state_dict)
-        state_dict = torch.load(path + '_bert.h5', map_location='cpu')
-        self.word_embeddings.load_state_dict(state_dict)
 
 
 
