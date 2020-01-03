@@ -339,7 +339,7 @@ def eval(batch_size=1, null_weight=None, loss_weight=None):
                       + str_loss_weight\
                       + [arguments.init_checkpoint] \
                       + [gm.sha] \
-                      + [arguments.without_linear] \
+                      + [arguments.with_linear] \
                       + [num_params]\
                       + [arguments.decode]\
                       + [arguments.with_bccwj]
