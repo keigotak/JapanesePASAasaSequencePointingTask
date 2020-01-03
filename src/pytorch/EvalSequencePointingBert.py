@@ -270,7 +270,7 @@ def eval(batch_size=1, null_weight=None, loss_weight=None):
 
             _log_path = save_dir_base.joinpath('detaillog_{0}_{1:%Y%m%d-%H%M%S}.txt'.format(arguments.model, now))
             with _log_path.open(mode='a', encoding="utf-8") as f:
-                sentence = [vocab.id2word(item) for item in t_args[0]]
+                sentence = [item for item in t_args[0]]
                 sentence = ' '.join(sentence)
                 for arg, pred, prop, word_pos, ku_pos, mode, label, predict in zip(t_args[0], t_preds[0], t_props[0], t_word_pos[0], t_ku_pos[0], t_mode[0], t_labels[0], t_prediction[0]):
                     conflict = False
@@ -281,8 +281,8 @@ def eval(batch_size=1, null_weight=None, loss_weight=None):
                         predict = ret
                         conflict = True
                     _line = '{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}' \
-                        .format(vocab.id2word(arg),
-                                vocab.id2word(pred),
+                        .format(arg,
+                                pred,
                                 prop,
                                 word_pos_indexer.id2word(word_pos),
                                 ku_pos_indexer.id2word(ku_pos),
