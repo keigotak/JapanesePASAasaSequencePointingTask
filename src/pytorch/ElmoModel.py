@@ -224,8 +224,6 @@ class ElmoModel:
 
     def get_pred_embedding(self, batch_arg_embedding, batch_word_pos, word_pos_pred_idx):
         preds = []
-        print('{}, {}, {}'.format(len(batch_arg_embedding), len(batch_arg_embedding[0]), len(batch_arg_embedding[0][0])))
-        print('{}, {}, {}'.format(type(batch_arg_embedding), type(batch_arg_embedding[0]), type(batch_arg_embedding[0][0])))
         for arg, word_pos in zip(batch_arg_embedding, batch_word_pos):
             if type(word_pos) != list:
                 word_pos = word_pos.tolist()
