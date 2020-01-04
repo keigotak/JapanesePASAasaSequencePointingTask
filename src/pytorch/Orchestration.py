@@ -69,9 +69,9 @@ processes = [
     # + test_base_list + ["--init_checkpoint",
     #                     "../../results/pasa-bertptr-20191207-151354/model-0/epoch15-f0.8709.h5"],
     #
-    ["python", "EvalSequencePointingBert.py", "--device", device, "--decode", "no_decoder", "--model", "bertptr"]
-    + test_base_list + ["--init_checkpoint",
-                        "../../results/pasa-bertptr-20191214-092336/model-0/epoch11-f0.8702.h5"],
+    # ["python", "EvalSequencePointingBert.py", "--device", device, "--decode", "no_decoder", "--model", "bertptr"]
+    # + test_base_list + ["--init_checkpoint",
+    #                     "../../results/pasa-bertptr-20191214-092336/model-0/epoch11-f0.8702.h5"],
     # ["python", "EvalSequencePointingBert.py", "--device", device, "--decode", "no_decoder", "--model", "bertptr"]
     # + test_base_list + ["--init_checkpoint",
     #                     "../../results/pasa-bertptr-20191214-092353/model-0/epoch15-f0.8703.h5"],
@@ -103,19 +103,19 @@ processes = [
 
     ["python", "EvalSequenceLabeling.py", "--device", device, "--model", "lstm", "--with_bccwj",
      "--embed", "glove-retrofitting"] + test_base_list + [
-        "--init_checkpoint", "../../results/pasa-lstm-20191118-210943/model-0/epoch19-f0.7649.h5"],
+        "--init_checkpoint", "../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20191118-210943/model-0/epoch19-f0.7649.h5"],
     ["python", "EvalSequenceLabeling.py", "--device", device, "--model", "lstm", "--with_bccwj",
      "--embed", "glove-retrofitting"] + test_base_list + [
-        "--init_checkpoint", "../../results/pasa-lstm-20191120-014008/model-0/epoch17-f0.7646.h5"],
+        "--init_checkpoint", "../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20191120-014008/model-0/epoch17-f0.7646.h5"],
     ["python", "EvalSequenceLabeling.py", "--device", device, "--model", "lstm", "--with_bccwj",
      "--embed", "glove-retrofitting"] + test_base_list + [
-        "--init_checkpoint", "../../results/pasa-lstm-20191120-013713/model-0/epoch10-f0.7630.h5"],
+        "--init_checkpoint", "../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20191120-013713/model-0/epoch10-f0.7630.h5"],
     ["python", "EvalSequenceLabeling.py", "--device", device, "--model", "lstm", "--with_bccwj",
      "--embed", "glove-retrofitting"] + test_base_list + [
-        "--init_checkpoint", "../../results/pasa-lstm-20191120-013822/model-0/epoch19-f0.7686.h5"],
+        "--init_checkpoint", "../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20191120-013822/model-0/epoch19-f0.7686.h5"],
     ["python", "EvalSequenceLabeling.py", "--device", device, "--model", "lstm", "--with_bccwj",
      "--embed", "glove-retrofitting"] + test_base_list + [
-        "--init_checkpoint", "../../results/pasa-lstm-20191120-014216/model-0/epoch17-f0.7641.h5"]
+        "--init_checkpoint", "../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20191120-014216/model-0/epoch17-f0.7641.h5"]
     #
     # ["python", "EvalSequenceLabelingPointer.py", "--device", device, "--model", "pointer", "--with_bccwj",
     #  "--embed", "glove-retrofitting", "--decode", "global_argmax"] + test_base_list + [
