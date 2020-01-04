@@ -23,23 +23,23 @@ test_base_list = ["--spreadsheet",
                   "--save_output"]
 
 processes = [
-    ["python", "SequenceLabelingElmo.py", "--model", "elmosl", "--embed", "glove-retrofitting"] + train_base_list + ["--device", device, "--seed", "0"],
-    ["python", "SequenceLabelingElmo.py", "--model", "elmosl", "--embed", "glove-retrofitting"] + train_base_list + ["--device", device, "--seed", "1"],
-    ["python", "SequenceLabelingElmo.py", "--model", "elmosl", "--embed", "glove-retrofitting"] + train_base_list + ["--device", device, "--seed", "2"],
-    ["python", "SequenceLabelingElmo.py", "--model", "elmosl", "--embed", "glove-retrofitting"] + train_base_list + ["--device", device, "--seed", "3"],
-    ["python", "SequenceLabelingElmo.py", "--model", "elmosl", "--embed", "glove-retrofitting"] + train_base_list + ["--device", device, "--seed", "4"]
+    # ["python", "SequenceLabelingElmo.py", "--model", "elmosl"] + train_base_list + ["--device", device, "--seed", "0"],
+    # ["python", "SequenceLabelingElmo.py", "--model", "elmosl"] + train_base_list + ["--device", device, "--seed", "1"],
+    # ["python", "SequenceLabelingElmo.py", "--model", "elmosl"] + train_base_list + ["--device", device, "--seed", "2"],
+    # ["python", "SequenceLabelingElmo.py", "--model", "elmosl"] + train_base_list + ["--device", device, "--seed", "3"],
+    # ["python", "SequenceLabelingElmo.py", "--model", "elmosl"] + train_base_list + ["--device", device, "--seed", "4"]
 
-    # ["python", "SequencePointingBert.py", "--decode", "ordered"] + train_base_list + ["--device", device, "--seed", "0"],
-    # ["python", "SequencePointingBert.py", "--decode", "ordered"] + train_base_list + ["--device", device, "--seed", "1"],
-    # ["python", "SequencePointingBert.py", "--decode", "ordered"] + train_base_list + ["--device", device, "--seed", "2"],
-    # ["python", "SequencePointingBert.py", "--decode", "ordered"] + train_base_list + ["--device", device, "--seed", "3"],
-    # ["python", "SequencePointingBert.py", "--decode", "ordered"] + train_base_list + ["--device", device, "--seed", "4"],
+    # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "ordered"] + train_base_list + ["--device", device, "--seed", "0"],
+    # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "ordered"] + train_base_list + ["--device", device, "--seed", "1"],
+    # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "ordered"] + train_base_list + ["--device", device, "--seed", "2"],
+    # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "ordered"] + train_base_list + ["--device", device, "--seed", "3"],
+    # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "ordered"] + train_base_list + ["--device", device, "--seed", "4"],
     #
-    # ["python", "SequencePointingBert.py", "--decode", "global_argmax"] + train_base_list + ["--device", device, "--seed", "0"],
-    # ["python", "SequencePointingBert.py", "--decode", "global_argmax"] + train_base_list + ["--device", device, "--seed", "1"],
-    # ["python", "SequencePointingBert.py", "--decode", "global_argmax"] + train_base_list + ["--device", device, "--seed", "2"],
-    # ["python", "SequencePointingBert.py", "--decode", "global_argmax"] + train_base_list + ["--device", device, "--seed", "3"],
-    # ["python", "SequencePointingBert.py", "--decode", "global_argmax"] + train_base_list + ["--device", device, "--seed", "4"]
+    # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "global_argmax"] + train_base_list + ["--device", device, "--seed", "0"],
+    # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "global_argmax"] + train_base_list + ["--device", device, "--seed", "1"],
+    # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "global_argmax"] + train_base_list + ["--device", device, "--seed", "2"],
+    # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "global_argmax"] + train_base_list + ["--device", device, "--seed", "3"],
+    # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "global_argmax"] + train_base_list + ["--device", device, "--seed", "4"]
 
     # ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl"] + test_base_list + [
     #     "--init_checkpoint", "../../results/pasa-bertsl-20191207-150951/model-0/epoch14-f0.8620.h5"],
@@ -100,22 +100,22 @@ processes = [
     # + test_base_list + ["--init_checkpoint",
     #                     "../../results/pasa-bertptr-20191220-073648/model-0/epoch15-f0.8707.h5"]
 
-    # ["python", "EvalSequenceLabeling.py", "--device", device, "--model", "lstm", "--with_bccwj",
-    #  "--embed", "glove-retrofitting"] + test_base_list + [
-    #     "--init_checkpoint", "../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20191118-210943/model-0/epoch19-f0.7649.h5"],
-    # ["python", "EvalSequenceLabeling.py", "--device", device, "--model", "lstm", "--with_bccwj",
-    #  "--embed", "glove-retrofitting"] + test_base_list + [
-    #     "--init_checkpoint", "../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20191120-014008/model-0/epoch17-f0.7646.h5"],
-    # ["python", "EvalSequenceLabeling.py", "--device", device, "--model", "lstm", "--with_bccwj",
-    #  "--embed", "glove-retrofitting"] + test_base_list + [
-    #     "--init_checkpoint", "../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20191120-013713/model-0/epoch10-f0.7630.h5"],
-    # ["python", "EvalSequenceLabeling.py", "--device", device, "--model", "lstm", "--with_bccwj",
-    #  "--embed", "glove-retrofitting"] + test_base_list + [
-    #     "--init_checkpoint", "../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20191120-013822/model-0/epoch19-f0.7686.h5"],
-    # ["python", "EvalSequenceLabeling.py", "--device", device, "--model", "lstm", "--with_bccwj",
-    #  "--embed", "glove-retrofitting"] + test_base_list + [
-    #     "--init_checkpoint", "../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20191120-014216/model-0/epoch17-f0.7641.h5"]
-    #
+    ["python", "EvalSequenceLabeling.py", "--device", device, "--model", "lstm", "--with_bccwj",
+     "--embed", "glove-retrofitting"] + test_base_list + [
+        "--init_checkpoint", "../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20191118-210943/model-0/epoch19-f0.7649.h5"],
+    ["python", "EvalSequenceLabeling.py", "--device", device, "--model", "lstm", "--with_bccwj",
+     "--embed", "glove-retrofitting"] + test_base_list + [
+        "--init_checkpoint", "../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20191120-014008/model-0/epoch17-f0.7646.h5"],
+    ["python", "EvalSequenceLabeling.py", "--device", device, "--model", "lstm", "--with_bccwj",
+     "--embed", "glove-retrofitting"] + test_base_list + [
+        "--init_checkpoint", "../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20191120-013713/model-0/epoch10-f0.7630.h5"],
+    ["python", "EvalSequenceLabeling.py", "--device", device, "--model", "lstm", "--with_bccwj",
+     "--embed", "glove-retrofitting"] + test_base_list + [
+        "--init_checkpoint", "../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20191120-013822/model-0/epoch19-f0.7686.h5"],
+    ["python", "EvalSequenceLabeling.py", "--device", device, "--model", "lstm", "--with_bccwj",
+     "--embed", "glove-retrofitting"] + test_base_list + [
+        "--init_checkpoint", "../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20191120-014216/model-0/epoch17-f0.7641.h5"]
+
     # ["python", "EvalSequenceLabelingPointer.py", "--device", device, "--model", "pointer", "--with_bccwj",
     #  "--embed", "glove-retrofitting", "--decode", "global_argmax"] + test_base_list + [
     #     "--init_checkpoint", "../../results/pasa-pointer-20191222-091011/model-0/epoch11-f0.7589.h5"],
