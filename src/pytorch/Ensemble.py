@@ -306,7 +306,7 @@ if mode in tag_sl:
     print('[Seq]')
     print('All: {}, Dep: {}, Zero: {} / tp: {}, fp: {}, fn: {}'.format(all_score, dep_score, zero_score, num_tp, num_fp, num_fn))
     print(', '.join(map(str, f1s)))
-    print('{}, {}, {}, {}, {}, {}, {}, {}'.foramt(Decimal(str(all_score)).quantize(Decimal('0.0001'),
+    print('{}, {}, {}, {}, {}, {}, {}, {}'.format(Decimal(str(all_score)).quantize(Decimal('0.0001'),
                                                                                    rounding=ROUND_HALF_UP),
                                                   Decimal(str(dep_score)).quantize(Decimal('0.0001'),
                                                                                    rounding=ROUND_HALF_UP),
@@ -412,7 +412,7 @@ elif mode in tag_sp:
     print('All: {}, Dep: {}, Zero: {} / tp: {}, fp: {}, fn: {}'.format(all_score, dep_score, zero_score, num_tp, num_fp,
                                                                        num_fn))
     print(', '.join(map(str, f1s)))
-    print('{}, {}, {}, {}, {}, {}, {}, {}'.foramt(Decimal(str(all_score)).quantize(Decimal('0.0001'),
+    print('{}, {}, {}, {}, {}, {}, {}, {}'.format(Decimal(str(all_score)).quantize(Decimal('0.0001'),
                                                                                    rounding=ROUND_HALF_UP),
                                                   Decimal(str(dep_score)).quantize(Decimal('0.0001'),
                                                                                    rounding=ROUND_HALF_UP),
