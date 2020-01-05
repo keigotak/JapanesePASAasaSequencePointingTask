@@ -10,8 +10,8 @@ sys.path.append(os.pardir)
 from Decoders import get_restricted_prediction
 from utils.HelperFunctions import concat_labels
 from Validation import get_pr_numbers, get_f_score
+import argparse
 
-mode = 'sl_bccwj'
 
 tag_sl = ['sl_ntc', 'sl_bccwj', 'bertsl_ntc', 'bertsl_bccwj']
 tag_sp = ['sp_global_ntc', 'sp_local_ntc', 'sp_none_ntc',
@@ -19,6 +19,12 @@ tag_sp = ['sp_global_ntc', 'sp_local_ntc', 'sp_none_ntc',
           'bertsp_global_ntc', 'bertsp_local_ntc', 'bertsp_none_ntc',
           # 'bertsp_global_bccwj', 'bertsp_local_bccwj',
           'bertsp_none_bccwj']
+
+parser = argparse.ArgumentParser(description='PASA Ensamble')
+parser.add_argument('--mode', default=None, type=str, choices=tag_sl + tag_sp)
+arguments = parser.parse_args()
+
+mode = arguments.mode
 
 
 def get_sl_ntc():
