@@ -172,42 +172,42 @@ def get_sp_bccwj(mode="global"):
 def get_bertsp_ntc(mode="global"):
     items0, items1, items2, items3, items4 = [], [], [], [], []
     if mode == "global":
-        with Path("../../results/pasa-pointer-20200104-075003/ptr_20200104-075003_model-0_epoch16-f0.8703.h5.pkl").open(
+        with Path("../../results/pasa-bertptr-20200104-075003/ptr_20200104-075003_model-0_epoch16-f0.8703.h5.pkl").open(
             'rb') as f:
             items0 = pickle.load(f)
-        with Path("../../results/pasa-pointer-20200104-075003/ptr_20200104-075003_model-0_epoch15-f0.8707.h5.pkl").open(
+        with Path("../../results/pasa-bertptr-20200104-075003/ptr_20200104-075003_model-0_epoch15-f0.8707.h5.pkl").open(
             'rb') as f:
             items1 = pickle.load(f)
-        with Path("../../results/pasa-pointer-20200104-075002/ptr_20200104-075002_model-0_epoch15-f0.8719.h5.pkl").open(
+        with Path("../../results/pasa-bertptr-20200104-075002/ptr_20200104-075002_model-0_epoch15-f0.8719.h5.pkl").open(
             'rb') as f:
             items2 = pickle.load(f)
-        with Path("../../results/pasa-pointer-20200104-075003/ptr_20200104-075003_model-0_epoch11-f0.8709.h5.pkl").open(
+        with Path("../../results/pasa-bertptr-20200104-075003/ptr_20200104-075003_model-0_epoch11-f0.8709.h5.pkl").open(
             'rb') as f:
             items3 = pickle.load(f)
-        with Path("../../results/pasa-pointer-20200104-093240/ptr_20200104-093240_model-0_epoch15-f0.8709.h5.pkl").open(
+        with Path("../../results/pasa-bertptr-20200104-093240/ptr_20200104-093240_model-0_epoch15-f0.8709.h5.pkl").open(
             'rb') as f:
             items4 = pickle.load(f)
     elif mode == "local":
-        with Path("../../results/pasa-pointer-20200104-111614/ptr_20200104-111614_model-0_epoch11-f0.8710.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200104-111614/ptr_20200104-111614_model-0_epoch11-f0.8710.h5.pkl").open('rb') as f:
             items0 = pickle.load(f)
-        with Path("../../results/pasa-pointer-20200104-111812/ptr_20200104-111812_model-0_epoch15-f0.8705.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200104-111812/ptr_20200104-111812_model-0_epoch15-f0.8705.h5.pkl").open('rb') as f:
             items1 = pickle.load(f)
-        with Path("../../results/pasa-pointer-20200104-130215/ptr_20200104-130215_model-0_epoch15-f0.8718.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200104-130215/ptr_20200104-130215_model-0_epoch15-f0.8718.h5.pkl").open('rb') as f:
             items2 = pickle.load(f)
-        with Path("../../results/pasa-pointer-20200104-130233/ptr_20200104-130233_model-0_epoch13-f0.8701.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200104-130233/ptr_20200104-130233_model-0_epoch13-f0.8701.h5.pkl").open('rb') as f:
             items3 = pickle.load(f)
-        with Path("../../results/pasa-pointer-20200104-130251/ptr_20200104-130251_model-0_epoch15-f0.8707.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200104-130251/ptr_20200104-130251_model-0_epoch15-f0.8707.h5.pkl").open('rb') as f:
             items4 = pickle.load(f)
     elif mode == "none":
-        with Path("../../results/pasa-pointer-20200104-200900/ptr_20200104-200900_model-0_epoch11-f0.8702.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200104-200900/ptr_20200104-200900_model-0_epoch11-f0.8702.h5.pkl").open('rb') as f:
             items0 = pickle.load(f)
-        with Path("../../results/pasa-pointer-20200104-093250/ptr_20200104-093250_model-0_epoch15-f0.8703.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200104-093250/ptr_20200104-093250_model-0_epoch15-f0.8703.h5.pkl").open('rb') as f:
             items1 = pickle.load(f)
-        with Path("../../results/pasa-pointer-20200104-093509/ptr_20200104-093509_model-0_epoch19-f0.8718.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200104-093509/ptr_20200104-093509_model-0_epoch19-f0.8718.h5.pkl").open('rb') as f:
             items2 = pickle.load(f)
-        with Path("../../results/pasa-pointer-20200104-111557/ptr_20200104-111557_model-0_epoch13-f0.8698.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200104-111557/ptr_20200104-111557_model-0_epoch13-f0.8698.h5.pkl").open('rb') as f:
             items3 = pickle.load(f)
-        with Path("../../results/pasa-pointer-20200104-111556/ptr_20200104-111556_model-0_epoch12-f0.8706.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200104-111556/ptr_20200104-111556_model-0_epoch12-f0.8706.h5.pkl").open('rb') as f:
             items4 = pickle.load(f)
     return items0, items1, items2, items3, items4
 
@@ -215,42 +215,42 @@ def get_bertsp_ntc(mode="global"):
 def get_bertsp_bccwj(mode="global"):
     items0, items1, items2, items3, items4 = [], [], [], [], []
     # if mode == "global":
-    #     with Path("../../results/pasa-pointer-20200104-075003/ptr_20200104-075003_model-0_epoch16-f0.8703.h5.pkl").open(
+    #     with Path("../../results/pasa-bertptr-20200104-075003/ptr_20200104-075003_model-0_epoch16-f0.8703.h5.pkl").open(
     #         'rb') as f:
     #         items0 = pickle.load(f)
-    #     with Path("../../results/pasa-pointer-20200104-075003/ptr_20200104-075003_model-0_epoch15-f0.8707.h5.pkl").open(
+    #     with Path("../../results/pasa-bertptr-20200104-075003/ptr_20200104-075003_model-0_epoch15-f0.8707.h5.pkl").open(
     #         'rb') as f:
     #         items1 = pickle.load(f)
-    #     with Path("../../results/pasa-pointer-20200104-075002/ptr_20200104-075002_model-0_epoch15-f0.8719.h5.pkl").open(
+    #     with Path("../../results/pasa-bertptr-20200104-075002/ptr_20200104-075002_model-0_epoch15-f0.8719.h5.pkl").open(
     #         'rb') as f:
     #         items2 = pickle.load(f)
-    #     with Path("../../results/pasa-pointer-20200104-075003/ptr_20200104-075003_model-0_epoch11-f0.8709.h5.pkl").open(
+    #     with Path("../../results/pasa-bertptr-20200104-075003/ptr_20200104-075003_model-0_epoch11-f0.8709.h5.pkl").open(
     #         'rb') as f:
     #         items3 = pickle.load(f)
-    #     with Path("../../results/pasa-pointer-20200104-093240/ptr_20200104-093240_model-0_epoch15-f0.8709.h5.pkl").open(
+    #     with Path("../../results/pasa-bertptr-20200104-093240/ptr_20200104-093240_model-0_epoch15-f0.8709.h5.pkl").open(
     #         'rb') as f:
     #         items4 = pickle.load(f)
     # elif mode == "local":
-    #     with Path("../../results/pasa-pointer-20200104-111614/ptr_20200104-111614_model-0_epoch11-f0.8710.h5.pkl").open('rb') as f:
+    #     with Path("../../results/pasa-bertptr-20200104-111614/ptr_20200104-111614_model-0_epoch11-f0.8710.h5.pkl").open('rb') as f:
     #         items0 = pickle.load(f)
-    #     with Path("../../results/pasa-pointer-20200104-111812/ptr_20200104-111812_model-0_epoch15-f0.8705.h5.pkl").open('rb') as f:
+    #     with Path("../../results/pasa-bertptr-20200104-111812/ptr_20200104-111812_model-0_epoch15-f0.8705.h5.pkl").open('rb') as f:
     #         items1 = pickle.load(f)
-    #     with Path("../../results/pasa-pointer-20200104-130215/ptr_20200104-130215_model-0_epoch15-f0.8718.h5.pkl").open('rb') as f:
+    #     with Path("../../results/pasa-bertptr-20200104-130215/ptr_20200104-130215_model-0_epoch15-f0.8718.h5.pkl").open('rb') as f:
     #         items2 = pickle.load(f)
-    #     with Path("../../results/pasa-pointer-20200104-130233/ptr_20200104-130233_model-0_epoch13-f0.8701.h5.pkl").open('rb') as f:
+    #     with Path("../../results/pasa-bertptr-20200104-130233/ptr_20200104-130233_model-0_epoch13-f0.8701.h5.pkl").open('rb') as f:
     #         items3 = pickle.load(f)
-    #     with Path("../../results/pasa-pointer-20200104-130251/ptr_20200104-130251_model-0_epoch15-f0.8707.h5.pkl").open('rb') as f:
+    #     with Path("../../results/pasa-bertptr-20200104-130251/ptr_20200104-130251_model-0_epoch15-f0.8707.h5.pkl").open('rb') as f:
     #         items4 = pickle.load(f)
     if mode == "none":
-        with Path("../../results/pasa-pointer-20200104-165547/ptr_20200104-165547_model-0_epoch16-f0.7924.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200104-165547/ptr_20200104-165547_model-0_epoch16-f0.7924.h5.pkl").open('rb') as f:
             items0 = pickle.load(f)
-        with Path("../../results/pasa-pointer-20200104-170518/ptr_20200104-170518_model-0_epoch17-f0.7922.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200104-170518/ptr_20200104-170518_model-0_epoch17-f0.7922.h5.pkl").open('rb') as f:
             items1 = pickle.load(f)
-        with Path("../../results/pasa-pointer-20200104-171529/ptr_20200104-171529_model-0_epoch12-f0.7936.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200104-171529/ptr_20200104-171529_model-0_epoch12-f0.7936.h5.pkl").open('rb') as f:
             items2 = pickle.load(f)
-        with Path("../../results/pasa-pointer-20200104-172439/ptr_20200104-172439_model-0_epoch16-f0.7945.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200104-172439/ptr_20200104-172439_model-0_epoch16-f0.7945.h5.pkl").open('rb') as f:
             items3 = pickle.load(f)
-        with Path("../../results/pasa-pointer-20200104-172634/ptr_20200104-172634_model-0_epoch14-f0.7937.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200104-172634/ptr_20200104-172634_model-0_epoch14-f0.7937.h5.pkl").open('rb') as f:
             items4 = pickle.load(f)
     return items0, items1, items2, items3, items4
 
@@ -409,6 +409,10 @@ All: 0.8579037473844398, Dep: 0.9177940839257052, Zero: 0.5664062499999999 / tp:
 All: 0.8582670943885211, Dep: 0.9177175343876987, Zero: 0.5714285714285715 / tp: [13108  9058  1886  2728   358    18], fp: [1108  292  397 1690  282   30], fn: [1192  531  793 2036  425  193]
 0.9193435264412961, 0.9565446961296794, 0.7601773478436115, 0.5942060553256371, 0.5031623330990864, 0.13899613899613902
 
+* bccwj
+[Seq]
+All: 0.7836949375410914, Dep: 0.8370541611624835, Zero: 0.5241002570694088 / tp: [6505 4388 1780 1359  231   41], fp: [910 752 512 695 222  96], fn: [1432  863  465 1330  401  218]
+0.8474465867639397, 0.8445770378211913, 0.7846594666078908, 0.573055028462998, 0.42580645161290326, 0.2070707070707071
 
 
 '''
