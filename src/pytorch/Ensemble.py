@@ -306,7 +306,7 @@ if mode in tag_sl:
     print('[Seq]')
     print('All: {}, Dep: {}, Zero: {} / tp: {}, fp: {}, fn: {}'.format(all_score, dep_score, zero_score, num_tp, num_fp, num_fn))
     print(', '.join(map(str, f1s)))
-    print('{}, {}, {}, {}, {}, {}, {}, {}'.format(Decimal(str(all_score)).quantize(Decimal('0.0001'),
+    print('{}, {}, {}, {}, {}, {}, {}, {}, {}'.format(Decimal(str(all_score)).quantize(Decimal('0.0001'),
                                                                                    rounding=ROUND_HALF_UP),
                                                   Decimal(str(dep_score)).quantize(Decimal('0.0001'),
                                                                                    rounding=ROUND_HALF_UP),
@@ -321,6 +321,8 @@ if mode in tag_sl:
                                                   Decimal(str(f1s[3])).quantize(Decimal('0.0001'),
                                                                                    rounding=ROUND_HALF_UP),
                                                   Decimal(str(f1s[4])).quantize(Decimal('0.0001'),
+                                                                                rounding=ROUND_HALF_UP),
+                                                  Decimal(str(f1s[5])).quantize(Decimal('0.0001'),
                                                                                 rounding=ROUND_HALF_UP)
                                                   ))
 
@@ -412,7 +414,7 @@ elif mode in tag_sp:
     print('All: {}, Dep: {}, Zero: {} / tp: {}, fp: {}, fn: {}'.format(all_score, dep_score, zero_score, num_tp, num_fp,
                                                                        num_fn))
     print(', '.join(map(str, f1s)))
-    print('{}, {}, {}, {}, {}, {}, {}, {}'.format(Decimal(str(all_score)).quantize(Decimal('0.0001'),
+    print('{}, {}, {}, {}, {}, {}, {}, {}, {}'.format(Decimal(str(all_score)).quantize(Decimal('0.0001'),
                                                                                    rounding=ROUND_HALF_UP),
                                                   Decimal(str(dep_score)).quantize(Decimal('0.0001'),
                                                                                    rounding=ROUND_HALF_UP),
@@ -427,6 +429,8 @@ elif mode in tag_sp:
                                                   Decimal(str(f1s[3])).quantize(Decimal('0.0001'),
                                                                                    rounding=ROUND_HALF_UP),
                                                   Decimal(str(f1s[4])).quantize(Decimal('0.0001'),
+                                                                                rounding=ROUND_HALF_UP),
+                                                  Decimal(str(f1s[5])).quantize(Decimal('0.0001'),
                                                                                 rounding=ROUND_HALF_UP)
                                                   ))
 
@@ -452,6 +456,7 @@ All: 0.8582670943885211, Dep: 0.9177175343876987, Zero: 0.5714285714285715 / tp:
 [bertsl]
 All: 0.8746221662468513, Dep: 0.9261248268402376, Zero: 0.623856601681604 / tp: [13320  9157  1925  2938   409    29], fp: [ 897  244  586 1409  227   53], fn: [ 980  432  754 1826  374  182]
 0.934179612161167, 0.9644023170089521, 0.7418111753371869, 0.6449346943255405, 0.5764622973925301, 0.19795221843003416
+0.8746, 0.9261, 0.9342, 0.9644, 0.7418, 0.6239, 0.6449, 0.5765
 
 [bertsp global_argmax]
 All: 0.8788624038340269, Dep: 0.9292825462090496, Zero: 0.6358381502890174 / tp: [13320  9154  1935  3022   415    28], fp: [ 869  247  440 1395  245   36], fn: [ 980  435  744 1742  368  183]
@@ -470,6 +475,7 @@ All: 0.8794243607507243, Dep: 0.9296412598724902, Zero: 0.6388255676119267 / tp:
 [sl]
 All: 0.7836949375410914, Dep: 0.8370541611624835, Zero: 0.5241002570694088 / tp: [6505 4388 1780 1359  231   41], fp: [910 752 512 695 222  96], fn: [1432  863  465 1330  401  218]
 0.8474465867639397, 0.8445770378211913, 0.7846594666078908, 0.573055028462998, 0.42580645161290326, 0.2070707070707071
+0.7837, 0.8371, 0.8474, 0.8446, 0.7847, 0.5241, 0.5731, 0.4258
 
 [sp global_argmax]
 All: 0.7801530459410148, Dep: 0.8359683794466404, Zero: 0.5137556987894984 / tp: [6603 4372 1715 1374  231   29], fp: [1051  758  428  824  262   61], fn: [1334  879  530 1315  401  230]
