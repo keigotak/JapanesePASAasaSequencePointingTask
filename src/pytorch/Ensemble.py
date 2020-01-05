@@ -309,29 +309,29 @@ if mode in tag_sl:
 elif mode in tag_sp:
     items0, items1, items2, items3, items4 = [], [], [], [], []
     if mode == 'sp_global_ntc':
-        item0, item1, item2, item3, item4 = get_sp_ntc(mode='global')
+        items0, items1, items2, items3, items4 = get_sp_ntc(mode='global')
     elif mode == 'sp_local_ntc':
-        item0, item1, item2, item3, item4 = get_sp_ntc(mode='local')
+        items0, items1, items2, items3, items4 = get_sp_ntc(mode='local')
     elif mode == 'sp_none_ntc':
-        item0, item1, item2, item3, item4 = get_sp_ntc(mode='none')
+        items0, items1, items2, items3, items4 = get_sp_ntc(mode='none')
     elif mode == 'sp_global_bccwj':
-        item0, item1, item2, item3, item4 = get_sp_bccwj(mode='global')
+        items0, items1, items2, items3, items4 = get_sp_bccwj(mode='global')
     elif mode == 'sp_local_bccwj':
-        item0, item1, item2, item3, item4 = get_sp_bccwj(mode='local')
+        items0, items1, items2, items3, items4 = get_sp_bccwj(mode='local')
     elif mode == 'sp_none_bccwj':
-        item0, item1, item2, item3, item4 = get_sp_bccwj(mode='none')
+        items0, items1, items2, items3, items4 = get_sp_bccwj(mode='none')
     elif mode == 'bertsp_global_ntc':
-        item0, item1, item2, item3, item4 = get_bertsp_ntc(mode='global')
+        items0, items1, items2, items3, items4 = get_bertsp_ntc(mode='global')
     elif mode == 'bertsp_local_ntc':
-        item0, item1, item2, item3, item4 = get_bertsp_ntc(mode='local')
+        items0, items1, items2, items3, items4 = get_bertsp_ntc(mode='local')
     elif mode == 'bertsp_none_ntc':
-        item0, item1, item2, item3, item4 = get_bertsp_ntc(mode='none')
+        items0, items1, items2, items3, items4 = get_bertsp_ntc(mode='none')
     elif mode == 'bertsp_global_bccwj':
-        item0, item1, item2, item3, item4 = get_bertsp_bccwj(mode='global')
+        items0, items1, items2, items3, items4 = get_bertsp_bccwj(mode='global')
     elif mode == 'bertsp_local_bccwj':
-        item0, item1, item2, item3, item4 = get_bertsp_bccwj(mode='local')
+        items0, items1, items2, items3, items4 = get_bertsp_bccwj(mode='local')
     elif mode == 'bertsp_none_bccwj':
-        item0, item1, item2, item3, item4 = get_bertsp_bccwj(mode='none')
+        items0, items1, items2, items3, items4 = get_bertsp_bccwj(mode='none')
 
     num_tp = np.array([0] * 6)
     num_fp = np.array([0] * 6)
@@ -409,10 +409,18 @@ All: 0.8579037473844398, Dep: 0.9177940839257052, Zero: 0.5664062499999999 / tp:
 All: 0.8582670943885211, Dep: 0.9177175343876987, Zero: 0.5714285714285715 / tp: [13108  9058  1886  2728   358    18], fp: [1108  292  397 1690  282   30], fn: [1192  531  793 2036  425  193]
 0.9193435264412961, 0.9565446961296794, 0.7601773478436115, 0.5942060553256371, 0.5031623330990864, 0.13899613899613902
 
+[bertsl]
+All: 0.8746221662468513, Dep: 0.9261248268402376, Zero: 0.623856601681604 / tp: [13320  9157  1925  2938   409    29], fp: [ 897  244  586 1409  227   53], fn: [ 980  432  754 1826  374  182]
+0.934179612161167, 0.9644023170089521, 0.7418111753371869, 0.6449346943255405, 0.5764622973925301, 0.19795221843003416
+
 * bccwj
-[Seq]
+[sl]
 All: 0.7836949375410914, Dep: 0.8370541611624835, Zero: 0.5241002570694088 / tp: [6505 4388 1780 1359  231   41], fp: [910 752 512 695 222  96], fn: [1432  863  465 1330  401  218]
 0.8474465867639397, 0.8445770378211913, 0.7846594666078908, 0.573055028462998, 0.42580645161290326, 0.2070707070707071
+
+[bertsl]
+All: 0.8118676510801204, Dep: 0.8576707357307819, Zero: 0.5900958466453674 / tp: [6784 4438 1776 1515  288   44], fp: [898 616 393 630 178  45], fn: [1140  804  463 1156  342  215]
+0.8694092015891324, 0.8620823620823622, 0.8058076225045372, 0.6291528239202657, 0.5255474452554746, 0.25287356321839083
 
 
 '''
