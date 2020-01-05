@@ -2,6 +2,7 @@ from pathlib import Path
 import pickle
 import numpy as np
 import torch
+from decimal import Decimal, ROUND_HALF_UP
 
 import sys
 sys.path.append('../')
@@ -305,6 +306,23 @@ if mode in tag_sl:
     print('[Seq]')
     print('All: {}, Dep: {}, Zero: {} / tp: {}, fp: {}, fn: {}'.format(all_score, dep_score, zero_score, num_tp, num_fp, num_fn))
     print(', '.join(map(str, f1s)))
+    print('{}, {}, {}, {}, {}, {}, {}, {}'.foramt(Decimal(str(all_score)).quantize(Decimal('0.0001'),
+                                                                                   rounding=ROUND_HALF_UP),
+                                                  Decimal(str(dep_score)).quantize(Decimal('0.0001'),
+                                                                                   rounding=ROUND_HALF_UP),
+                                                  Decimal(str(f1s[0])).quantize(Decimal('0.0001'),
+                                                                                   rounding=ROUND_HALF_UP),
+                                                  Decimal(str(f1s[1])).quantize(Decimal('0.0001'),
+                                                                                   rounding=ROUND_HALF_UP),
+                                                  Decimal(str(f1s[2])).quantize(Decimal('0.0001'),
+                                                                                   rounding=ROUND_HALF_UP),
+                                                  Decimal(str(zero_score)).quantize(Decimal('0.0001'),
+                                                                                   rounding=ROUND_HALF_UP),
+                                                  Decimal(str(f1s[3])).quantize(Decimal('0.0001'),
+                                                                                   rounding=ROUND_HALF_UP),
+                                                  Decimal(str(f1s[4])).quantize(Decimal('0.0001'),
+                                                                                rounding=ROUND_HALF_UP)
+                                                  ))
 
 elif mode in tag_sp:
     items0, items1, items2, items3, items4 = [], [], [], [], []
@@ -394,6 +412,23 @@ elif mode in tag_sp:
     print('All: {}, Dep: {}, Zero: {} / tp: {}, fp: {}, fn: {}'.format(all_score, dep_score, zero_score, num_tp, num_fp,
                                                                        num_fn))
     print(', '.join(map(str, f1s)))
+    print('{}, {}, {}, {}, {}, {}, {}, {}'.foramt(Decimal(str(all_score)).quantize(Decimal('0.0001'),
+                                                                                   rounding=ROUND_HALF_UP),
+                                                  Decimal(str(dep_score)).quantize(Decimal('0.0001'),
+                                                                                   rounding=ROUND_HALF_UP),
+                                                  Decimal(str(f1s[0])).quantize(Decimal('0.0001'),
+                                                                                   rounding=ROUND_HALF_UP),
+                                                  Decimal(str(f1s[1])).quantize(Decimal('0.0001'),
+                                                                                   rounding=ROUND_HALF_UP),
+                                                  Decimal(str(f1s[2])).quantize(Decimal('0.0001'),
+                                                                                   rounding=ROUND_HALF_UP),
+                                                  Decimal(str(zero_score)).quantize(Decimal('0.0001'),
+                                                                                   rounding=ROUND_HALF_UP),
+                                                  Decimal(str(f1s[3])).quantize(Decimal('0.0001'),
+                                                                                   rounding=ROUND_HALF_UP),
+                                                  Decimal(str(f1s[4])).quantize(Decimal('0.0001'),
+                                                                                rounding=ROUND_HALF_UP)
+                                                  ))
 
 
 '''
