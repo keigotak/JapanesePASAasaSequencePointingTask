@@ -31,13 +31,14 @@ def main():
     test_label, test_args, test_preds, test_prop, test_vocab, test_word_pos, test_ku_pos, test_modes, test_word_pos_id, test_ku_pos_id, test_modes_id = get_datasets_in_sentences(
         TEST, with_bccwj=arguments.with_bccwj, with_bert=False)
 
-    model = ElmoModel(device=device, elmo_with="allennlp")
-    embeddings = {}
-    for args in [train_args, dev_args, test_args]:
-        sents = [''.join(arg.tolist()) for arg in args.tolist()]
-        for sent, words in zip(sents, args):
-            if sent not in embeddings.keys():
-                embeddings[sent] = model.get_word_embedding(words)
+    with torch.no_grad():
+        model = ElmoModel(device=device, elmo_with="allennlp")
+        embeddings = {}
+        for args in [train_args, dev_args, test_args]:
+            sents = [''.join(arg.tolist()) for arg in args.tolist()]
+            for sent, words in zip(sents, args):
+                if sent not in embeddings.keys():
+                    embeddings[sent] = model.get_word_embedding(words)
     with Path('../../data/elmo.pkl').open('wb') as f:
         pickle.dump(embeddings, f)
 
