@@ -7,7 +7,7 @@ import sys
 sys.path.append('../')
 import os
 sys.path.append(os.pardir)
-from Decoders import get_restricted_prediction
+from Decoders import get_restricted_prediction, get_no_decode_prediction, get_ordered_prediction
 from utils.HelperFunctions import concat_labels
 from Validation import get_pr_numbers, get_f_score
 import argparse
@@ -348,7 +348,12 @@ elif mode in tag_sp:
         sum_ni = torch.Tensor([sum_ni.tolist()])
         sum_wo = torch.Tensor([sum_wo.tolist()])
 
-        ga_prediction, ni_prediction, wo_prediction = get_restricted_prediction(sum_ga, sum_ni, sum_wo)
+        if 'global' in mode:
+            ga_prediction, ni_prediction, wo_prediction = get_restricted_prediction(sum_ga, sum_ni, sum_wo)
+        elif 'local' in mode:
+            ga_prediction, ni_prediction, wo_prediction = get_ordered_prediction(sum_ga, sum_ni, sum_wo)
+        else:
+            ga_prediction, ni_prediction, wo_prediction = get_no_decode_prediction(sum_ga, sum_ni, sum_wo)
         s_size = sum_ga.shape[1]
         ga_prediction = np.identity(s_size)[ga_prediction].astype(np.int64)
         ni_prediction = np.identity(s_size)[ni_prediction].astype(np.int64)
