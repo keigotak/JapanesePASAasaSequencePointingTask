@@ -185,13 +185,14 @@ class CustomELMoTokenCharactersIndexer(TokenIndexer[List[int]]):
 
 class ElmoModel:
     def __init__(self, device='cpu', elmo_with="allennlp"):
+        self.device = device
         self.elmo_with = elmo_with
         if self.elmo_with == "allennlp":
             root_path = Path('../../data/elmo/converted')
             option_file = root_path / 'allennlp_config.json'
             weight_file = root_path / 'allennlp_elmo.hdf5'
             self.num_output_representations = 2
-            self.embedding = Elmo(option_file, weight_file, num_output_representations=self.num_output_representations)
+            self.embedding = Elmo(option_file, weight_file, num_output_representations=self.num_output_representations).to(device)
             self.embedding_dim = 1024 * self.num_output_representations
 
             with open('../../data/elmo/converted/char_for_allennlp.dic') as f:
@@ -202,7 +203,13 @@ class ElmoModel:
         else:
             root_path = Path('../../data/elmo')
             self.embedding = Embedder(root_path)
-            if device != 'cpu':
+            if str(device) == 'cpu':
+                self.embedding.use_cuda = False
+                self.embedding.model.use_cuda = False
+                self.embedding.model.encoder.use_cuda = False
+                self.embedding.model.token_embedder.use_cuda = False
+                self.embedding.model.to(device)
+            else:
                 self.embedding.use_cuda = True
                 self.embedding.model.use_cuda = True
                 self.embedding.model.encoder.use_cuda = True
@@ -215,7 +222,7 @@ class ElmoModel:
         if self.elmo_with == "allennlp":
             for words in batch_words:
                 indexes = self.char_indexer.tokens_to_indices(words, self.vocab, "tokens")
-                embedding = self.embedding(torch.Tensor([indexes["tokens"]]).long())
+                embedding = self.embedding(torch.Tensor([indexes["tokens"]]).long().to(self.device))
                 rets.append(torch.cat((embedding['elmo_representations'][0], embedding['elmo_representations'][1]), dim=2)[0])
         else:
             rets = self.embedding.sents2elmo(batch_words)
