@@ -38,7 +38,7 @@ def main():
             sents = [''.join(arg.tolist()) for arg in args.tolist()]
             for sent, words in zip(sents, args):
                 if sent not in embeddings.keys():
-                    embeddings[sent] = model.get_word_embedding(words)
+                    embeddings[sent] = [vecs.tolist() for vecs in model.get_word_embedding(words)]
     with Path('../../data/elmo.pkl').open('wb') as f:
         pickle.dump(embeddings, f)
 
