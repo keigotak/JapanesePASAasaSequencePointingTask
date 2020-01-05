@@ -207,7 +207,7 @@ def get_bertsp_ntc(mode="global"):
             items2 = pickle.load(f)
         with Path("../../results/pasa-bertptr-20200104-111557/ptr_20200104-111557_model-0_epoch13-f0.8698.h5.pkl").open('rb') as f:
             items3 = pickle.load(f)
-        with Path("../../results/pasa-bertptr-20200104-111556/ptr_20200104-111556_model-0_epoch12-f0.8706.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200104-111556/ptr_20200104-111556_model-0_epoch15-f0.8706.h5.pkl").open('rb') as f:
             items4 = pickle.load(f)
     return items0, items1, items2, items3, items4
 
