@@ -29,15 +29,15 @@ mode = arguments.mode
 
 
 def get_sl_ntc():
-    with Path("../../../PhD/projects/180630_oomorisan_PASA/results/testresult_acl2019/seq/seq_20190427-110202_model-0_epoch19-f0.8438.h5.pkl").open('rb') as f:
+    with Path("../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20190427-110202/seq_20190427-110202_model-0_epoch19-f0.8438.h5.pkl").open('rb') as f:
         items0 = pickle.load(f)
-    with Path("../../../PhD/projects/180630_oomorisan_PASA/results/testresult_acl2019/seq/seq_20190427-110222_model-0_epoch19-f0.8438.h5.pkl").open('rb') as f:
+    with Path("../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20190427-110222/seq_20190427-110222_model-0_epoch19-f0.8438.h5.pkl").open('rb') as f:
         items1 = pickle.load(f)
-    with Path("../../../PhD/projects/180630_oomorisan_PASA/results/testresult_acl2019/seq/seq_20190427-110231_model-0_epoch19-f0.8465.h5.pkl").open('rb') as f:
+    with Path("../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20190427-110231/seq_20190427-110231_model-0_epoch19-f0.8465.h5.pkl").open('rb') as f:
         items2 = pickle.load(f)
-    with Path("../../../PhD/projects/180630_oomorisan_PASA/results/testresult_acl2019/seq/seq_20190427-110302_model-0_epoch17-f0.8473.h5.pkl").open('rb') as f:
+    with Path("../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20190427-110302/seq_20190427-110302_model-0_epoch17-f0.8473.h5.pkl").open('rb') as f:
         items3 = pickle.load(f)
-    with Path("../../../PhD/projects/180630_oomorisan_PASA/results/testresult_acl2019/seq/seq_20190427-110328_model-0_epoch18-f0.8455.h5.pkl").open('rb') as f:
+    with Path("../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20190427-110328/seq_20190427-110328_model-0_epoch18-f0.8455.h5.pkl").open('rb') as f:
         items4 = pickle.load(f)
     return items0, items1, items2, items3, items4
 
@@ -87,23 +87,23 @@ def get_bertsl_bccwj():
 def get_sp_ntc(mode="global"):
     items0, items1, items2, items3, items4 = [], [], [], [], []
     if mode == "global":
-        with Path("../../../PhD/projects/180630_oomorisan_PASA/results/testresult_acl2019/global_argmax/ptr_20190427-114739_model-0_epoch14-f0.8461.h5.pkl").open(
+        with Path("../../../PhD/projects/180630_oomorisan_PASA/results/pasa-pointer-20190427-114739/ptr_20190427-114739_model-0_epoch14-f0.8461.h5.pkl").open(
             'rb') as f:
             items0 = pickle.load(f)
-        with Path("../../../PhD/projects/180630_oomorisan_PASA/results/testresult_acl2019/global_argmax/ptr_20190427-114743_model-0_epoch19-f0.8438.h5.pkl").open(
+        with Path("../../../PhD/projects/180630_oomorisan_PASA/results/pasa-pointer-20190427-114743/ptr_20190427-114743_model-0_epoch19-f0.8438.h5.pkl").open(
             'rb') as f:
             items1 = pickle.load(f)
-        with Path("../../../PhD/projects/180630_oomorisan_PASA/results/testresult_acl2019/global_argmax/ptr_20190427-114749_model-0_epoch16-f0.8455.h5.pkl").open(
+        with Path("../../../PhD/projects/180630_oomorisan_PASA/results/pasa-pointer-20190427-114749/ptr_20190427-114749_model-0_epoch16-f0.8455.h5.pkl").open(
             'rb') as f:
             items2 = pickle.load(f)
-        with Path("../../../PhD/projects/180630_oomorisan_PASA/results/testresult_acl2019/global_argmax/ptr_20190427-114838_model-0_epoch17-f0.8456.h5.pkl").open(
+        with Path("../../../PhD/projects/180630_oomorisan_PASA/results/pasa-pointer-20190427-114838/ptr_20190427-114838_model-0_epoch17-f0.8456.h5.pkl").open(
             'rb') as f:
             items3 = pickle.load(f)
-        with Path("../../../PhD/projects/180630_oomorisan_PASA/results/testresult_acl2019/global_argmax/ptr_20190427-120937_model-0_epoch14-f0.8474.h5.pkl").open(
+        with Path("../../../PhD/projects/180630_oomorisan_PASA/results/pasa-pointer-20190427-120937/ptr_20190427-120937_model-0_epoch14-f0.8474.h5.pkl").open(
             'rb') as f:
             items4 = pickle.load(f)
     elif mode == "local":
-        with Path("../../../PhD/projects/180630_oomorisan_PASAresults/pasa-pointer-20190611-215418/ptr_20190611-215418_model-0_epoch17-f0.8440.h5.pkl").open('rb') as f:
+        with Path("../../../PhD/projects/180630_oomorisan_PASA/results/pasa-pointer-20190611-215418/ptr_20190611-215418_model-0_epoch17-f0.8440.h5.pkl").open('rb') as f:
             items0 = pickle.load(f)
         with Path("../../../PhD/projects/180630_oomorisan_PASA/results/pasa-pointer-20190611-222931/ptr_20190611-222931_model-0_epoch15-f0.8455.h5.pkl").open('rb') as f:
             items1 = pickle.load(f)
