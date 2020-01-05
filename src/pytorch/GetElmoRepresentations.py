@@ -1,3 +1,4 @@
+import os
 import sys
 sys.path.append('../')
 import argparse
@@ -15,6 +16,8 @@ def main():
     arguments = parser.parse_args()
     with_bccwj = arguments.with_bccwj
 
+    if arguments.device != 'cpu':
+        os.environ["CUDA_VISIBLE_DEVICES"] = arguments.device
     device = torch.device("cpu")
     if arguments.device != 'cpu':
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
