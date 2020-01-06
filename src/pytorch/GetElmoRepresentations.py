@@ -7,6 +7,7 @@ from ElmoModel import ElmoModel
 from utils.Datasets import get_datasets_in_sentences, get_datasets_in_sentences_test
 import pickle
 import torch
+from tqdm import tqdm
 
 
 def main():
@@ -43,6 +44,18 @@ def main():
         pickle.dump(embeddings, f)
 
 
+def load():
+    with Path('../../data/elmo.pkl').open('rb') as f:
+        embeddings = pickle.load(f)
+        cnt = 0
+    for k, v in embeddings.items():
+        print('{}'.format(k))
+        print('{}'.format(v))
+        if cnt > 10:
+            break
+
+
 if __name__ == '__main__':
-    main()
+    # main()
+    load()
 
