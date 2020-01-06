@@ -191,7 +191,7 @@ class ElmoModel:
         self.elmo_embeddings = None
         if self.elmo_with == "allennlp":
             if Path('../../data/elmo.pkl').exists():
-                with Path('../../data/elmo.pkl').open('wb') as f:
+                with Path('../../data/elmo.pkl').open('rb') as f:
                     self.elmo_embeddings = pickle.load(f)
             root_path = Path('../../data/elmo/converted')
             option_file = root_path / 'allennlp_config.json'
