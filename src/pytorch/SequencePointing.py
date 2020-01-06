@@ -37,12 +37,12 @@ from utils.GoogleSpreadSheet import write_spreadsheet
 from utils.ParallelTrials import ParallelTrials
 
 from Loss import *
-from Batcher import SequenceBatcher
+from Batcher import SequenceBatcher, SequenceBatcherBert
 from Validation import get_pr_numbers, get_f_score
 from Decoders import get_restricted_prediction, get_ordered_prediction, get_no_decode_prediction
 
 from PretrainedEmbeddings import PretrainedEmbedding
-from PointerNetworksModel import PointerNetworksModel
+from SequencePointingModel import SequencePointingModel
 
 arguments = get_argparser()
 
@@ -58,14 +58,18 @@ DEV = "dev"
 TEST = "test"
 PADDING_ID = 4
 
+with_bert = False
+if 'bert' in arguments.model:
+    with_bert = True
+
 if arguments.test:
-    train_label, train_args, train_preds, train_prop, train_vocab, train_word_pos, train_ku_pos, train_modes, train_word_pos_id, train_ku_pos_id, train_modes_id = get_datasets_in_sentences_test(TRAIN, with_bccwj=arguments.with_bccwj)
-    dev_label, dev_args, dev_preds, dev_prop, dev_vocab, dev_word_pos, dev_ku_pos, dev_modes, dev_word_pos_id, dev_ku_pos_id, dev_modes_id = get_datasets_in_sentences_test(DEV, with_bccwj=arguments.with_bccwj)
-    test_label, test_args, test_preds, test_prop, test_vocab, test_word_pos, test_ku_pos, test_modes, test_word_pos_id, test_ku_pos_id, test_modes_id = get_datasets_in_sentences_test(TEST, with_bccwj=arguments.with_bccwj)
+    train_label, train_args, train_preds, train_prop, train_vocab, train_word_pos, train_ku_pos, train_modes, train_word_pos_id, train_ku_pos_id, train_modes_id = get_datasets_in_sentences_test(TRAIN, with_bccwj=arguments.with_bccwj, with_bert=with_bert)
+    dev_label, dev_args, dev_preds, dev_prop, dev_vocab, dev_word_pos, dev_ku_pos, dev_modes, dev_word_pos_id, dev_ku_pos_id, dev_modes_id = get_datasets_in_sentences_test(DEV, with_bccwj=arguments.with_bccwj, with_bert=with_bert)
+    test_label, test_args, test_preds, test_prop, test_vocab, test_word_pos, test_ku_pos, test_modes, test_word_pos_id, test_ku_pos_id, test_modes_id = get_datasets_in_sentences_test(TEST, with_bccwj=arguments.with_bccwj, with_bert=with_bert)
 else:
-    train_label, train_args, train_preds, train_prop, train_vocab, train_word_pos, train_ku_pos, train_modes, train_word_pos_id, train_ku_pos_id, train_modes_id = get_datasets_in_sentences(TRAIN, with_bccwj=arguments.with_bccwj)
-    dev_label, dev_args, dev_preds, dev_prop, dev_vocab, dev_word_pos, dev_ku_pos, dev_modes, dev_word_pos_id, dev_ku_pos_id, dev_modes_id = get_datasets_in_sentences(DEV, with_bccwj=arguments.with_bccwj)
-    test_label, test_args, test_preds, test_prop, test_vocab, test_word_pos, test_ku_pos, test_modes, test_word_pos_id, test_ku_pos_id, test_modes_id = get_datasets_in_sentences(TEST, with_bccwj=arguments.with_bccwj)
+    train_label, train_args, train_preds, train_prop, train_vocab, train_word_pos, train_ku_pos, train_modes, train_word_pos_id, train_ku_pos_id, train_modes_id = get_datasets_in_sentences(TRAIN, with_bccwj=arguments.with_bccwj, with_bert=with_bert)
+    dev_label, dev_args, dev_preds, dev_prop, dev_vocab, dev_word_pos, dev_ku_pos, dev_modes, dev_word_pos_id, dev_ku_pos_id, dev_modes_id = get_datasets_in_sentences(DEV, with_bccwj=arguments.with_bccwj, with_bert=with_bert)
+    test_label, test_args, test_preds, test_prop, test_vocab, test_word_pos, test_ku_pos, test_modes, test_word_pos_id, test_ku_pos_id, test_modes_id = get_datasets_in_sentences(TEST, with_bccwj=arguments.with_bccwj, with_bert=with_bert)
 
 if arguments.num_data != -1 and arguments.num_data < len(train_label):
     np.random.seed(71)
@@ -151,39 +155,41 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
     dropout_ratio = round(dropout_ratio, 2)
 
     if arguments.embed == 'original':
-        model = PointerNetworksModel(target_size=1,
-                                     l1_size=fc1_size,
-                                     dropout_ratio=dropout_ratio,
-                                     vocab_size=len(vocab),
-                                     word_pos_size=len(word_pos_indexer),
-                                     ku_pos_size=len(ku_pos_indexer),
-                                     mode_size=len(mode_indexer),
-                                     vocab_padding_idx=vocab.get_pad_id(),
-                                     word_pos_padding_idx=word_pos_indexer.get_pad_id(),
-                                     ku_pos_padding_idx=ku_pos_indexer.get_pad_id(),
-                                     mode_padding_idx=mode_indexer.get_pad_id(),
-                                     device=device,
-                                     add_null_word=arguments.add_null_word,
-                                     seed=arguments.seed,
-                                     with_linear=arguments.with_linear)
+        model = SequencePointingModel(target_size=1,
+                                      l1_size=fc1_size,
+                                      dropout_ratio=dropout_ratio,
+                                      vocab_size=len(vocab),
+                                      word_pos_size=len(word_pos_indexer),
+                                      ku_pos_size=len(ku_pos_indexer),
+                                      mode_size=len(mode_indexer),
+                                      word_pos_pred_idx=word_pos_indexer.word2id(0),
+                                      vocab_padding_idx=vocab.get_pad_id(),
+                                      word_pos_padding_idx=word_pos_indexer.get_pad_id(),
+                                      ku_pos_padding_idx=ku_pos_indexer.get_pad_id(),
+                                      mode_padding_idx=mode_indexer.get_pad_id(),
+                                      device=device,
+                                      add_null_word=arguments.add_null_word,
+                                      seed=arguments.seed,
+                                      with_linear=arguments.with_linear)
     else:
-        model = PointerNetworksModel(target_size=1,
-                                     l1_size=fc1_size,
-                                     dropout_ratio=dropout_ratio,
-                                     vocab_size=0,
-                                     word_pos_size=len(word_pos_indexer),
-                                     ku_pos_size=len(ku_pos_indexer),
-                                     mode_size=len(mode_indexer),
-                                     vocab_padding_idx=vocab.get_pad_id(),
-                                     word_pos_padding_idx=word_pos_indexer.get_pad_id(),
-                                     ku_pos_padding_idx=ku_pos_indexer.get_pad_id(),
-                                     mode_padding_idx=mode_indexer.get_pad_id(),
-                                     pretrained_embedding=arguments.embed,
-                                     pretrained_weights=vocab.weights,
-                                     device=device,
-                                     add_null_word=arguments.add_null_word,
-                                     seed=arguments.seed,
-                                     with_linear=arguments.with_linear)
+        model = SequencePointingModel(target_size=1,
+                                      l1_size=fc1_size,
+                                      dropout_ratio=dropout_ratio,
+                                      vocab_size=0,
+                                      word_pos_size=len(word_pos_indexer),
+                                      ku_pos_size=len(ku_pos_indexer),
+                                      mode_size=len(mode_indexer),
+                                      word_pos_pred_idx=word_pos_indexer.word2id(0),
+                                      vocab_padding_idx=vocab.get_pad_id(),
+                                      word_pos_padding_idx=word_pos_indexer.get_pad_id(),
+                                      ku_pos_padding_idx=ku_pos_indexer.get_pad_id(),
+                                      mode_padding_idx=mode_indexer.get_pad_id(),
+                                      pretrained_embedding=arguments.embed,
+                                      pretrained_weights=vocab.weights,
+                                      device=device,
+                                      add_null_word=arguments.add_null_word,
+                                      seed=arguments.seed,
+                                      with_linear=arguments.with_linear)
     embedding_dim = model.embedding_dim
     hidden_size = model.hidden_size
 
@@ -193,11 +199,11 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
         model.load_state_dict(state_dict)
         print("Load model: {}".format(arguments.init_checkpoint))
 
-    print(model)
+    print_b(str(model))
     num_params = 0
     for parameter in model.parameters():
         num_params += len(parameter)
-    print(num_params)
+    print_b(num_params)
 
     if arguments.device != "cpu":
         if torch.cuda.device_count() > 1:
@@ -271,16 +277,6 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
     best_f1s = [0] * 6
 
     es = EarlyStop(arguments.earlystop, go_minus=False)
-    if loss_weight is not None:
-        total = sum(loss_weight.values())
-        loss_weight = [loss_weight['loss_weight_ptr_ga'] / total,
-                       loss_weight['loss_weight_ptr_ni'] / total,
-                       loss_weight['loss_weight_ptr_wo'] / total]
-
-    if null_weight is not None:
-        null_weight = [null_weight['null_weight_ga'],
-                       null_weight['null_weight_ni'],
-                       null_weight['null_weight_wo']]
 
     _params = ['server: {} {}'.format(sm.server_name, sm.device_name),
                'init_checkpoint: {}'.format(arguments.init_checkpoint),
@@ -295,15 +291,9 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                'clip: {}'.format(clip),
                'weight_decay: {}'.format(weight_decay),
                'dropout_ratio: {}'.format(dropout_ratio),
-               'loss_weight: {}'.format(loss_weight),
-               'null_weight: {}'.format(null_weight),
                'optim: {}'.format(optim),
-               'add_null_word: {}'.format(arguments.add_null_word),
-               'add_null_weight: {}'.format(arguments.add_null_weight),
-               'add_loss_weight: {}'.format(arguments.add_loss_weight),
                'git sha: {}'.format(gm.sha),
                'seed: {}'.format(arguments.seed),
-               'with_linear: {}'.format(arguments.with_linear),
                "with_bccwj: {}".format(arguments.with_bccwj)
                ]
 
@@ -312,6 +302,10 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
     op.save_model_info(_params)
     sw_lap.start()
     sw_total.start()
+
+    criterion_ga = nn.CrossEntropyLoss()
+    criterion_ni = nn.CrossEntropyLoss()
+    criterion_wo = nn.CrossEntropyLoss()
 
     for e in range(arguments.epochs):
         vw_train_loss.reset()
@@ -323,16 +317,10 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
             # output shape: Batch, Sentence_length
             t_args, t_preds, t_labels, t_props, t_word_pos, t_ku_pos, t_mode = train_batcher.get_batch()
 
-            if arguments.add_null_word:
-                t_args = add_null(t_args, vocab.get_null_id())
-                t_preds = add_null(t_preds, vocab.get_null_id())
-                t_word_pos = add_null(t_word_pos, word_pos_indexer.get_null_id())
-                t_ku_pos = add_null(t_ku_pos, ku_pos_indexer.get_null_id())
-                t_mode = add_null(t_mode, mode_indexer.get_null_id())
-
             # output shape: Batch, Sentence_length, 1
-            t_args = torch.from_numpy(t_args).long().to(device)
-            t_preds = torch.from_numpy(t_preds).long().to(device)
+            if 'bert' not in arguments.model or 'elmo' not in arguments.model:
+                t_args = torch.from_numpy(t_args).long().to(device)
+                t_preds = torch.from_numpy(t_preds).long().to(device)
             t_word_pos = torch.from_numpy(t_word_pos).long().to(device)
             t_ku_pos = torch.from_numpy(t_ku_pos).long().to(device)
             t_mode = torch.from_numpy(t_mode).long().to(device)
@@ -350,13 +338,7 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
 
             b_size = output[0].shape[0]
             s_size = output[0].shape[1]
-            criterion_ga = nn.CrossEntropyLoss()  # ignore_index不要では？
-            criterion_ni = nn.CrossEntropyLoss()
-            criterion_wo = nn.CrossEntropyLoss()
-            if null_weight is not None:
-                criterion_ga = nn.CrossEntropyLoss(weight=torch.FloatTensor([null_weight[0]] + [1.0] * (s_size - 1)).to(device))
-                criterion_ni = nn.CrossEntropyLoss(weight=torch.FloatTensor([null_weight[1]] + [1.0] * (s_size - 1)).to(device))
-                criterion_wo = nn.CrossEntropyLoss(weight=torch.FloatTensor([null_weight[2]] + [1.0] * (s_size - 1)).to(device))
+
             loss_ga = criterion_ga(output[0].view(b_size, s_size), t_ga_labels)
             loss_ni = criterion_ni(output[1].view(b_size, s_size), t_ni_labels)
             loss_wo = criterion_wo(output[2].view(b_size, s_size), t_wo_labels)
@@ -386,16 +368,10 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                     # output shape: Batch, Sentence_length
                     d_args, d_preds, d_labels, d_props, d_word_pos, d_ku_pos, d_mode = dev_batcher.get_batch()
 
-                    if arguments.add_null_word:
-                        d_args = add_null(d_args, vocab.get_null_id())
-                        d_preds = add_null(d_preds, vocab.get_null_id())
-                        d_word_pos = add_null(d_word_pos, word_pos_indexer.get_null_id())
-                        d_ku_pos = add_null(d_ku_pos, ku_pos_indexer.get_null_id())
-                        d_mode = add_null(d_mode, mode_indexer.get_null_id())
-
                     # output shape: Batch, Sentence_length
-                    d_args = torch.from_numpy(d_args).long().to(device)
-                    d_preds = torch.from_numpy(d_preds).long().to(device)
+                    if 'bert' not in arguments.model or 'elmo' not in arguments.model:
+                        d_args = torch.from_numpy(d_args).long().to(device)
+                        d_preds = torch.from_numpy(d_preds).long().to(device)
                     d_word_pos = torch.from_numpy(d_word_pos).long().to(device)
                     d_ku_pos = torch.from_numpy(d_ku_pos).long().to(device)
                     d_mode = torch.from_numpy(d_mode).long().to(device)
@@ -418,24 +394,11 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                     d_ni_labels = torch.from_numpy(d_loss_labels[1]).long().to(device)
                     d_wo_labels = torch.from_numpy(d_loss_labels[2]).long().to(device)
 
-                    criterion_ga = nn.CrossEntropyLoss(ignore_index=PADDING_ID)
-                    criterion_ni = nn.CrossEntropyLoss(ignore_index=PADDING_ID)
-                    criterion_wo = nn.CrossEntropyLoss(ignore_index=PADDING_ID)
-                    if null_weight is not None:
-                        criterion_ga = nn.CrossEntropyLoss(ignore_index=PADDING_ID, weight=torch.FloatTensor(
-                            [null_weight[0]] + [1.0] * (s_size - 1)).to(device))
-                        criterion_ni = nn.CrossEntropyLoss(ignore_index=PADDING_ID, weight=torch.FloatTensor(
-                            [null_weight[1]] + [1.0] * (s_size - 1)).to(device))
-                        criterion_wo = nn.CrossEntropyLoss(ignore_index=PADDING_ID, weight=torch.FloatTensor(
-                            [null_weight[2]] + [1.0] * (s_size - 1)).to(device))
-
                     dev_loss_ga = criterion_ga(ga_prediction, d_ga_labels)
                     dev_loss_ni = criterion_ni(ni_prediction, d_ni_labels)
                     dev_loss_wo = criterion_wo(wo_prediction, d_wo_labels)
 
                     dev_loss = dev_loss_ga + dev_loss_ni + dev_loss_wo
-                    if loss_weight is not None:
-                        dev_loss = (loss_weight[0] * dev_loss_ga + loss_weight[1] * dev_loss_ni + loss_weight[2] * dev_loss_wo)
                     vw_dev_loss.add(float(dev_loss))
 
                     # output shape: Batch
@@ -537,7 +500,7 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
 
             es.is_maximum_delay(all_score)
 
-            print(''.join(print_text))
+            print_b(''.join(print_text))
             if arguments.line and (is_best or es.is_over() or e == arguments.epochs - 1):
                 ln.send_message("\nStart: {0:%Y%m%d-%H%M%S}\n".format(now) +
                                 arguments.model + "\n" +
@@ -553,6 +516,8 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
             if cp.is_maximum(max_all_score) and arguments.save_model:
                 model_path = model_dir.joinpath('epoch{0}-f{1:.4f}.h5'.format(e, max_all_score))
                 torch.save(model.state_dict(), model_path)
+                model_path = model_dir.joinpath('epoch{0}-f{1:.4f}_embed.h5'.format(e, max_all_score))
+                torch.save(model.word_embeddings.state_dict(), model_path)
                 best_model_path = model_path
 
             if es.is_over():
@@ -583,7 +548,7 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
         if loss_weight is None:
             str_loss_weight = list(map(str, [0] * 4))
         else:
-            str_loss_weight = [0] + list(map(str, loss_weight))
+            str_loss_weight = [0] + list(map(str, loss_weight.values()))
         _file = Path(__file__).name
         _spreadline = ["{:%Y%m%d-%H%M%S} ".format(now),
                        "{:%Y%m%d-%H%M%S} ".format(get_now()),
@@ -615,7 +580,8 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                       + [arguments.with_linear]\
                       + [num_params]\
                       + [arguments.num_data]\
-                      + [arguments.decode]\
+                      + [arguments.decode] \
+                      + [arguments.model]\
                       + [arguments.with_bccwj]
         write_spreadsheet(_spreadline)
 
@@ -634,12 +600,6 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
 
 if __name__ == "__main__":
     if arguments.hyp:
-        # train(batch_size=16,
-        #       learning_rate=0.1, fc1_size=96, optim="sgd", dropout_ratio=0.3,
-        #       norm_type={'clip': 5, 'weight_decay': 0.0})
-        # train(batch_size=30,
-        #       learning_rate=0.3, fc1_size=88, optim="sgd", dropout_ratio=0.2,
-        #       norm_type={'clip': 6, 'weight_decay': 0.0})
         train(batch_size=2,
               learning_rate=0.2, fc1_size=88, optim="sgd", dropout_ratio=0.4,
               norm_type={'clip': 2, 'weight_decay': 0.0})
@@ -653,17 +613,10 @@ if __name__ == "__main__":
                 'attachments': {'all': score_all, 'dep': score_dep, 'zero': score_zero}
             }
 
-        def get_parameter_space_pointer():
-            ret = get_parameter_space_pointer_no_null_loss_weight()
-            ret = get_parameter_space_pointer_add_loss_weight(ret)
-            ret = get_parameter_space_pointer_add_null_weight(ret)
-            return ret
-
         def get_parameter_space_pointer_no_null_loss_weight():
             return {'optim': hp.choice('optim', ['adam', 'sgd', 'rmsprop', 'adabound']),
                     'learning_rate': hp.choice('learning_rate', [0.4, 0.3, 0.2, 0.1, 0.05, 0.01, 0.005, 0.001, 0.0001, 0.00001]),
                     'batch_size': hp.quniform('batch_size', 2, 200, 2),
-                    'fc1_size': hp.quniform('fc1_size', 32, 152, 8),
                     'dropout_ratio': hp.quniform('dropout_ratio', 0.0, 0.7, 0.1),
                     'norm_type': hp.choice('norm_type', [
                         {
@@ -673,30 +626,7 @@ if __name__ == "__main__":
                         }])
             }
 
-        def get_parameter_space_pointer_add_loss_weight(ret):
-            ret['loss_weight'] = {
-                'loss_weight_seq': hp.quniform('loss_weight_seq', 0, 1000, 1),
-                'loss_weight_ptr_ga': hp.quniform('loss_weight_ptr_ga', 0, 1000, 1),
-                'loss_weight_ptr_ni': hp.quniform('loss_weight_ptr_ni', 0, 1000, 1),
-                'loss_weight_ptr_wo': hp.quniform('loss_weight_ptr_wo', 0, 1000, 1)
-            }
-            return ret
-
-        def get_parameter_space_pointer_add_null_weight(ret):
-            ret['null_weight'] = {
-                'null_weight_ga': hp.loguniform('null_weight_ga', -5, 0),
-                'null_weight_ni': hp.loguniform('null_weight_ni', -5, 0),
-                'null_weight_wo': hp.loguniform('null_weight_wo', -5, 0)
-            }
-            return ret
-
         space = get_parameter_space_pointer_no_null_loss_weight()
-        if arguments.add_null_weight and arguments.add_loss_weight:
-            space = get_parameter_space_pointer()
-        elif not arguments.add_null_weight and arguments.add_loss_weight:
-            space = get_parameter_space_pointer_add_loss_weight(space)
-        elif arguments.add_null_weight and not arguments.add_loss_weight:
-            space = get_parameter_space_pointer_add_null_weight(space)
 
         _trials_path = Path('../../results/trials').joinpath('{0:%Y%m%d-%H%M%S}.pkl'.format(now))
         if arguments.trials_key != '':

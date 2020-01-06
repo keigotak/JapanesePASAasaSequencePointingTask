@@ -558,7 +558,7 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                       + [best_model_path]\
                       + [arguments.seed]\
                       + [gm.sha]\
-                      + [arguments.without_linear]\
+                      + [arguments.with_linear]\
                       + [num_params]\
                       + [arguments.num_data]\
                       + [arguments.decode] \
