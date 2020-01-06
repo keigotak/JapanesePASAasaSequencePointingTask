@@ -37,7 +37,7 @@ from utils.GoogleSpreadSheet import write_spreadsheet
 from utils.ParallelTrials import ParallelTrials
 
 from Loss import *
-from Batcher import SequenceBatcher, SequenceBatcherBert
+from Batcher import SequenceBatcher
 from Validation import get_pr_numbers, get_f_score
 from Decoders import get_restricted_prediction, get_ordered_prediction, get_no_decode_prediction
 
@@ -56,11 +56,12 @@ if arguments.device != "cpu":
 TRAIN = "train"
 DEV = "dev"
 TEST = "test"
-PADDING_ID = 4
 
 with_bert = False
-if 'bert' in arguments.model:
+if 'bert' in arguments.emb:
     with_bert = True
+embs_type1 = {'original', 'bert', 'elmo'}
+embs_with_word = {'bert', 'elmo'}
 
 if arguments.test:
     train_label, train_args, train_preds, train_prop, train_vocab, train_word_pos, train_ku_pos, train_modes, train_word_pos_id, train_ku_pos_id, train_modes_id = get_datasets_in_sentences_test(TRAIN, with_bccwj=arguments.with_bccwj, with_bert=with_bert)
@@ -91,11 +92,21 @@ vocab = Vocab()
 vocab.fit(train_vocab, arguments.vocab_thresh)
 vocab.fit(dev_vocab, arguments.vocab_thresh)
 vocab.fit(test_vocab, arguments.vocab_thresh)
-if arguments.embed != 'original':
-    vocab = PretrainedEmbedding(arguments.embed, vocab)
+if arguments.emb not in embs_type1:
+    vocab = PretrainedEmbedding(arguments.emb, vocab)
 train_arg_id, train_pred_id = vocab.transform_sentences(train_args, train_preds)
 dev_arg_id, dev_pred_id = vocab.transform_sentences(dev_args, dev_preds)
 test_arg_id, test_pred_id = vocab.transform_sentences(test_args, test_preds)
+if arguments.emb in embs_with_word:
+    train_arg, train_pred = train_args, train_preds
+    dev_arg, dev_pred = dev_args, dev_preds
+    test_arg, test_pred = test_args, test_preds
+else:
+    train_arg, train_pred = train_arg_id, train_pred_id
+    dev_arg, dev_pred = dev_arg_id, dev_pred_id
+    test_arg, test_pred = test_arg_id, test_pred_id
+
+
 
 word_pos_indexer = Indexer()
 word_pos_id = np.concatenate([train_word_pos_id, dev_word_pos_id, test_word_pos_id])
@@ -121,7 +132,7 @@ test_modes = mode_indexer.transform_sentences(test_modes)
 embedding_dim = arguments.embed_size
 hidden_size = arguments.hidden_size
 
-tag = get_pasa() + "-" + arguments.model
+tag = get_pasa() + "-" + arguments.emb + arguments.task
 now = get_now()
 save_dir_base, _ = get_save_dir(tag, now)
 
@@ -143,20 +154,15 @@ trials = Trials()
 
 
 # @profile
-def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_ratio=0.4, null_weight=None, loss_weight=None, norm_type=None):
+def train(batch_size, learning_rate=1e-3, optim="adam",  dropout_ratio=0.4, null_weight=None, loss_weight=None, norm_type=None):
     np.random.seed(arguments.seed)
     random.seed(arguments.seed)
 
     batch_size = int(batch_size)
-    fc1_size = 0
-    if arguments.with_linear:
-        fc1_size = int(fc1_size)
-    fc2_size = 0
     dropout_ratio = round(dropout_ratio, 2)
 
-    if arguments.embed == 'original':
+    if arguments.emb in embs_type1:
         model = SequencePointingModel(target_size=1,
-                                      l1_size=fc1_size,
                                       dropout_ratio=dropout_ratio,
                                       vocab_size=len(vocab),
                                       word_pos_size=len(word_pos_indexer),
@@ -167,13 +173,12 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                                       word_pos_padding_idx=word_pos_indexer.get_pad_id(),
                                       ku_pos_padding_idx=ku_pos_indexer.get_pad_id(),
                                       mode_padding_idx=mode_indexer.get_pad_id(),
+                                      pretrained_embedding=arguments.emb,
                                       device=device,
                                       add_null_word=arguments.add_null_word,
-                                      seed=arguments.seed,
-                                      with_linear=arguments.with_linear)
+                                      seed=arguments.seed)
     else:
         model = SequencePointingModel(target_size=1,
-                                      l1_size=fc1_size,
                                       dropout_ratio=dropout_ratio,
                                       vocab_size=0,
                                       word_pos_size=len(word_pos_indexer),
@@ -184,12 +189,11 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                                       word_pos_padding_idx=word_pos_indexer.get_pad_id(),
                                       ku_pos_padding_idx=ku_pos_indexer.get_pad_id(),
                                       mode_padding_idx=mode_indexer.get_pad_id(),
-                                      pretrained_embedding=arguments.embed,
+                                      pretrained_embedding=arguments.emb,
                                       pretrained_weights=vocab.weights,
                                       device=device,
                                       add_null_word=arguments.add_null_word,
-                                      seed=arguments.seed,
-                                      with_linear=arguments.with_linear)
+                                      seed=arguments.seed)
     embedding_dim = model.embedding_dim
     hidden_size = model.hidden_size
 
@@ -226,12 +230,9 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
     elif optim == 'adabound':
         optimizer = adabound.AdaBound(model.parameters(), lr=learning_rate, final_lr=0.1)
 
-    with_word = False
-    if 'bert' in arguments.model or 'elmo' in arguments.model:
-        with_word = True
     train_batcher = SequenceBatcher(batch_size,
-                                    train_arg_id,
-                                    train_pred_id,
+                                    train_arg,
+                                    train_pred,
                                     train_label,
                                     train_prop,
                                     train_word_pos,
@@ -240,11 +241,13 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                                     vocab_pad_id=vocab.get_pad_id(),
                                     word_pos_pad_id=word_pos_indexer.get_pad_id(),
                                     ku_pos_pad_id=ku_pos_indexer.get_pad_id(),
-                                    mode_pad_id=mode_indexer.get_pad_id(), shuffle=True, with_word=with_word)
+                                    mode_pad_id=mode_indexer.get_pad_id(),
+                                    shuffle=True,
+                                    with_word=arguments.emb in embs_with_word)
     if arguments.overfit:
         dev_batcher = SequenceBatcher(arguments.dev_size,
-                                      train_arg_id,
-                                      train_pred_id,
+                                      train_arg,
+                                      train_pred,
                                       train_label,
                                       train_prop,
                                       train_word_pos,
@@ -253,11 +256,13 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                                       vocab_pad_id=vocab.get_pad_id(),
                                       word_pos_pad_id=word_pos_indexer.get_pad_id(),
                                       ku_pos_pad_id=ku_pos_indexer.get_pad_id(),
-                                      mode_pad_id=mode_indexer.get_pad_id(), shuffle=True, with_word=with_word)
+                                      mode_pad_id=mode_indexer.get_pad_id(),
+                                      shuffle=True,
+                                      with_word=arguments.emb in embs_with_word)
     else:
         dev_batcher = SequenceBatcher(arguments.dev_size,
-                                      dev_arg_id,
-                                      dev_pred_id,
+                                      dev_arg,
+                                      dev_pred,
                                       dev_label,
                                       dev_prop,
                                       dev_word_pos,
@@ -266,7 +271,9 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                                       vocab_pad_id=vocab.get_pad_id(),
                                       word_pos_pad_id=word_pos_indexer.get_pad_id(),
                                       ku_pos_pad_id=ku_pos_indexer.get_pad_id(),
-                                      mode_pad_id=mode_indexer.get_pad_id(), shuffle=True, with_word=with_word)
+                                      mode_pad_id=mode_indexer.get_pad_id(),
+                                      shuffle=True,
+                                      with_word=arguments.emb in embs_with_word)
 
     if len(trials) != 1 and not arguments.hyp:
         hyp_max_score.set(translate_score_and_loss(trials.best_trial['result']['loss']))
@@ -283,12 +290,10 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
 
     _params = ['server: {} {}'.format(sm.server_name, sm.device_name),
                'init_checkpoint: {}'.format(arguments.init_checkpoint),
-               'embed_type: {}'.format(arguments.embed),
+               'embed_type: {}'.format(arguments.emb),
                'train_batch_size: {}'.format(batch_size),
                'dev_batch_size: {}'.format(arguments.dev_size),
                'learning_rate: {}'.format(learning_rate),
-               'fc1_size: {}'.format(fc1_size),
-               'fc2_size: {}'.format(fc2_size),
                'embedding_dim: {}'.format(embedding_dim),
                'hidden_size: {}'.format(hidden_size),
                'clip: {}'.format(clip),
@@ -321,7 +326,7 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
             t_args, t_preds, t_labels, t_props, t_word_pos, t_ku_pos, t_mode = train_batcher.get_batch()
 
             # output shape: Batch, Sentence_length, 1
-            if 'bert' not in arguments.model or 'elmo' not in arguments.model:
+            if arguments.emb not in embs_with_word:
                 t_args = torch.from_numpy(t_args).long().to(device)
                 t_preds = torch.from_numpy(t_preds).long().to(device)
             t_word_pos = torch.from_numpy(t_word_pos).long().to(device)
@@ -372,7 +377,7 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                     d_args, d_preds, d_labels, d_props, d_word_pos, d_ku_pos, d_mode = dev_batcher.get_batch()
 
                     # output shape: Batch, Sentence_length
-                    if 'bert' not in arguments.model or 'elmo' not in arguments.model:
+                    if arguments.emb not in embs_with_word:
                         d_args = torch.from_numpy(d_args).long().to(device)
                         d_preds = torch.from_numpy(d_preds).long().to(device)
                     d_word_pos = torch.from_numpy(d_word_pos).long().to(device)
@@ -568,8 +573,8 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                       + [optim,
                          learning_rate,
                          batch_size,
-                         fc1_size,
-                         fc2_size,
+                         "",
+                         "",
                          embedding_dim,
                          hidden_size,
                          clip,
@@ -604,7 +609,7 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
 if __name__ == "__main__":
     if arguments.hyp:
         train(batch_size=2,
-              learning_rate=0.2, fc1_size=88, optim="sgd", dropout_ratio=0.4,
+              learning_rate=0.2, optim="sgd", dropout_ratio=0.4,
               norm_type={'clip': 2, 'weight_decay': 0.0})
     else:
         def objective(args):
