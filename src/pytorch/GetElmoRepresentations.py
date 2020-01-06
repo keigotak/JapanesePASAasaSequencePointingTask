@@ -49,9 +49,10 @@ def load():
         cnt = 0
     for k, v in embeddings.items():
         print('{}'.format(k))
-        print('{}'.format(v))
+        print('{}'.format(len(v), len(v[0]), len(v[0][0])))
         if cnt > 10:
             break
+        cnt += 1
 
 
 if __name__ == '__main__':

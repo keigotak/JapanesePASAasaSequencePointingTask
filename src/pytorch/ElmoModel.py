@@ -2,6 +2,7 @@ from pathlib import Path
 import logging
 logging.basicConfig(level=logging.FATAL,
                     format='%(asctime)-15s %(levelname)s: %(message)s')
+import pickle
 
 import numpy as np
 import torch
@@ -187,7 +188,11 @@ class ElmoModel:
     def __init__(self, device='cpu', elmo_with="allennlp"):
         self.device = device
         self.elmo_with = elmo_with
+        self.elmo_embeddings = None
         if self.elmo_with == "allennlp":
+            if Path('../../data/elmo.pkl').exists():
+                with Path('../../data/elmo.pkl').open('wb') as f:
+                    self.elmo_embeddings = pickle.load(f)
             root_path = Path('../../data/elmo/converted')
             option_file = root_path / 'allennlp_config.json'
             weight_file = root_path / 'allennlp_elmo.hdf5'
@@ -220,7 +225,16 @@ class ElmoModel:
     def get_word_embedding(self, batch_words):
         rets = []
         if self.elmo_with == "allennlp":
+            max_len = max(map(len, batch_words))
             for words in batch_words:
+                sents = ''.join(words)
+                if self.elmo_embeddings is not None and sents in self.elmo_embeddings.keys():
+                    vecs = self.elmo_embeddings[sents]
+                    if len(vecs) < max_len:
+                        vecs.extend([[0.] * self.embedding_dim] * (max_len - len(vecs)))
+                    print('{}, {}'.format(max_len, len(vecs)))
+                    rets.append(torch.tensor(vecs))
+                    continue
                 indexes = self.char_indexer.tokens_to_indices(words, self.vocab, "tokens")
                 embedding = self.embedding(torch.Tensor([indexes["tokens"]]).long().to(self.device))
                 rets.append(torch.cat((embedding['elmo_representations'][0], embedding['elmo_representations'][1]), dim=2)[0])
@@ -246,8 +260,8 @@ class ElmoModel:
 
 if __name__ == "__main__":
     model = ElmoModel(device='cpu', elmo_with="allennlp")
-    sentences = np.array([["猫", "が", "好き", "です", "。", "　", "[PAD]"], ["私", "の", "父", "は", "カモ", "です", "。"], ["友人", "は", "ウサギ", "が", "好き", "です", "。"]])
-    pos = [[3, 2, 1, 0, 1, 2, 3], [5, 4, 3, 2, 1, 0, 1], [5, 4, 3, 2, 1, 0, 1]]
+    sentences = np.array([["政治", "が", "そう", "では", "ない", "か", "。"], ["猫", "が", "好き", "です", "。", "　", "[PAD]"], ["私", "の", "父", "は", "カモ", "です", "。"], ["友人", "は", "ウサギ", "が", "好き", "です", "。"]])
+    pos = [[2, 1, 0, 1, 2, 3, 4], [3, 2, 1, 0, 1, 2, 3], [5, 4, 3, 2, 1, 0, 1], [5, 4, 3, 2, 1, 0, 1]]
     pred_idx = 0
     ret = model.get_word_embedding(sentences)
     print(ret)
