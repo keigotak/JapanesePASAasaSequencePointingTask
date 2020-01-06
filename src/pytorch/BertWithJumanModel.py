@@ -25,7 +25,7 @@ class JumanTokenizer():
         return [mrph.midasi for mrph in result.mrph_list()]
 
 
-class BertWithJumanModel(nn.Module):
+class BertWithJumanModel():
     def __init__(self, bert_path=Path("../../data/bert-kyoto/Japanese_L-12_H-768_A-12_E-30_BPE").resolve(),
                  vocab_file_name="vocab.txt",
                  device='cpu',
