@@ -43,7 +43,19 @@ def main():
         pickle.dump(embeddings, f)
 
 
+def load():
+    with Path('../../data/elmo.pkl').open('rb') as f:
+        embeddings = pickle.load(f)
+        cnt = 0
+    for k, v in embeddings.items():
+        print('{}'.format(k))
+        print('{}'.format(v))
+        if cnt > 10:
+            break
+
 
 if __name__ == '__main__':
-    main()
+    # main()
+    load()
+
 
