@@ -39,7 +39,10 @@ def main():
             for sent, words in zip(sents, args):
                 if sent not in embeddings.keys():
                     embeddings[sent] = [vecs.tolist() for vecs in model.get_word_embedding(words)]
-    with Path('../../data/elmo.pkl').open('wb') as f:
+    tag = "_ntc"
+    if arguments.with_bccwj:
+        tag = "_bccwj"
+    with Path('../../data/elmo' + tag + '.pkl').open('wb') as f:
         pickle.dump(embeddings, f)
 
 
