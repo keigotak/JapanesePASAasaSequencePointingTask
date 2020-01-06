@@ -67,7 +67,6 @@ class SequencePointingModel(BiGRUModel):
         self.output_ni = nn.Linear(self.hidden_size, self.target_size)
         self.output_wo = nn.Linear(self.hidden_size, self.target_size)
 
-
     def forward(self, arg, pred, word_pos, ku_pos, mode):
         lstm_out = super().forward(arg, pred, word_pos, ku_pos, mode)
 
@@ -76,16 +75,10 @@ class SequencePointingModel(BiGRUModel):
         output_ni = self.output_ni(lstm_out)
         output_wo = self.output_wo(lstm_out)
 
-        if self.add_null_word:
-            # output shape: Batch, Sentence_length
-            output_ga = output_ga.view(output_ga.shape[0], output_ga.shape[1])
-            output_ni = output_ni.view(output_ni.shape[0], output_ni.shape[1])
-            output_wo = output_wo.view(output_wo.shape[0], output_wo.shape[1])
-        else:
-            # output shape: Batch, Sentence_length+1
-            output_ga = torch.cat((torch.zeros(output_ga.shape[0], 1).float().to(output_ga.device), output_ga.view(output_ga.shape[0], output_ga.shape[1])), dim=1)
-            output_ni = torch.cat((torch.zeros(output_ni.shape[0], 1).float().to(output_ni.device), output_ni.view(output_ni.shape[0], output_ni.shape[1])), dim=1)
-            output_wo = torch.cat((torch.zeros(output_wo.shape[0], 1).float().to(output_wo.device), output_wo.view(output_wo.shape[0], output_wo.shape[1])), dim=1)
+        # output shape: Batch, Sentence_length+1
+        output_ga = torch.cat((torch.zeros(output_ga.shape[0], 1).float().to(output_ga.device), output_ga.view(output_ga.shape[0], output_ga.shape[1])), dim=1)
+        output_ni = torch.cat((torch.zeros(output_ni.shape[0], 1).float().to(output_ni.device), output_ni.view(output_ni.shape[0], output_ni.shape[1])), dim=1)
+        output_wo = torch.cat((torch.zeros(output_wo.shape[0], 1).float().to(output_wo.device), output_wo.view(output_wo.shape[0], output_wo.shape[1])), dim=1)
 
         return output_ga, output_ni, output_wo
 
