@@ -53,7 +53,7 @@ class PairBatcher:
 
 
 class SequenceBatcher:
-    def __init__(self, batch_size, args, preds, labels, props, word_pos=None, ku_pos=None, mode=None, vocab_pad_id=-1, word_pos_pad_id=-1, ku_pos_pad_id=-1, mode_pad_id=-1, shuffle=False, seed=71):
+    def __init__(self, batch_size, args, preds, labels, props, word_pos=None, ku_pos=None, mode=None, vocab_pad_id=-1, word_pos_pad_id=-1, ku_pos_pad_id=-1, mode_pad_id=-1, shuffle=False, seed=71, with_word=False):
         np.random.seed(seed)
         random.seed(seed)
 
@@ -76,6 +76,7 @@ class SequenceBatcher:
         self.shuffle = shuffle
         self.seq_len = np.array([len(item) for item in self.args])
         self.max_seq_len = max(self.seq_len)
+        self.with_word = with_word
 
         self.batch_sequence_index = list(range(len(self.args)))
         if self.shuffle:
@@ -98,16 +99,18 @@ class SequenceBatcher:
         max_seq_len = max(self._batch(self.seq_len))
 
         # padding
-        args = self._padding(args, max_seq_len, self.vocab_pad_id)
-        preds = self._padding(preds, max_seq_len, self.vocab_pad_id)
+        if self.with_word:
+            VOCAB_PADDING_WORD = "[PAD]"
+            args = self._padding(args, max_seq_len, VOCAB_PADDING_WORD)
+            preds = self._padding(preds, max_seq_len, VOCAB_PADDING_WORD)
+        else:
+            args = self._padding(args, max_seq_len, self.vocab_pad_id)
+            preds = self._padding(preds, max_seq_len, self.vocab_pad_id)
         labels = self._padding(labels, max_seq_len, 4)
         props = self._str_padding(props, max_seq_len, 'pad')
         word_pos = self._padding(word_pos, max_seq_len, self.word_pos_pad_id)
         ku_pos = self._padding(ku_pos, max_seq_len, self.ku_pos_pad_id)
         mode = self._padding(mode, max_seq_len, self.mode_pad_id)
-
-        # add null
-        args = self._padding(args, max_seq_len, self.vocab_pad_id)
 
         if reset:
             self.reset()
@@ -160,36 +163,3 @@ class SequenceBatcher:
 
     def get_current_batch_number(self):
         return self.current_batch_number
-
-
-class SequenceBatcherBert(SequenceBatcher):
-    def get_batch(self, reset=False):
-        VOCAB_PADDING_WORD = "[PAD]"
-        args = self._batch(self.args)
-        preds = self._batch(self.preds)
-        labels = self._batch(self.labels)
-        props = self._batch(self.props)
-        word_pos = self._batch(self.word_pos)
-        ku_pos = self._batch(self.ku_pos)
-        mode = self._batch(self.mode)
-
-        max_seq_len = max(self._batch(self.seq_len))
-
-        # padding
-        args = self._padding(args, max_seq_len, VOCAB_PADDING_WORD)
-        preds = self._padding(preds, max_seq_len, VOCAB_PADDING_WORD)
-        labels = self._padding(labels, max_seq_len, 4)
-        props = self._str_padding(props, max_seq_len, 'pad')
-        word_pos = self._padding(word_pos, max_seq_len, self.word_pos_pad_id)
-        ku_pos = self._padding(ku_pos, max_seq_len, self.ku_pos_pad_id)
-        mode = self._padding(mode, max_seq_len, self.mode_pad_id)
-
-        # add null
-        args = self._padding(args, max_seq_len, self.vocab_pad_id)
-
-        if reset:
-            self.reset()
-        else:
-            self.current += args.shape[0]
-            self.current_batch_number += 1
-        return args, preds, labels, props, word_pos, ku_pos, mode

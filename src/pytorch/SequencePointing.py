@@ -32,7 +32,7 @@ from utils.MemoryWatcher import MemoryWatcher
 from utils.GitManager import GitManager
 from utils.TensorBoardLogger import TensorBoardLogger
 from utils.ServerManager import ServerManager
-from utils.HelperFunctions import get_argparser, get_pasa, get_now, get_save_dir, add_null, get_pointer_label, concat_labels, get_cuda_id, translate_score_and_loss
+from utils.HelperFunctions import get_argparser, get_pasa, get_now, get_save_dir, add_null, get_pointer_label, concat_labels, get_cuda_id, translate_score_and_loss, print_b
 from utils.GoogleSpreadSheet import write_spreadsheet
 from utils.ParallelTrials import ParallelTrials
 
@@ -226,6 +226,9 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
     elif optim == 'adabound':
         optimizer = adabound.AdaBound(model.parameters(), lr=learning_rate, final_lr=0.1)
 
+    with_word = False
+    if 'bert' in arguments.model or 'elmo' in arguments.model:
+        with_word = True
     train_batcher = SequenceBatcher(batch_size,
                                     train_arg_id,
                                     train_pred_id,
@@ -237,7 +240,7 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                                     vocab_pad_id=vocab.get_pad_id(),
                                     word_pos_pad_id=word_pos_indexer.get_pad_id(),
                                     ku_pos_pad_id=ku_pos_indexer.get_pad_id(),
-                                    mode_pad_id=mode_indexer.get_pad_id(), shuffle=True)
+                                    mode_pad_id=mode_indexer.get_pad_id(), shuffle=True, with_word=with_word)
     if arguments.overfit:
         dev_batcher = SequenceBatcher(arguments.dev_size,
                                       train_arg_id,
@@ -250,7 +253,7 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                                       vocab_pad_id=vocab.get_pad_id(),
                                       word_pos_pad_id=word_pos_indexer.get_pad_id(),
                                       ku_pos_pad_id=ku_pos_indexer.get_pad_id(),
-                                      mode_pad_id=mode_indexer.get_pad_id(), shuffle=True)
+                                      mode_pad_id=mode_indexer.get_pad_id(), shuffle=True, with_word=with_word)
     else:
         dev_batcher = SequenceBatcher(arguments.dev_size,
                                       dev_arg_id,
@@ -263,7 +266,7 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                                       vocab_pad_id=vocab.get_pad_id(),
                                       word_pos_pad_id=word_pos_indexer.get_pad_id(),
                                       ku_pos_pad_id=ku_pos_indexer.get_pad_id(),
-                                      mode_pad_id=mode_indexer.get_pad_id(), shuffle=True)
+                                      mode_pad_id=mode_indexer.get_pad_id(), shuffle=True, with_word=with_word)
 
     if len(trials) != 1 and not arguments.hyp:
         hyp_max_score.set(translate_score_and_loss(trials.best_trial['result']['loss']))
