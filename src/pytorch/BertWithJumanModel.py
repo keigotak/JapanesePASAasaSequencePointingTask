@@ -42,6 +42,13 @@ class BertWithJumanModel():
         self.vocab_size = self.model.embeddings.word_embeddings.num_embeddings
         self.max_seq_length = 224
 
+        if self.device != "cpu":
+            if torch.cuda.device_count() > 1:
+                print("Let's use", torch.cuda.device_count(), "GPUs!")
+                self.model = nn.DataParallel(self.model, device_ids=get_cuda_id(self.device))
+
+        self.model.to(self.device)
+
     def _preprocess_text(self, text):
         return text.replace(" ", "")  # for Juman
 
@@ -99,12 +106,6 @@ class BertWithJumanModel():
             batched_bert_ids.append(id)
             batched_bert_seq_ids.append([-1] + seq_ids[:self.max_seq_length] + [seq_ids[-1] + 1])
 
-            if self.device != "cpu":
-                if torch.cuda.device_count() > 1:
-                    print("Let's use", torch.cuda.device_count(), "GPUs!")
-                    self.model = nn.DataParallel(self.model, device_ids=get_cuda_id(self.device))
-
-            self.model.to(self.device)
             embedding, _ = self.model(torch.tensor(id).reshape(1, -1).to(self.device))
             batched_bert_embs.extend(embedding)
 
