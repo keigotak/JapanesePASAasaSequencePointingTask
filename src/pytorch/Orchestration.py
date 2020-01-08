@@ -30,17 +30,17 @@ processes = [
     # ["python", "SequenceLabelingElmo.py", "--model", "elmosl"] + train_base_list + ["--device", device, "--seed", "3"],
     # ["python", "SequenceLabelingElmo.py", "--model", "elmosl"] + train_base_list + ["--device", device, "--seed", "4"]
 
-    ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "ordered"] + train_base_list + ["--device", device, "--seed", "0"],
-    ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "ordered"] + train_base_list + ["--device", device, "--seed", "1"],
-    ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "ordered"] + train_base_list + ["--device", device, "--seed", "2"],
-    ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "ordered"] + train_base_list + ["--device", device, "--seed", "3"],
-    ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "ordered"] + train_base_list + ["--device", device, "--seed", "4"]
+    # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "ordered"] + train_base_list + ["--device", device, "--seed", "0"],
+    # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "ordered"] + train_base_list + ["--device", device, "--seed", "1"],
+    # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "ordered"] + train_base_list + ["--device", device, "--seed", "2"],
+    # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "ordered"] + train_base_list + ["--device", device, "--seed", "3"],
+    # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "ordered"] + train_base_list + ["--device", device, "--seed", "4"]
 
-    # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "global_argmax"] + train_base_list + ["--device", device, "--seed", "0"],
-    # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "global_argmax"] + train_base_list + ["--device", device, "--seed", "1"],
-    # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "global_argmax"] + train_base_list + ["--device", device, "--seed", "2"],
-    # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "global_argmax"] + train_base_list + ["--device", device, "--seed", "3"],
-    # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "global_argmax"] + train_base_list + ["--device", device, "--seed", "4"]
+    ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "global_argmax"] + train_base_list + ["--device", device, "--seed", "0"],
+    ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "global_argmax"] + train_base_list + ["--device", device, "--seed", "1"],
+    ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "global_argmax"] + train_base_list + ["--device", device, "--seed", "2"],
+    ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "global_argmax"] + train_base_list + ["--device", device, "--seed", "3"],
+    ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "global_argmax"] + train_base_list + ["--device", device, "--seed", "4"]
 
     # ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl"] + test_base_list + [
     #     "--init_checkpoint", "../../results/pasa-bertsl-20191207-150951/model-0/epoch14-f0.8620.h5"],
