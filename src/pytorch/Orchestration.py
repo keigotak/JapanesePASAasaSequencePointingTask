@@ -17,7 +17,8 @@ train_base_list = ["--epochs", "20",
                    "--earlystop", "5",
                    "--save_model",
                    "--spreadsheet",
-                   "--line"]
+                   "--line",
+                   "--with_bccwj"]
 
 test_base_list = ["--spreadsheet",
                   "--save_output"]
