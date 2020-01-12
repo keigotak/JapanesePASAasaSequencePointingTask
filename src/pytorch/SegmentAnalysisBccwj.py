@@ -206,12 +206,12 @@ if __name__ == '__main__':
     files = get_files(model)
     all_scores, dep_scores, zero_scores = {}, {}, {}
     categories = ['ブログ', '知恵袋', '出版', '新聞', '雑誌', '白書']
-    for path_pkl, path_detail in zip(files[model][0], files[model][1]):
+    for path_pkl, path_detail in zip(files[0], files[1]):
         print(path_detail)
         all_scores[path_detail], dep_scores[path_detail], zero_scores[path_detail] = main(path_pkl, path_detail)
 
     for category in categories:
-        for path_detail in files[model][1]:
+        for path_detail in files[1]:
             print('{}, {}, {}, {}, {}'.format(path_detail,
                                               category,
                                               all_scores[path_detail][category],
