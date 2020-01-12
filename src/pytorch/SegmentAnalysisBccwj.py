@@ -51,6 +51,17 @@ def main(path_pkl, path_detail):
         sentences.extend([''.join(test_args[i])])
         labels.extend([test_label[i].tolist()])
         categories.extend([ref_texts[''.join(test_args[i])][0]])
+    count_categories = {'ブログ': 0, '知恵袋': 0, '出版': 0, '新聞': 0, '雑誌': 0, '白書': 0}
+    for key in count_categories.keys():
+        count_categories[key] = categories.count(key)
+    print(count_categories)
+    count_categories = {'ブログ': set(), '知恵袋': set(), '出版': set(), '新聞': set(), '雑誌': set(), '白書': set()}
+    for sentence, category in zip(sentences, categories):
+        count_categories[category].add(sentence)
+    print(','.join(['{}: {}'.format(category, len(count_categories[category])) for category in count_categories.keys()]))
+    if arguments.reset:
+        with Path('../../data/BCCWJ-DepParaPAS/test_sentences.txt').open('w', encoding='utf-8') as f:
+            f.write('\n'.join(['{}, {}, {}, {}'.format(ref_texts[''.join(arg)][0], ''.join(arg), pred[0], ''.join(map(str, label))) for arg, pred, label in zip(test_args, test_preds, test_label)]))
 
     with Path(path_pkl).open('rb') as f:
         outputs = pickle.load(f)
