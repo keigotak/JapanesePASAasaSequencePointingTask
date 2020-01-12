@@ -210,11 +210,14 @@ if __name__ == '__main__':
         print(path_detail)
         all_scores[path_detail], dep_scores[path_detail], zero_scores[path_detail] = main(path_pkl, path_detail)
 
-    for category in categories:
-        for path_detail in files[1]:
-            print('{}, {}, {}, {}, {}'.format(path_detail,
-                                              category,
-                                              all_scores[path_detail][category],
-                                              ','.join(map(str, dep_scores[path_detail][category])),
-                                              ','.join(map(str, zero_scores[path_detail][category]))))
+    with Path('../../results/bccwj-categories.txt').open('a', encoding='utf-8') as f:
+        for category in categories:
+            for path_detail in files[1]:
+                line = '{}, {}, {}, {}, {}'.format(path_detail,
+                                                  category,
+                                                  all_scores[path_detail][category],
+                                                  ','.join(map(str, dep_scores[path_detail][category])),
+                                                  ','.join(map(str, zero_scores[path_detail][category])))
+                print(line)
+                f.write(line + '\n')
 
