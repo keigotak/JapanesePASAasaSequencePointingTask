@@ -126,16 +126,16 @@ def get_f1(outputs, labels, properties):
 def get_files(model_name):
     file = {
         'sl': (
-            ['../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20200105-035952/seq_20200105-035952_model-0_epoch19-f0.7649.h5.pkl',
-             '../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20200105-040035/seq_20200105-040035_model-0_epoch17-f0.7646.h5.pkl',
-             '../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20200105-040101/seq_20200105-040101_model-0_epoch10-f0.7630.h5.pkl',
-             '../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20200105-040001/seq_20200105-040001_model-0_epoch19-f0.7686.h5.pkl',
-             '../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20200105-040118/seq_20200105-040118_model-0_epoch17-f0.7641.h5.pkl'],
-            ['../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20200105-035952/detaillog_lstm_20200105-035952.txt',
-             '../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20200105-040035/detaillog_lstm_20200105-040035.txt',
-             '../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20200105-040101/detaillog_lstm_20200105-040101.txt',
-             '../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20200105-040001/detaillog_lstm_20200105-040001.txt',
-             '../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20200105-040118/detaillog_lstm_20200105-040118.txt']),
+            ['../../results/pasa-lstm-20200105-035952/seq_20200105-035952_model-0_epoch19-f0.7649.h5.pkl',
+             '../../results/pasa-lstm-20200105-040035/seq_20200105-040035_model-0_epoch17-f0.7646.h5.pkl',
+             '../../results/pasa-lstm-20200105-040101/seq_20200105-040101_model-0_epoch10-f0.7630.h5.pkl',
+             '../../results/pasa-lstm-20200105-040001/seq_20200105-040001_model-0_epoch19-f0.7686.h5.pkl',
+             '../../results/pasa-lstm-20200105-040118/seq_20200105-040118_model-0_epoch17-f0.7641.h5.pkl'],
+            ['../../results/pasa-lstm-20200105-035952/detaillog_lstm_20200105-035952.txt',
+             '../../results/pasa-lstm-20200105-040035/detaillog_lstm_20200105-040035.txt',
+             '../../results/pasa-lstm-20200105-040101/detaillog_lstm_20200105-040101.txt',
+             '../../results/pasa-lstm-20200105-040001/detaillog_lstm_20200105-040001.txt',
+             '../../results/pasa-lstm-20200105-040118/detaillog_lstm_20200105-040118.txt']),
         'spg': (
             ['../../results/pasa-pointer-20200104-130555/ptr_20200104-130555_model-0_epoch11-f0.7589.h5.pkl',
              '../../results/pasa-pointer-20200104-130649/ptr_20200104-130649_model-0_epoch11-f0.7634.h5.pkl',
