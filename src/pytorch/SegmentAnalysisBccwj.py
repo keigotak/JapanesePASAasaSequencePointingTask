@@ -205,6 +205,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='PASA bccwj analysis')
     parser.add_argument('--model', default='sl', type=str)
+    parser.add_argument('--reset', action='store_true')
     arguments = parser.parse_args()
 
     model = arguments.model
@@ -214,6 +215,9 @@ if __name__ == '__main__':
     for path_pkl, path_detail in zip(files[0], files[1]):
         print(path_detail)
         all_scores[path_detail], dep_scores[path_detail], zero_scores[path_detail] = main(path_pkl, path_detail)
+
+    if arguments.reset:
+        os.remove(Path('../../results/bccwj-categories.txt'))
 
     with Path('../../results/bccwj-categories.txt').open('a', encoding='utf-8') as f:
         for category in categories:
