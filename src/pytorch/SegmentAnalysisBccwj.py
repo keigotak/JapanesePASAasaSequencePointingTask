@@ -52,7 +52,12 @@ def main(path_pkl, path_detail):
 
     with Path(path_pkl).open('rb') as f:
         outputs = pickle.load(f)
-    properties = [output[1] for output in outputs]
+    if 'pointer' in path_pkl or 'sp' in path_pkl:
+        properties = [output[3] for output in outputs]
+        index = 4
+    else:
+        properties = [output[1] for output in outputs]
+        index = 2
 
     with Path(path_detail).open('r', encoding='utf-8') as f:
         detailed_outputs = f.readlines()
@@ -62,7 +67,7 @@ def main(path_pkl, path_detail):
     for line in detailed_outputs:
         words = line.strip().split(', ')
         prediction.append(int(words[7]))
-        if len(prediction) == len(outputs[i][2]):
+        if len(prediction) == len(outputs[i][index]):
             predictions.append(prediction.copy())
             prediction = []
             i += 1
