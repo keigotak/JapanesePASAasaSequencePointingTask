@@ -206,7 +206,7 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description='PASA bccwj analysis')
-    parser.add_argument('--model', default='sl', type=str)
+    parser.add_argument('--model', default=None, type=str)
     parser.add_argument('--reset', action='store_true')
     arguments = parser.parse_args()
 
