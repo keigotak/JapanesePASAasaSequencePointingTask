@@ -54,7 +54,7 @@ def main(path_pkl, path_detail):
 
     with Path(path_pkl).open('rb') as f:
         outputs = pickle.load(f)
-    if 'pointer' in path_pkl or 'sp' in path_pkl:
+    if 'pointer' in path_pkl or 'sp' in path_pkl or 'ptr' in path_pkl:
         properties = [output[3] for output in outputs]
         index = 4
     else:
