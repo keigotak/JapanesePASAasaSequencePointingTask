@@ -111,11 +111,11 @@ class BertWithJumanModel():
 
         dup_ids = []
         dup_tokens = []
-        dup_embs = []
+        dup_embs = None
         for seq_ids, ids, tokens, embs in zip(batched_bert_seq_ids, batched_bert_ids, batched_bert_words, batched_bert_embs):
             dup_id = []
             dup_token = []
-            dup_emb = []
+            dup_emb = None
 
             def get_duplicated_index(l, x):
                 return [i for i, _x in enumerate(l) if _x == x]
@@ -126,37 +126,52 @@ class BertWithJumanModel():
                 if len(indexes) == 1:
                     dup_id.append(int(ids[indexes[0]]))
                     dup_token.append(tokens[indexes[0]])
-                    dup_emb.append(embs[indexes[0]])
+                    if dup_emb is None:
+                        dup_emb = embs[indexes[0]].unsqueeze(0)
+                    else:
+                        dup_emb = torch.cat((dup_emb, embs[indexes[0]].unsqueeze(0)), dim=0)
                 else:
                     if len(indexes) == 0:
                         pass
                     else:
                         dup_id.append([int(ids[ii]) for ii in indexes])
                         dup_token.append([tokens[ii] for ii in indexes])
-                        dup_emb.append(torch.mean(itemgetter(indexes)(embs), dim=0))
+                        if dup_emb is None:
+                            dup_emb = torch.mean(itemgetter(indexes)(embs), dim=0).unsqueeze(0)
+                        else:
+                            dup_emb = torch.cat((dup_emb, torch.mean(itemgetter(indexes)(embs), dim=0).unsqueeze(0)), dim=0)
                 if tokens[current_pos] == "[SEP]":
                     break
                 current_pos += len(indexes)
 
             dup_ids.append(dup_id)
             dup_tokens.append(dup_token)
-            dup_embs.append(dup_emb)
+            if dup_embs is None:
+                dup_embs = dup_emb.unsqueeze(0)
+            else:
+                dup_embs = torch.cat((dup_embs, dup_emb.unsqueeze(0)), dim=0)
 
-        shlinked_embedding = []
-        shlinked_token = []
         shlinked_id = []
+        shlinked_token = []
+        shlinked_embedding = None
         for id, token, emb in zip(dup_ids, dup_tokens, dup_embs):
-            shlinked_embedding.append(emb[1:-1])
-            shlinked_token.append(token[1:-1])
             shlinked_id.append(id[1:-1])
+            shlinked_token.append(token[1:-1])
+            if shlinked_embedding is None:
+                shlinked_embedding = emb[1:-1].unsqueeze(0)
+            else:
+                shlinked_embedding = torch.cat((shlinked_embedding, emb[1:-1].unsqueeze(0)), dim=0)
 
         return {"embedding": shlinked_embedding, "token": shlinked_token, "id": shlinked_id}
 
     def get_pred_embedding(self, batched_arg_embedding, batched_arg_token, batched_word_pos, pred_pos_index):
-        batched_pred_embedding = []
+        batched_pred_embedding = None
         for word_pos, arg_embedding, arg_token in zip(batched_word_pos, batched_arg_embedding, batched_arg_token):
             index = int((word_pos == pred_pos_index).nonzero().reshape(-1))
-            batched_pred_embedding.append([arg_embedding[index] for _ in range(len(arg_embedding))])
+            if batched_pred_embedding is None:
+                batched_pred_embedding = arg_embedding[index].repeat(len(arg_embedding)).view(-1, len(arg_embedding[index])).unsqueeze(0)
+            else:
+                batched_pred_embedding = torch.cat((batched_pred_embedding, arg_embedding[index].repeat(len(arg_embedding)).view(-1, len(arg_embedding[index])).unsqueeze(0)), dim=0)
             if "[PAD]" in arg_token:
                 pad_from = arg_token.index("[PAD]")
                 for i in range(pad_from, len(batched_pred_embedding[-1])):
