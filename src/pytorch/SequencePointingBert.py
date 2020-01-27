@@ -265,6 +265,7 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
     _params = ['server: {} {}'.format(sm.server_name, sm.device_name),
                'init_checkpoint: {}'.format(arguments.init_checkpoint),
                'embed_type: {}'.format(arguments.embed),
+               'decode: {}'.format(arguments.decode),
                'train_batch_size: {}'.format(batch_size),
                'dev_batch_size: {}'.format(arguments.dev_size),
                'learning_rate: {}'.format(learning_rate),
