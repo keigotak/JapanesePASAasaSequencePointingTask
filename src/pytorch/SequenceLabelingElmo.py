@@ -482,7 +482,7 @@ def train(batch_size, learning_rate=1e-3, optim="adam",  dropout_ratio=0.4, null
                       + [best_model_path]\
                       + [arguments.seed]\
                       + [gm.sha]\
-                      + [arguments.without_linear]\
+                      + [arguments.with_linear]\
                       + [num_params]\
                       + [arguments.num_data]\
                       + ["no_decoder"]\
