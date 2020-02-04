@@ -181,6 +181,6 @@ class BertSequencePointingModel(Model):
         self.load_state_dict(state_dict)
 
 
-
 if __name__ == "__main__":
     model = BertSequencePointingModel()
+
