@@ -215,34 +215,34 @@ def get_bertsp_ntc(mode="global"):
 
 def get_bertsp_bccwj(mode="global"):
     items0, items1, items2, items3, items4 = [], [], [], [], []
-    # if mode == "global":
-    #     with Path("../../results/pasa-bertptr-20200104-075003/ptr_20200104-075003_model-0_epoch16-f0.8703.h5.pkl").open(
-    #         'rb') as f:
-    #         items0 = pickle.load(f)
-    #     with Path("../../results/pasa-bertptr-20200104-075003/ptr_20200104-075003_model-0_epoch15-f0.8707.h5.pkl").open(
-    #         'rb') as f:
-    #         items1 = pickle.load(f)
-    #     with Path("../../results/pasa-bertptr-20200104-075002/ptr_20200104-075002_model-0_epoch15-f0.8719.h5.pkl").open(
-    #         'rb') as f:
-    #         items2 = pickle.load(f)
-    #     with Path("../../results/pasa-bertptr-20200104-075003/ptr_20200104-075003_model-0_epoch11-f0.8709.h5.pkl").open(
-    #         'rb') as f:
-    #         items3 = pickle.load(f)
-    #     with Path("../../results/pasa-bertptr-20200104-093240/ptr_20200104-093240_model-0_epoch15-f0.8709.h5.pkl").open(
-    #         'rb') as f:
-    #         items4 = pickle.load(f)
-    # elif mode == "local":
-    #     with Path("../../results/pasa-bertptr-20200104-111614/ptr_20200104-111614_model-0_epoch11-f0.8710.h5.pkl").open('rb') as f:
-    #         items0 = pickle.load(f)
-    #     with Path("../../results/pasa-bertptr-20200104-111812/ptr_20200104-111812_model-0_epoch15-f0.8705.h5.pkl").open('rb') as f:
-    #         items1 = pickle.load(f)
-    #     with Path("../../results/pasa-bertptr-20200104-130215/ptr_20200104-130215_model-0_epoch15-f0.8718.h5.pkl").open('rb') as f:
-    #         items2 = pickle.load(f)
-    #     with Path("../../results/pasa-bertptr-20200104-130233/ptr_20200104-130233_model-0_epoch13-f0.8701.h5.pkl").open('rb') as f:
-    #         items3 = pickle.load(f)
-    #     with Path("../../results/pasa-bertptr-20200104-130251/ptr_20200104-130251_model-0_epoch15-f0.8707.h5.pkl").open('rb') as f:
-    #         items4 = pickle.load(f)
-    if mode == "none":
+    if mode == "global":
+        with Path("../../results/pasa-bertptr-20200204-000526/ptr_20200204-000526_model-0_epoch16-f0.7955.h5.pkl").open(
+            'rb') as f:
+            items0 = pickle.load(f)
+        with Path("../../results/pasa-bertptr-20200204-000526/ptr_20200204-000526_model-0_epoch16-f0.7939.h5.pkl").open(
+            'rb') as f:
+            items1 = pickle.load(f)
+        with Path("../../results/pasa-bertptr-20200204-000531/ptr_20200204-000531_model-0_epoch14-f0.7943.h5.pkl").open(
+            'rb') as f:
+            items2 = pickle.load(f)
+        with Path("../../results/pasa-bertptr-20200204-000527/ptr_20200204-000527_model-0_epoch14-f0.7950.h5.pkl").open(
+            'rb') as f:
+            items3 = pickle.load(f)
+        with Path("../../results/pasa-bertptr-20200204-000523/ptr_20200204-000523_model-0_epoch13-f0.7943.h5.pkl").open(
+            'rb') as f:
+            items4 = pickle.load(f)
+    elif mode == "local":
+        with Path("../../results/pasa-bertptr-20200204-004921/ptr_20200204-004921_model-0_epoch14-f0.7955.h5.pkl").open('rb') as f:
+            items0 = pickle.load(f)
+        with Path("../../results/pasa-bertptr-20200204-004930/ptr_20200204-004930_model-0_epoch17-f0.7940.h5.pkl").open('rb') as f:
+            items1 = pickle.load(f)
+        with Path("../../results/pasa-bertptr-20200204-004921/ptr_20200204-004921_model-0_epoch14-f0.7944.h5.pkl").open('rb') as f:
+            items2 = pickle.load(f)
+        with Path("../../results/pasa-bertptr-20200204-004932/ptr_20200204-004932_model-0_epoch13-f0.7963.h5.pkl").open('rb') as f:
+            items3 = pickle.load(f)
+        with Path("../../results/pasa-bertptr-20200204-004921/ptr_20200204-004921_model-0_epoch13-f0.7924.h5.pkl").open('rb') as f:
+            items4 = pickle.load(f)
+    elif mode == "none":
         with Path("../../results/pasa-bertptr-20200104-165547/ptr_20200104-165547_model-0_epoch16-f0.7924.h5.pkl").open('rb') as f:
             items0 = pickle.load(f)
         with Path("../../results/pasa-bertptr-20200104-170518/ptr_20200104-170518_model-0_epoch17-f0.7922.h5.pkl").open('rb') as f:
