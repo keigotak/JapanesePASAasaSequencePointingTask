@@ -18,7 +18,7 @@ tag_sl = ['sl_ntc', 'sl_bccwj', 'bertsl_ntc', 'bertsl_bccwj']
 tag_sp = ['sp_global_ntc', 'sp_local_ntc', 'sp_none_ntc',
           'sp_global_bccwj', 'sp_local_bccwj', 'sp_none_bccwj',
           'bertsp_global_ntc', 'bertsp_local_ntc', 'bertsp_none_ntc',
-          # 'bertsp_global_bccwj', 'bertsp_local_bccwj',
+          'bertsp_global_bccwj', 'bertsp_local_bccwj',
           'bertsp_none_bccwj']
 
 parser = argparse.ArgumentParser(description='PASA Ensamble')
