@@ -198,6 +198,17 @@ def get_files(model_name):
              '../../results/pasa-bertsl-20200104-154415/detaillog_bertsl_20200104-154415.txt',
              '../../results/pasa-bertsl-20200104-154538/detaillog_bertsl_20200104-154538.txt',
              '../../results/pasa-bertsl-20200104-163623/detaillog_bertsl_20200104-163623.txt']),
+        'bspg': (
+            ['../../results/pasa-bertptr-20200204-225742/ptr_20200204-225742_model-0_epoch16-f0.7939.h5.pkl',
+             '../../results/pasa-bertptr-20200204-233732/ptr_20200204-233732_model-0_epoch16-f0.7955.h5.pkl',
+             '../../results/pasa-bertptr-20200204-000531/ptr_20200204-000531_model-0_epoch14-f0.7943.h5.pkl',
+             '../../results/pasa-bertptr-20200204-000527/ptr_20200204-000527_model-0_epoch14-f0.7950.h5.pkl',
+             '../../results/pasa-bertptr-20200204-000523/ptr_20200204-000523_model-0_epoch13-f0.7943.h5.pkl'],
+            ['../../results/pasa-bertptr-20200204-225742/detaillog_bertptr_20200204-225742.txt',
+             '../../results/pasa-bertptr-20200204-233732/detaillog_bertptr_20200204-233732.txt',
+             '../../results/pasa-bertptr-20200204-000531/detaillog_bertptr_20200204-000531.txt',
+             '../../results/pasa-bertptr-20200204-000527/detaillog_bertptr_20200204-000527.txt',
+             '../../results/pasa-bertptr-20200204-000523/detaillog_bertptr_20200204-000523.txt']),
         'bspn': (
             ['../../results/pasa-bertptr-20200104-165547/ptr_20200104-165547_model-0_epoch16-f0.7924.h5.pkl',
              '../../results/pasa-bertptr-20200104-170518/ptr_20200104-170518_model-0_epoch17-f0.7922.h5.pkl',
@@ -208,7 +219,18 @@ def get_files(model_name):
              '../../results/pasa-bertptr-20200104-170518/detaillog_bertptr_20200104-170518.txt',
              '../../results/pasa-bertptr-20200104-171529/detaillog_bertptr_20200104-171529.txt',
              '../../results/pasa-bertptr-20200104-172439/detaillog_bertptr_20200104-172439.txt',
-             '../../results/pasa-bertptr-20200104-172634/detaillog_bertptr_20200104-172634.txt'])
+             '../../results/pasa-bertptr-20200104-172634/detaillog_bertptr_20200104-172634.txt']),
+        'bspl': (
+            ['../../results/pasa-bertptr-20200205-001801/ptr_20200205-001801_model-0_epoch14-f0.7955.h5.pkl',
+             '../../results/pasa-bertptr-20200204-004930/ptr_20200204-004930_model-0_epoch17-f0.7940.h5.pkl',
+             '../../results/pasa-bertptr-20200205-005949/ptr_20200205-005949_model-0_epoch14-f0.7944.h5.pkl',
+             '../../results/pasa-bertptr-20200204-004932/ptr_20200204-004932_model-0_epoch13-f0.7963.h5.pkl',
+             '../../results/pasa-bertptr-20200205-014243/ptr_20200205-014243_model-0_epoch13-f0.7924.h5.pkl'],
+            ['../../results/pasa-bertptr-20200205-001801/detaillog_bertptr_20200205-001801.txt',
+             '../../results/pasa-bertptr-20200204-004930/detaillog_bertptr_20200204-004930.txt',
+             '../../results/pasa-bertptr-20200205-005949/detaillog_bertptr_20200205-005949.txt',
+             '../../results/pasa-bertptr-20200204-004932/detaillog_bertptr_20200204-004932.txt',
+             '../../results/pasa-bertptr-20200205-014243/detaillog_bertptr_20200205-014243.txt'])
     }
     return file[model_name]
 
