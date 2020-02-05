@@ -63,6 +63,17 @@ def main(path_pkl, path_detail):
         with Path('../../data/BCCWJ-DepParaPAS/test_sentences.txt').open('w', encoding='utf-8') as f:
             f.write('\n'.join(['{}, {}, {}, {}'.format(ref_texts[''.join(arg)][0], ''.join(arg), pred[0], ''.join(map(str, label))) for arg, pred, label in zip(test_args, test_preds, test_label)]))
 
+    # perplexity_sentences = []
+    # perplexity_categories = []
+    # for arg in test_args:
+    #     sentence = ''.join(arg)
+    #     if sentence not in perplexity_sentences:
+    #         perplexity_sentences.append(sentence)
+    #         perplexity_categories.append(ref_texts[sentence][0])
+    # with Path('../../data/BCCWJ-DepParaPAS/test_sentences_perplexity.txt').open('w', encoding='utf-8') as f:
+    #     f.write('\n'.join(['{}, {}'.format(category, sentence) for category, sentence in zip(perplexity_categories, perplexity_sentences)]))
+
+
     with Path(path_pkl).open('rb') as f:
         outputs = pickle.load(f)
     if 'pointer' in path_pkl or 'sp' in path_pkl or 'ptr' in path_pkl:
