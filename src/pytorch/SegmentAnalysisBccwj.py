@@ -360,26 +360,25 @@ def run(model, arguments):
                 remove_file(Path('../../results/labelwise-fscores-{}-avg.txt'.format(tags[category])))
             with Path('../../results/labelwise-fscores-{}-avg.txt'.format(tags[category])).open('a', encoding='utf-8') as f:
                 for i in range(max_sentence_length):
-                    avg_lengthwise_all_scores = 0.0
-                    avg_lengthwise_dep_scores = np.array([0.0] * 4)
-                    avg_lengthwise_zero_scores = np.array([0.0] * 4)
+                    # avg_lengthwise_all_scores = 0.0
+                    # avg_lengthwise_dep_scores = np.array([0.0] * 4)
+                    # avg_lengthwise_zero_scores = np.array([0.0] * 4)
                     tmp_scores = []
                     for path_detail in files[1]:
-                        avg_lengthwise_all_scores += lengthwise_all_scores[path_detail][category][i]
-                        avg_lengthwise_dep_scores += np.array(lengthwise_dep_scores[path_detail][category][i])
-                        avg_lengthwise_zero_scores += np.array(lengthwise_zero_scores[path_detail][category][i])
+                        # avg_lengthwise_all_scores += lengthwise_all_scores[path_detail][category][i]
+                        # avg_lengthwise_dep_scores += np.array(lengthwise_dep_scores[path_detail][category][i])
+                        # avg_lengthwise_zero_scores += np.array(lengthwise_zero_scores[path_detail][category][i])
                         tmp_scores.append([lengthwise_all_scores[path_detail][category][i]] + lengthwise_dep_scores[path_detail][category][i] + lengthwise_zero_scores[path_detail][category][i])
-                    avg_lengthwise_all_scores /= len(files[1])
-                    avg_lengthwise_dep_scores /= len(files[1])
-                    avg_lengthwise_zero_scores /= len(files[1])
+                    # avg_lengthwise_all_scores /= len(files[1])
+                    # avg_lengthwise_dep_scores /= len(files[1])
+                    # avg_lengthwise_zero_scores /= len(files[1])
+                    mean_tmp_scores = np.mean(np.array(tmp_scores), axis=0)
                     dev_tmp_scores = np.var(np.array(tmp_scores), axis=0)
-                    line = '{}, {}, {}, {}, {}, {}, {}'.format(model,
-                                                               category,
-                                                               i,
-                                                               avg_lengthwise_all_scores,
-                                                               ','.join(map(str, avg_lengthwise_dep_scores.tolist())),
-                                                               ','.join(map(str, avg_lengthwise_zero_scores.tolist())),
-                                                               ','.join(map(str, dev_tmp_scores.tolist())))
+                    line = '{}, {}, {}, {}, {}'.format(model,
+                                                       category,
+                                                       i,
+                                                       ','.join(map(str, mean_tmp_scores.tolist())),
+                                                       ','.join(map(str, dev_tmp_scores.tolist())))
                     print(line)
                     f.write(line + '\n')
 
@@ -387,26 +386,25 @@ def run(model, arguments):
         remove_file(Path('../../results/fscores-avg.txt'))
     with Path('../../results/fscores-avg.txt').open('a', encoding='utf-8') as f:
         for i in range(max_sentence_length):
-            avg_lengthwise_all_scores = 0.0
-            avg_lengthwise_dep_scores = np.array([0.0] * 4)
-            avg_lengthwise_zero_scores = np.array([0.0] * 4)
+            # avg_lengthwise_all_scores = 0.0
+            # avg_lengthwise_dep_scores = np.array([0.0] * 4)
+            # avg_lengthwise_zero_scores = np.array([0.0] * 4)
             tmp_scores = []
             for path_detail in files[1]:
                 for category in categories:
-                    avg_lengthwise_all_scores += lengthwise_all_scores[path_detail][category][i]
-                    avg_lengthwise_dep_scores += np.array(lengthwise_dep_scores[path_detail][category][i])
-                    avg_lengthwise_zero_scores += np.array(lengthwise_zero_scores[path_detail][category][i])
+                    # avg_lengthwise_all_scores += lengthwise_all_scores[path_detail][category][i]
+                    # avg_lengthwise_dep_scores += np.array(lengthwise_dep_scores[path_detail][category][i])
+                    # avg_lengthwise_zero_scores += np.array(lengthwise_zero_scores[path_detail][category][i])
                     tmp_scores.append([lengthwise_all_scores[path_detail][category][i]] + lengthwise_dep_scores[path_detail][category][i] + lengthwise_zero_scores[path_detail][category][i])
-            avg_lengthwise_all_scores /= len(files[1]) + len(categories)
-            avg_lengthwise_dep_scores /= len(files[1]) + len(categories)
-            avg_lengthwise_zero_scores /= len(files[1]) + len(categories)
+            # avg_lengthwise_all_scores /= len(files[1]) + len(categories)
+            # avg_lengthwise_dep_scores /= len(files[1]) + len(categories)
+            # avg_lengthwise_zero_scores /= len(files[1]) + len(categories)
+            mean_tmp_scores = np.mean(np.array(tmp_scores), axis=0)
             dev_tmp_scores = np.var(np.array(tmp_scores), axis=0)
-            line = '{}, {}, {}, {}, {}, {}'.format(model,
-                                                   i,
-                                                   avg_lengthwise_all_scores,
-                                                   ','.join(map(str, avg_lengthwise_dep_scores.tolist())),
-                                                   ','.join(map(str, avg_lengthwise_zero_scores.tolist())),
-                                                   ','.join(map(str, dev_tmp_scores.tolist())))
+            line = '{}, {}, {}, {}'.format(model,
+                                           i,
+                                           ','.join(map(str, mean_tmp_scores.tolist())),
+                                           ','.join(map(str, dev_tmp_scores.tolist())))
             print(line)
             f.write(line + '\n')
 
