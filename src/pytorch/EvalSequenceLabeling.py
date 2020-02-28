@@ -234,8 +234,9 @@ def eval(batch_size=1, null_weight=None, loss_weight=None):
             with _log_path.open(mode='a', encoding="utf-8") as f:
                 sentence = [vocab.id2word(item) for item in t_args[0]]
                 sentence = ' '.join(sentence)
+                sentence_length = len(sentence)
                 for arg, pred, prop, word_pos, ku_pos, mode, label, predict in zip(t_args[0], t_preds[0], t_props[0], t_word_pos[0], t_ku_pos[0], t_mode[0], t_labels[0], prediction[0]):
-                    _line = '{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}' \
+                    _line = '{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}' \
                         .format(vocab.id2word(arg),
                                 vocab.id2word(pred),
                                 prop,
@@ -244,7 +245,8 @@ def eval(batch_size=1, null_weight=None, loss_weight=None):
                                 mode_indexer.id2word(mode),
                                 label,
                                 predict,
-                                sentence)
+                                sentence,
+                                sentence_length)
                     f.write(_line + '\n')
 
             tp_history.append(tp)

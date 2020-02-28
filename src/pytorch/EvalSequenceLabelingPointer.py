@@ -289,6 +289,7 @@ def eval(batch_size=1, null_weight=None, loss_weight=None):
             with _log_path.open(mode='a', encoding="utf-8") as f:
                 sentence = [vocab.id2word(item) for item in t_args[0]]
                 sentence = ' '.join(sentence)
+                sentence_length = len(sentence)
                 for arg, pred, prop, word_pos, ku_pos, mode, label, predict in zip(t_args[0], t_preds[0], t_props[0], t_word_pos[0], t_ku_pos[0], t_mode[0], t_labels[0], t_prediction[0]):
                     conflict = False
                     if type(predict) == list:
@@ -297,7 +298,7 @@ def eval(batch_size=1, null_weight=None, loss_weight=None):
                             ret += str(item)
                         predict = ret
                         conflict = True
-                    _line = '{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}' \
+                    _line = '{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}' \
                         .format(vocab.id2word(arg),
                                 vocab.id2word(pred),
                                 prop,
@@ -307,7 +308,8 @@ def eval(batch_size=1, null_weight=None, loss_weight=None):
                                 label,
                                 predict,
                                 sentence,
-                                conflict)
+                                conflict,
+                                sentence_length)
                     f.write(_line + '\n')
 
             tp_history.append(tp)
