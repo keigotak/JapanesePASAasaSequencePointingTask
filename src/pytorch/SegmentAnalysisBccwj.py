@@ -299,100 +299,129 @@ def get_files(model_name):
     return file[model_name]
 
 
-if __name__ == '__main__':
-    import argparse
+def remove_file(_path):
+    try:
+        os.remove(_path)
+    except FileNotFoundError:
+        pass
 
-    parser = argparse.ArgumentParser(description='PASA bccwj analysis')
-    parser.add_argument('--model', default=None, type=str)
-    parser.add_argument('--reset_sentences', action='store_true')
-    parser.add_argument('--reset_score', action='store_true')
-    arguments = parser.parse_args()
 
-    model = arguments.model
+def run(model, arguments):
     files = get_files(model)
     all_scores, dep_scores, zero_scores = {}, {}, {}
     lengthwise_all_scores, lengthwise_dep_scores, lengthwise_zero_scores = {}, {}, {}
     categories = ['ブログ', '知恵袋', '出版', '新聞', '雑誌', '白書']
+    tags = {'出版': 'PB', '雑誌': 'PM', '新聞': 'PN', '白書': 'OW', '知恵袋': 'OC', 'ブログ': 'OY'}
+
     with_initial_print = True
     for path_pkl, path_detail in zip(files[0], files[1]):
-        all_scores[path_detail], dep_scores[path_detail], zero_scores[path_detail], lengthwise_all_scores[path_detail], lengthwise_dep_scores[path_detail], lengthwise_zero_scores[path_detail], max_sentence_length = main(path_pkl, path_detail, with_initial_print)
+        all_scores[path_detail], dep_scores[path_detail], zero_scores[path_detail], lengthwise_all_scores[
+            path_detail], lengthwise_dep_scores[path_detail], lengthwise_zero_scores[
+            path_detail], max_sentence_length = main(path_pkl, path_detail, with_initial_print)
         with_initial_print = False
 
-    if arguments.reset_score:
-        os.remove(Path('../../results/bccwj-categories.txt'))
+    if arguments.reset_scores:
+        remove_file(Path('../../results/bccwj-categories.txt'))
 
     with Path('../../results/bccwj-categories.txt').open('a', encoding='utf-8') as f:
         for category in categories:
             for path_detail in files[1]:
-                line = '{}, {}, {}, {}, {}'.format(path_detail,
-                                                  category,
-                                                  all_scores[path_detail][category],
-                                                  ','.join(map(str, dep_scores[path_detail][category])),
-                                                  ','.join(map(str, zero_scores[path_detail][category])))
+                line = '{}, {}, {}, {}, {}, {}'.format(model,
+                                                       path_detail,
+                                                       category,
+                                                       all_scores[path_detail][category],
+                                                       ','.join(map(str, dep_scores[path_detail][category])),
+                                                       ','.join(map(str, zero_scores[path_detail][category])))
                 print(line)
                 f.write(line + '\n')
 
-    if arguments.reset_score:
-        os.remove(Path('../../results/labelwise-fscores.txt'))
-    with Path('../../results/labelwise-fscores.txt').open('a', encoding='utf-8') as f:
         for category in categories:
-            for i in range(max_sentence_length):
-                for path_detail in files[1]:
+            if arguments.reset_scores:
+                remove_file(Path('../../results/labelwise-fscores-{}.txt'.format(tags[category])))
+            with Path('../../results/labelwise-fscores-{}.txt'.format(tags[category])).open('a', encoding='utf-8') as f:
+                for i in range(max_sentence_length):
+                    for path_detail in files[1]:
+                        line = '{}, {}, {}, {}, {}, {}, {}'.format(model,
+                                                                   category,
+                                                                   i,
+                                                                   lengthwise_all_scores[path_detail][category][i],
+                                                                   ','.join(map(str, lengthwise_dep_scores[path_detail][
+                                                                       category][i])),
+                                                                   ','.join(map(str,
+                                                                                lengthwise_zero_scores[path_detail][
+                                                                                    category][i])),
+                                                                   path_detail)
+
+                        print(line)
+                        f.write(line + '\n')
+
+        for category in categories:
+            if arguments.reset_scores:
+                remove_file(Path('../../results/labelwise-fscores-{}-avg.txt'.format(tags[category])))
+            with Path('../../results/labelwise-fscores-{}-avg.txt'.format(tags[category])).open('a', encoding='utf-8') as f:
+                for i in range(max_sentence_length):
+                    avg_lengthwise_all_scores = 0.0
+                    avg_lengthwise_dep_scores = np.array([0.0] * 4)
+                    avg_lengthwise_zero_scores = np.array([0.0] * 4)
+                    tmp_scores = []
+                    for path_detail in files[1]:
+                        avg_lengthwise_all_scores += lengthwise_all_scores[path_detail][category][i]
+                        avg_lengthwise_dep_scores += np.array(lengthwise_dep_scores[path_detail][category][i])
+                        avg_lengthwise_zero_scores += np.array(lengthwise_zero_scores[path_detail][category][i])
+                        tmp_scores.append([lengthwise_all_scores[path_detail][category][i]] + lengthwise_dep_scores[path_detail][category][i] + lengthwise_zero_scores[path_detail][category][i])
+                    avg_lengthwise_all_scores /= len(files[1])
+                    avg_lengthwise_dep_scores /= len(files[1])
+                    avg_lengthwise_zero_scores /= len(files[1])
+                    dev_tmp_scores = np.var(np.array(tmp_scores), axis=0)
                     line = '{}, {}, {}, {}, {}, {}, {}'.format(model,
                                                                category,
                                                                i,
-                                                               lengthwise_all_scores[path_detail][category][i],
-                                                               ','.join(map(str, lengthwise_dep_scores[path_detail][category][i])),
-                                                               ','.join(map(str, lengthwise_zero_scores[path_detail][category][i])),
-                                                               path_detail)
-
+                                                               avg_lengthwise_all_scores,
+                                                               ','.join(map(str, avg_lengthwise_dep_scores.tolist())),
+                                                               ','.join(map(str, avg_lengthwise_zero_scores.tolist())),
+                                                               ','.join(map(str, dev_tmp_scores.tolist())))
                     print(line)
                     f.write(line + '\n')
 
-    if arguments.reset_score:
-        os.remove(Path('../../results/labelwise-fscores-avg.txt'))
-    with Path('../../results/labelwise-fscores-avg.txt').open('a', encoding='utf-8') as f:
-        for category in categories:
-            for i in range(max_sentence_length):
-                avg_lengthwise_all_scores = 0.0
-                avg_lengthwise_dep_scores = np.array([0.0] * 4)
-                avg_lengthwise_zero_scores = np.array([0.0] * 4)
-                for path_detail in files[1]:
-                    avg_lengthwise_all_scores += lengthwise_all_scores[path_detail][category][i]
-                    avg_lengthwise_dep_scores += np.array(lengthwise_dep_scores[path_detail][category][i])
-                    avg_lengthwise_zero_scores += np.array(lengthwise_zero_scores[path_detail][category][i])
-                avg_lengthwise_all_scores /= len(files[1])
-                avg_lengthwise_dep_scores /= len(files[1])
-                avg_lengthwise_zero_scores /= len(files[1])
-                line = '{}, {}, {}, {}, {}, {}, {}'.format(model,
-                                                           category,
-                                                           i,
-                                                           avg_lengthwise_all_scores,
-                                                           ','.join(map(str, avg_lengthwise_dep_scores.tolist())),
-                                                           ','.join(map(str, avg_lengthwise_zero_scores.tolist())),
-                                                           ','.join(files[1]))
-                print(line)
-                f.write(line + '\n')
-
-    if arguments.reset_score:
-        os.remove(Path('../../results/fscores-avg.txt'))
+    if arguments.reset_scores:
+        remove_file(Path('../../results/fscores-avg.txt'))
     with Path('../../results/fscores-avg.txt').open('a', encoding='utf-8') as f:
         for i in range(max_sentence_length):
             avg_lengthwise_all_scores = 0.0
             avg_lengthwise_dep_scores = np.array([0.0] * 4)
             avg_lengthwise_zero_scores = np.array([0.0] * 4)
+            tmp_scores = []
             for path_detail in files[1]:
                 for category in categories:
                     avg_lengthwise_all_scores += lengthwise_all_scores[path_detail][category][i]
                     avg_lengthwise_dep_scores += np.array(lengthwise_dep_scores[path_detail][category][i])
                     avg_lengthwise_zero_scores += np.array(lengthwise_zero_scores[path_detail][category][i])
+                    tmp_scores.append([lengthwise_all_scores[path_detail][category][i]] + lengthwise_dep_scores[path_detail][category][i] + lengthwise_zero_scores[path_detail][category][i])
             avg_lengthwise_all_scores /= len(files[1]) + len(categories)
             avg_lengthwise_dep_scores /= len(files[1]) + len(categories)
             avg_lengthwise_zero_scores /= len(files[1]) + len(categories)
-            line = '{}, {}, {}, {}, {}'.format(model,
-                                               i,
-                                               avg_lengthwise_all_scores,
-                                               ','.join(map(str, avg_lengthwise_dep_scores.tolist())),
-                                               ','.join(map(str, avg_lengthwise_zero_scores.tolist())))
+            dev_tmp_scores = np.var(np.array(tmp_scores), axis=0)
+            line = '{}, {}, {}, {}, {}, {}'.format(model,
+                                                   i,
+                                                   avg_lengthwise_all_scores,
+                                                   ','.join(map(str, avg_lengthwise_dep_scores.tolist())),
+                                                   ','.join(map(str, avg_lengthwise_zero_scores.tolist())),
+                                                   ','.join(map(str, dev_tmp_scores.tolist())))
             print(line)
             f.write(line + '\n')
+
+
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser(description='PASA bccwj analysis')
+    parser.add_argument('--model', default=None, type=str)
+    parser.add_argument('--reset_sentences', action='store_true')
+    parser.add_argument('--reset_scores', action='store_true')
+    arguments = parser.parse_args()
+
+    model = arguments.model
+    if model == 'all':
+        for item in ['sl', 'spg', 'spl', 'spn', 'bsl', 'bspg', 'bspl', 'bspn']:
+            run(model, arguments)
+    else:
+        run(model, arguments)
