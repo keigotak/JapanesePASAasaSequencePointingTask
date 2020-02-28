@@ -422,6 +422,6 @@ if __name__ == '__main__':
     model = arguments.model
     if model == 'all':
         for item in ['sl', 'spg', 'spl', 'spn', 'bsl', 'bspg', 'bspl', 'bspn']:
-            run(model, arguments)
+            run(item, arguments)
     else:
         run(model, arguments)
