@@ -9,9 +9,10 @@ import os
 sys.path.append(os.pardir)
 from utils.Datasets import get_datasets_in_sentences
 from Validation import get_pr_numbers, get_f_score
+from BertWithJumanModel import BertWithJumanModel
 
 
-def main(path_pkl, path_detail):
+def main(path_pkl, path_detail, with_initial_print=True):
     tags = {'PB': '出版', 'PM': '雑誌', 'PN': '新聞', 'LB': '図書館', 'OW': '白書', 'OT': '教科書', 'OP': '広報紙',
                  'OB': 'ベストセラー', 'OC': '知恵袋', 'OY': 'ブログ', 'OV': '韻文', 'OL': '法律', 'OM': '国会議事録'}
     ref_texts = {}
@@ -51,18 +52,26 @@ def main(path_pkl, path_detail):
         sentences.extend([''.join(test_args[i])])
         labels.extend([test_label[i].tolist()])
         categories.extend([ref_texts[''.join(test_args[i])][0]])
-    count_categories = {'ブログ': 0, '知恵袋': 0, '出版': 0, '新聞': 0, '雑誌': 0, '白書': 0}
-    for key in count_categories.keys():
-        count_categories[key] = categories.count(key)
-    print(count_categories)
-    count_categories = {'ブログ': set(), '知恵袋': set(), '出版': set(), '新聞': set(), '雑誌': set(), '白書': set()}
-    for sentence, category in zip(sentences, categories):
-        count_categories[category].add(sentence)
-    print(','.join(['{}: {}'.format(category, len(count_categories[category])) for category in count_categories.keys()]))
-    if arguments.reset:
-        with Path('../../data/BCCWJ-DepParaPAS/test_sentences.txt').open('w', encoding='utf-8') as f:
-            f.write('\n'.join(['{}, {}, {}, {}'.format(ref_texts[''.join(arg)][0], ''.join(arg), pred[0], ''.join(map(str, label))) for arg, pred, label in zip(test_args, test_preds, test_label)]))
 
+    if with_initial_print:
+        count_categories = {'ブログ': 0, '知恵袋': 0, '出版': 0, '新聞': 0, '雑誌': 0, '白書': 0}
+        for key in count_categories.keys():
+            count_categories[key] = categories.count(key)
+        print(count_categories)
+        count_categories = {'ブログ': set(), '知恵袋': set(), '出版': set(), '新聞': set(), '雑誌': set(), '白書': set()}
+        sentence_length = {}
+        bert = BertWithJumanModel(device='cpu')
+        for sentence, category in zip(sentences, categories):
+            count_categories[category].add(sentence)
+            if sentence not in sentence_length.keys():
+                bert_tokens = bert.bert_tokenizer.tokenize(" ".join(bert.juman_tokenizer.tokenize(sentence)))
+                sentence_length[sentence] = (len(bert_tokens), bert_tokens)
+        print(','.join(['{}: {}'.format(category, len(count_categories[category])) for category in count_categories.keys()]))
+        if arguments.reset_sentences:
+            with Path('../../data/BCCWJ-DepParaPAS/test_sentences.txt').open('w', encoding='utf-8') as f:
+                f.write('\n'.join(['{}, {}, {}, {}, {}, {}, {}, {}'.format(ref_texts[''.join(arg)][0], ''.join(arg), pred[0], ''.join(map(str, label)), len(arg), sentence_length[''.join(arg)][0], '|'.join(sentence_length[''.join(arg)][1]), '|'.join(arg)) for arg, pred, label in zip(test_args, test_preds, test_label)]))
+
+    print(path_detail)
     # perplexity_sentences = []
     # perplexity_categories = []
     # for arg in test_args:
@@ -100,7 +109,10 @@ def main(path_pkl, path_detail):
     keys = set(categories)
     for key in keys:
         print('{}: {}, {}, {}'.format(key, all_scores[key], ','.join(map(str, dep_scores[key])), ','.join(map(str, zero_scores[key]))))
-    return all_scores, dep_scores, zero_scores
+
+    lengthwise_all_scores, lengthwise_dep_scores, lengthwise_zero_scores, max_sentence_length = get_f1_with_sentence_length(predictions, labels, properties, categories)
+
+    return all_scores, dep_scores, zero_scores, lengthwise_all_scores, lengthwise_dep_scores, lengthwise_zero_scores, max_sentence_length
 
 
 def get_f1_with_categories(outputs, labels, properties, categories):
@@ -142,6 +154,47 @@ def get_f1_with_categories(outputs, labels, properties, categories):
 
     return all_scores, dep_scores, zero_scores
 
+
+def get_f1_with_sentence_length(outputs, labels, properties, categories):
+    keys = set(categories)
+    max_sentence_length = max(list(map(len, labels))) + 1
+    tp_histories, fp_histories, fn_histories = {key: {i: np.array([0]*6) for i in range(max_sentence_length)} for key in keys}, {key: {i: np.array([0]*6) for i in range(max_sentence_length)} for key in keys}, {key: {i: np.array([0]*6) for i in range(max_sentence_length)} for key in keys}
+    for output, label, property, category in zip(outputs, labels, properties, categories):
+        tp_history, fp_history, fn_history = get_f1(output, label, property)
+        tp_histories[category][len(label)] += tp_history[0]
+        fp_histories[category][len(label)] += fp_history[0]
+        fn_histories[category][len(label)] += fn_history[0]
+
+    all_scores, dep_scores, zero_scores = {key: {i: 0 for i in range(max_sentence_length)}for key in keys}, {key: {i: [] for i in range(max_sentence_length)} for key in keys}, {key: {i: [] for i in range(max_sentence_length)} for key in keys}
+    for key in keys:
+        for i in range(max_sentence_length):
+            num_tp = tp_histories[key][i].tolist()
+            num_fp = fp_histories[key][i].tolist()
+            num_fn = fn_histories[key][i].tolist()
+            all_scores[key][i], dep_score, zero_score = get_f_score(num_tp, num_fp, num_fn)
+            dep_scores[key][i].append(dep_score)
+            zero_scores[key][i].append(zero_score)
+            precisions, recalls, f1s = [], [], []
+            num_tn = np.array([0] * len(num_tp))
+            for _tp, _fp, _fn, _tn in zip(num_tp, num_fp, num_fn, num_tn):
+                precision = 0.0
+                if _tp + _fp != 0:
+                    precision = _tp / (_tp + _fp)
+                precisions.append(precision)
+
+                recall = 0.0
+                if _tp + _fn != 0:
+                    recall = _tp / (_tp + _fn)
+                recalls.append(recall)
+
+                f1 = 0.0
+                if precision + recall != 0:
+                    f1 = 2 * precision * recall / (precision + recall)
+                f1s.append(f1)
+            dep_scores[key][i].extend(f1s[0:3])
+            zero_scores[key][i].extend(f1s[3:6])
+
+    return all_scores, dep_scores, zero_scores, max_sentence_length
 
 def get_f1(outputs, labels, properties):
     tp_history, fp_history, fn_history = [], [], []
@@ -251,18 +304,21 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='PASA bccwj analysis')
     parser.add_argument('--model', default=None, type=str)
-    parser.add_argument('--reset', action='store_true')
+    parser.add_argument('--reset_sentences', action='store_true')
+    parser.add_argument('--reset_score', action='store_true')
     arguments = parser.parse_args()
 
     model = arguments.model
     files = get_files(model)
     all_scores, dep_scores, zero_scores = {}, {}, {}
+    lengthwise_all_scores, lengthwise_dep_scores, lengthwise_zero_scores = {}, {}, {}
     categories = ['ブログ', '知恵袋', '出版', '新聞', '雑誌', '白書']
+    with_initial_print = True
     for path_pkl, path_detail in zip(files[0], files[1]):
-        print(path_detail)
-        all_scores[path_detail], dep_scores[path_detail], zero_scores[path_detail] = main(path_pkl, path_detail)
+        all_scores[path_detail], dep_scores[path_detail], zero_scores[path_detail], lengthwise_all_scores[path_detail], lengthwise_dep_scores[path_detail], lengthwise_zero_scores[path_detail], max_sentence_length = main(path_pkl, path_detail, with_initial_print)
+        with_initial_print = False
 
-    if arguments.reset:
+    if arguments.reset_score:
         os.remove(Path('../../results/bccwj-categories.txt'))
 
     with Path('../../results/bccwj-categories.txt').open('a', encoding='utf-8') as f:
@@ -276,3 +332,67 @@ if __name__ == '__main__':
                 print(line)
                 f.write(line + '\n')
 
+    if arguments.reset_score:
+        os.remove(Path('../../results/labelwise-fscores.txt'))
+    with Path('../../results/labelwise-fscores.txt').open('a', encoding='utf-8') as f:
+        for category in categories:
+            for i in range(max_sentence_length):
+                for path_detail in files[1]:
+                    line = '{}, {}, {}, {}, {}, {}, {}'.format(model,
+                                                               category,
+                                                               i,
+                                                               lengthwise_all_scores[path_detail][category][i],
+                                                               ','.join(map(str, lengthwise_dep_scores[path_detail][category][i])),
+                                                               ','.join(map(str, lengthwise_zero_scores[path_detail][category][i])),
+                                                               path_detail)
+
+                    print(line)
+                    f.write(line + '\n')
+
+    if arguments.reset_score:
+        os.remove(Path('../../results/labelwise-fscores-avg.txt'))
+    with Path('../../results/labelwise-fscores-avg.txt').open('a', encoding='utf-8') as f:
+        for category in categories:
+            for i in range(max_sentence_length):
+                avg_lengthwise_all_scores = 0.0
+                avg_lengthwise_dep_scores = np.array([0.0] * 4)
+                avg_lengthwise_zero_scores = np.array([0.0] * 4)
+                for path_detail in files[1]:
+                    avg_lengthwise_all_scores += lengthwise_all_scores[path_detail][category][i]
+                    avg_lengthwise_dep_scores += np.array(lengthwise_dep_scores[path_detail][category][i])
+                    avg_lengthwise_zero_scores += np.array(lengthwise_zero_scores[path_detail][category][i])
+                avg_lengthwise_all_scores /= len(files[1])
+                avg_lengthwise_dep_scores /= len(files[1])
+                avg_lengthwise_zero_scores /= len(files[1])
+                line = '{}, {}, {}, {}, {}, {}, {}'.format(model,
+                                                           category,
+                                                           i,
+                                                           avg_lengthwise_all_scores,
+                                                           ','.join(map(str, avg_lengthwise_dep_scores.tolist())),
+                                                           ','.join(map(str, avg_lengthwise_zero_scores.tolist())),
+                                                           ','.join(files[1]))
+                print(line)
+                f.write(line + '\n')
+
+    if arguments.reset_score:
+        os.remove(Path('../../results/fscores-avg.txt'))
+    with Path('../../results/fscores-avg.txt').open('a', encoding='utf-8') as f:
+        for i in range(max_sentence_length):
+            avg_lengthwise_all_scores = 0.0
+            avg_lengthwise_dep_scores = np.array([0.0] * 4)
+            avg_lengthwise_zero_scores = np.array([0.0] * 4)
+            for path_detail in files[1]:
+                for category in categories:
+                    avg_lengthwise_all_scores += lengthwise_all_scores[path_detail][category][i]
+                    avg_lengthwise_dep_scores += np.array(lengthwise_dep_scores[path_detail][category][i])
+                    avg_lengthwise_zero_scores += np.array(lengthwise_zero_scores[path_detail][category][i])
+            avg_lengthwise_all_scores /= len(files[1]) + len(categories)
+            avg_lengthwise_dep_scores /= len(files[1]) + len(categories)
+            avg_lengthwise_zero_scores /= len(files[1]) + len(categories)
+            line = '{}, {}, {}, {}, {}'.format(model,
+                                               i,
+                                               avg_lengthwise_all_scores,
+                                               ','.join(map(str, avg_lengthwise_dep_scores.tolist())),
+                                               ','.join(map(str, avg_lengthwise_zero_scores.tolist())))
+            print(line)
+            f.write(line + '\n')
