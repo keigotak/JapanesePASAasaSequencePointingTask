@@ -12,7 +12,7 @@ from Validation import get_pr_numbers, get_f_score
 from BertWithJumanModel import BertWithJumanModel
 
 
-def main(path_pkl, path_detail, with_initial_print=True):
+def main(path_pkl, path_detail, bin_size=1, with_initial_print=True):
     tags = {'PB': '出版', 'PM': '雑誌', 'PN': '新聞', 'LB': '図書館', 'OW': '白書', 'OT': '教科書', 'OP': '広報紙',
                  'OB': 'ベストセラー', 'OC': '知恵袋', 'OY': 'ブログ', 'OV': '韻文', 'OL': '法律', 'OM': '国会議事録'}
     ref_texts = {}
@@ -110,9 +110,9 @@ def main(path_pkl, path_detail, with_initial_print=True):
     for key in keys:
         print('{}: {}, {}, {}'.format(key, all_scores[key], ','.join(map(str, dep_scores[key])), ','.join(map(str, zero_scores[key]))))
 
-    lengthwise_all_scores, lengthwise_dep_scores, lengthwise_zero_scores, max_sentence_length = get_f1_with_sentence_length(predictions, labels, properties, categories)
+    lengthwise_all_scores, lengthwise_dep_scores, lengthwise_zero_scores, lengthwise_itr = get_f1_with_sentence_length(predictions, labels, properties, categories, bin_size)
 
-    return all_scores, dep_scores, zero_scores, lengthwise_all_scores, lengthwise_dep_scores, lengthwise_zero_scores, max_sentence_length
+    return all_scores, dep_scores, zero_scores, lengthwise_all_scores, lengthwise_dep_scores, lengthwise_zero_scores, lengthwise_itr
 
 
 def get_f1_with_categories(outputs, labels, properties, categories):
@@ -155,19 +155,20 @@ def get_f1_with_categories(outputs, labels, properties, categories):
     return all_scores, dep_scores, zero_scores
 
 
-def get_f1_with_sentence_length(outputs, labels, properties, categories):
+def get_f1_with_sentence_length(outputs, labels, properties, categories, bin_size=1):
     keys = set(categories)
     max_sentence_length = max(list(map(len, labels))) + 1
-    tp_histories, fp_histories, fn_histories = {key: {i: np.array([0]*6) for i in range(max_sentence_length)} for key in keys}, {key: {i: np.array([0]*6) for i in range(max_sentence_length)} for key in keys}, {key: {i: np.array([0]*6) for i in range(max_sentence_length)} for key in keys}
+    itr = range(0, max_sentence_length // bin_size + 1)
+    tp_histories, fp_histories, fn_histories = {key: {i: np.array([0]*6) for i in itr} for key in keys}, {key: {i: np.array([0]*6) for i in itr} for key in keys}, {key: {i: np.array([0]*6) for i in itr} for key in keys}
     for output, label, property, category in zip(outputs, labels, properties, categories):
         tp_history, fp_history, fn_history = get_f1(output, label, property)
-        tp_histories[category][len(label)] += tp_history[0]
-        fp_histories[category][len(label)] += fp_history[0]
-        fn_histories[category][len(label)] += fn_history[0]
+        tp_histories[category][len(label) // bin_size] += tp_history[0]
+        fp_histories[category][len(label) // bin_size] += fp_history[0]
+        fn_histories[category][len(label) // bin_size] += fn_history[0]
 
-    all_scores, dep_scores, zero_scores = {key: {i: 0 for i in range(max_sentence_length)}for key in keys}, {key: {i: [] for i in range(max_sentence_length)} for key in keys}, {key: {i: [] for i in range(max_sentence_length)} for key in keys}
+    all_scores, dep_scores, zero_scores = {key: {i: 0 for i in itr}for key in keys}, {key: {i: [] for i in itr} for key in keys}, {key: {i: [] for i in itr} for key in keys}
     for key in keys:
-        for i in range(max_sentence_length):
+        for i in itr:
             num_tp = tp_histories[key][i].tolist()
             num_fp = fp_histories[key][i].tolist()
             num_fn = fn_histories[key][i].tolist()
@@ -194,7 +195,7 @@ def get_f1_with_sentence_length(outputs, labels, properties, categories):
             dep_scores[key][i].extend(f1s[0:3])
             zero_scores[key][i].extend(f1s[3:6])
 
-    return all_scores, dep_scores, zero_scores, max_sentence_length
+    return all_scores, dep_scores, zero_scores, itr
 
 def get_f1(outputs, labels, properties):
     tp_history, fp_history, fn_history = [], [], []
@@ -312,12 +313,13 @@ def run(model, arguments):
     lengthwise_all_scores, lengthwise_dep_scores, lengthwise_zero_scores = {}, {}, {}
     categories = ['ブログ', '知恵袋', '出版', '新聞', '雑誌', '白書']
     tags = {'出版': 'PB', '雑誌': 'PM', '新聞': 'PN', '白書': 'OW', '知恵袋': 'OC', 'ブログ': 'OY'}
+    bin_size = arguments.bin_size
 
     with_initial_print = True
     for path_pkl, path_detail in zip(files[0], files[1]):
         all_scores[path_detail], dep_scores[path_detail], zero_scores[path_detail], lengthwise_all_scores[
             path_detail], lengthwise_dep_scores[path_detail], lengthwise_zero_scores[
-            path_detail], max_sentence_length = main(path_pkl, path_detail, with_initial_print)
+            path_detail], lengthwise_itr = main(path_pkl, path_detail, bin_size, with_initial_print)
         with_initial_print = False
 
     if arguments.reset_scores:
@@ -336,10 +338,13 @@ def run(model, arguments):
                 f.write(line + '\n')
 
         for category in categories:
+            file_extention = tags[category]
+            if bin_size != 1:
+                file_extention = file_extention + '-{}'.format(bin_size)
             if arguments.reset_scores:
-                remove_file(Path('../../results/labelwise-fscores-{}.txt'.format(tags[category])))
-            with Path('../../results/labelwise-fscores-{}.txt'.format(tags[category])).open('a', encoding='utf-8') as f:
-                for i in range(max_sentence_length):
+                remove_file(Path('../../results/labelwise-fscores-{}.txt'.format(file_extention)))
+            with Path('../../results/labelwise-fscores-{}.txt'.format(file_extention)).open('a', encoding='utf-8') as f:
+                for i in lengthwise_itr:
                     for path_detail in files[1]:
                         line = '{}, {}, {}, {}, {}, {}, {}'.format(model,
                                                                    category,
@@ -356,10 +361,13 @@ def run(model, arguments):
                         f.write(line + '\n')
 
         for category in categories:
+            file_extention = tags[category]
+            if bin_size != 1:
+                file_extention = file_extention + '-{}'.format(bin_size)
             if arguments.reset_scores:
-                remove_file(Path('../../results/labelwise-fscores-{}-avg.txt'.format(tags[category])))
-            with Path('../../results/labelwise-fscores-{}-avg.txt'.format(tags[category])).open('a', encoding='utf-8') as f:
-                for i in range(max_sentence_length):
+                remove_file(Path('../../results/labelwise-fscores-{}-avg.txt'.format(file_extention)))
+            with Path('../../results/labelwise-fscores-{}-avg.txt'.format(file_extention)).open('a', encoding='utf-8') as f:
+                for i in lengthwise_itr:
                     tmp_scores = []
                     for path_detail in files[1]:
                         tmp_scores.append([lengthwise_all_scores[path_detail][category][i]] + lengthwise_dep_scores[path_detail][category][i] + lengthwise_zero_scores[path_detail][category][i])
@@ -373,10 +381,13 @@ def run(model, arguments):
                     print(line)
                     f.write(line + '\n')
 
+    file_extention = ''
+    if bin_size != 1:
+        file_extention = '-{}'.format(bin_size)
     if arguments.reset_scores:
-        remove_file(Path('../../results/fscores-avg.txt'))
-    with Path('../../results/fscores-avg.txt').open('a', encoding='utf-8') as f:
-        for i in range(max_sentence_length):
+        remove_file(Path('../../results/fscores-avg{}.txt').format(file_extention))
+    with Path('../../results/fscores-avg{}.txt'.format(file_extention)).open('a', encoding='utf-8') as f:
+        for i in lengthwise_itr:
             tmp_scores = []
             for path_detail in files[1]:
                 for category in categories:
@@ -397,6 +408,7 @@ if __name__ == '__main__':
     parser.add_argument('--model', default=None, type=str)
     parser.add_argument('--reset_sentences', action='store_true')
     parser.add_argument('--reset_scores', action='store_true')
+    parser.add_argument('--bin_size', default=1, type=int)
     arguments = parser.parse_args()
 
     model = arguments.model
