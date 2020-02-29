@@ -85,12 +85,12 @@ def main(path_pkl, path_detail, with_initial_print=True):
 
     with Path(path_pkl).open('rb') as f:
         outputs = pickle.load(f)
-    if 'pointer' in path_pkl or 'sp' in path_pkl or 'ptr' in path_pkl:
-        properties = [output[3] for output in outputs]
-        index = 4
-    else:
+    if 'lstm' in path_pkl or 'bertsl' in path_pkl:
         properties = [output[1] for output in outputs]
         index = 2
+    else:
+        properties = [output[3] for output in outputs]
+        index = 4
 
     with Path(path_detail).open('r', encoding='utf-8') as f:
         detailed_outputs = f.readlines()
