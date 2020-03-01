@@ -356,9 +356,9 @@ def eval(batch_size=1, null_weight=None, loss_weight=None):
         items = arguments.init_checkpoint.split("/")
         tmp = '{0:%Y%m%d-%H%M%S}'.format(now)
         if len(items) >= 2:
-            _log_path = save_dir_base.joinpath('ptr_{}_{}_{}.pkl'.format(tmp, items[-2], items[-1]))
+            _log_path = save_dir_base.joinpath('bsp_{}_{}_{}.pkl'.format(tmp, items[-2], items[-1]))
         else:
-            _log_path = save_dir_base.joinpath('ptr_{}.pkl'.format(tmp))
+            _log_path = save_dir_base.joinpath('bsp_{}.pkl'.format(tmp))
         with _log_path.open('wb') as f:
             pickle.dump(data_history, f)
 
