@@ -421,6 +421,31 @@ def run(model, arguments):
             print(line)
             f.write(line + '\n')
 
+    if arguments.reset_scores:
+        remove_file(Path('../../results/final-results.txt').format(file_extention))
+    with Path('../../results/final-results.txt'.format(file_extention)).open('a', encoding='utf-8') as f:
+        sum_tp, sum_fp, sum_fn = np.array([0] * 6), np.array([0] * 6), np.array([0] * 6)
+        count = 0
+        tmp_scores = []
+        for i in lengthwise_itr:
+            for category in categories:
+                for path_detail in files[1]:
+                    tmp_scores.append([lengthwise_all_scores[path_detail][category][i]] + lengthwise_dep_scores[path_detail][category][i] + lengthwise_zero_scores[path_detail][category][i])
+                    sum_tp += tp[path_detail][category][i]
+                    sum_fp += fp[path_detail][category][i]
+                    sum_fn += fn[path_detail][category][i]
+                count += counts[category][i]
+        avg_tmp_scores = np.mean(np.array(tmp_scores), axis=0)
+        all_score, dep_score, zero_score = get_f_score(sum_tp, sum_fp, sum_fn)
+        line = '{}, {}, {}, {}, {}, {}'.format(model,
+                                               i,
+                                               all_score,
+                                               dep_score,
+                                               zero_score,
+                                               count)
+        print(line)
+        f.write(line + '\n')
+
 
 if __name__ == '__main__':
     import argparse
