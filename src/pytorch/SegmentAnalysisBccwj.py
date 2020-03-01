@@ -383,13 +383,13 @@ def run(model, arguments):
                     count += counts[category][i]
                     avg_tmp_scores = np.mean(np.array(tmp_scores), axis=0)
                     all_score, dep_score, zero_score = get_f_score(sum_tp, sum_fp, sum_fn)
-                    line = '{}, {}, {}, {}, {}'.format(model,
-                                                       category,
-                                                       i,
-                                                       all_score,
-                                                       dep_score,
-                                                       zero_score,
-                                                       count)
+                    line = '{}, {}, {}, {}, {}, {}, {}'.format(model,
+                                                               category,
+                                                               i,
+                                                               all_score,
+                                                               dep_score,
+                                                               zero_score,
+                                                               count)
                     print(line)
                     f.write(line + '\n')
 
@@ -412,12 +412,12 @@ def run(model, arguments):
                 count += counts[category][i]
             avg_tmp_scores = np.mean(np.array(tmp_scores), axis=0)
             all_score, dep_score, zero_score = get_f_score(sum_tp, sum_fp, sum_fn)
-            line = '{}, {}, {}, {}'.format(model,
-                                           i,
-                                           all_score,
-                                           dep_score,
-                                           zero_score,
-                                           count)
+            line = '{}, {}, {}, {}, {}, {}'.format(model,
+                                                   i,
+                                                   all_score,
+                                                   dep_score,
+                                                   zero_score,
+                                                   count)
             print(line)
             f.write(line + '\n')
 
