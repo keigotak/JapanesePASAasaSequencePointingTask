@@ -110,9 +110,9 @@ def main(path_pkl, path_detail, bin_size=1, with_initial_print=True):
     for key in keys:
         print('{}: {}, {}, {}'.format(key, all_scores[key], ','.join(map(str, dep_scores[key])), ','.join(map(str, zero_scores[key]))))
 
-    lengthwise_all_scores, lengthwise_dep_scores, lengthwise_zero_scores, lengthwise_itr = get_f1_with_sentence_length(predictions, labels, properties, categories, bin_size)
+    lengthwise_all_scores, lengthwise_dep_scores, lengthwise_zero_scores, lengthwise_itr, tp, fp, fn, counts = get_f1_with_sentence_length(predictions, labels, properties, categories, bin_size)
 
-    return all_scores, dep_scores, zero_scores, lengthwise_all_scores, lengthwise_dep_scores, lengthwise_zero_scores, lengthwise_itr
+    return all_scores, dep_scores, zero_scores, lengthwise_all_scores, lengthwise_dep_scores, lengthwise_zero_scores, lengthwise_itr, tp, fp, fn, counts
 
 
 def get_f1_with_categories(outputs, labels, properties, categories):
@@ -160,11 +160,13 @@ def get_f1_with_sentence_length(outputs, labels, properties, categories, bin_siz
     max_sentence_length = max(list(map(len, labels))) + 1
     itr = range(0, max_sentence_length // bin_size + 1)
     tp_histories, fp_histories, fn_histories = {key: {i: np.array([0]*6) for i in itr} for key in keys}, {key: {i: np.array([0]*6) for i in itr} for key in keys}, {key: {i: np.array([0]*6) for i in itr} for key in keys}
+    counts = {key: {i: 0 for i in itr} for key in keys}
     for output, label, property, category in zip(outputs, labels, properties, categories):
         tp_history, fp_history, fn_history = get_f1(output, label, property)
         tp_histories[category][len(label) // bin_size] += tp_history[0]
         fp_histories[category][len(label) // bin_size] += fp_history[0]
         fn_histories[category][len(label) // bin_size] += fn_history[0]
+        counts[category][len(label) // bin_size] += 1
 
     all_scores, dep_scores, zero_scores = {key: {i: 0 for i in itr}for key in keys}, {key: {i: [] for i in itr} for key in keys}, {key: {i: [] for i in itr} for key in keys}
     for key in keys:
@@ -195,7 +197,7 @@ def get_f1_with_sentence_length(outputs, labels, properties, categories, bin_siz
             dep_scores[key][i].extend(f1s[0:3])
             zero_scores[key][i].extend(f1s[3:6])
 
-    return all_scores, dep_scores, zero_scores, itr
+    return all_scores, dep_scores, zero_scores, itr, tp_histories, fp_histories, fn_histories, counts
 
 def get_f1(outputs, labels, properties):
     tp_history, fp_history, fn_history = [], [], []
@@ -310,6 +312,8 @@ def remove_file(_path):
 def run(model, arguments):
     files = get_files(model)
     all_scores, dep_scores, zero_scores = {}, {}, {}
+    tp, fp, fn = {}, {}, {}
+    counts = None
     lengthwise_all_scores, lengthwise_dep_scores, lengthwise_zero_scores = {}, {}, {}
     categories = ['ブログ', '知恵袋', '出版', '新聞', '雑誌', '白書']
     tags = {'出版': 'PB', '雑誌': 'PM', '新聞': 'PN', '白書': 'OW', '知恵袋': 'OC', 'ブログ': 'OY'}
@@ -319,7 +323,7 @@ def run(model, arguments):
     for path_pkl, path_detail in zip(files[0], files[1]):
         all_scores[path_detail], dep_scores[path_detail], zero_scores[path_detail], lengthwise_all_scores[
             path_detail], lengthwise_dep_scores[path_detail], lengthwise_zero_scores[
-            path_detail], lengthwise_itr = main(path_pkl, path_detail, bin_size, with_initial_print)
+            path_detail], lengthwise_itr, tp[path_detail], fp[path_detail], fn[path_detail], counts = main(path_pkl, path_detail, bin_size, with_initial_print)
         with_initial_print = False
 
     if arguments.reset_scores:
@@ -368,16 +372,24 @@ def run(model, arguments):
                 remove_file(Path('../../results/labelwise-fscores-{}-avg.txt'.format(file_extention)))
             with Path('../../results/labelwise-fscores-{}-avg.txt'.format(file_extention)).open('a', encoding='utf-8') as f:
                 for i in lengthwise_itr:
+                    sum_tp, sum_fp, sum_fn = np.array([0] * 6), np.array([0] * 6), np.array([0] * 6)
+                    count = 0
                     tmp_scores = []
                     for path_detail in files[1]:
                         tmp_scores.append([lengthwise_all_scores[path_detail][category][i]] + lengthwise_dep_scores[path_detail][category][i] + lengthwise_zero_scores[path_detail][category][i])
-                    mean_tmp_scores = np.mean(np.array(tmp_scores), axis=0)
-                    dev_tmp_scores = np.var(np.array(tmp_scores), axis=0)
+                        sum_tp += tp[path_detail][category][i]
+                        sum_fp += fp[path_detail][category][i]
+                        sum_fn += fn[path_detail][category][i]
+                    count += counts[category][i]
+                    avg_tmp_scores = np.mean(np.array(tmp_scores), axis=0)
+                    all_score, dep_score, zero_score = get_f_score(sum_tp, sum_fp, sum_fn)
                     line = '{}, {}, {}, {}, {}'.format(model,
                                                        category,
                                                        i,
-                                                       ','.join(map(str, mean_tmp_scores.tolist())),
-                                                       ','.join(map(str, dev_tmp_scores.tolist())))
+                                                       all_score,
+                                                       dep_score,
+                                                       zero_score,
+                                                       count)
                     print(line)
                     f.write(line + '\n')
 
@@ -388,16 +400,24 @@ def run(model, arguments):
         remove_file(Path('../../results/fscores-avg{}.txt').format(file_extention))
     with Path('../../results/fscores-avg{}.txt'.format(file_extention)).open('a', encoding='utf-8') as f:
         for i in lengthwise_itr:
+            sum_tp, sum_fp, sum_fn = np.array([0] * 6), np.array([0] * 6), np.array([0] * 6)
+            count = 0
             tmp_scores = []
-            for path_detail in files[1]:
-                for category in categories:
+            for category in categories:
+                for path_detail in files[1]:
                     tmp_scores.append([lengthwise_all_scores[path_detail][category][i]] + lengthwise_dep_scores[path_detail][category][i] + lengthwise_zero_scores[path_detail][category][i])
-            mean_tmp_scores = np.mean(np.array(tmp_scores), axis=0)
-            dev_tmp_scores = np.var(np.array(tmp_scores), axis=0)
+                    sum_tp += tp[path_detail][category][i]
+                    sum_fp += fp[path_detail][category][i]
+                    sum_fn += fn[path_detail][category][i]
+                count += counts[category][i]
+            avg_tmp_scores = np.mean(np.array(tmp_scores), axis=0)
+            all_score, dep_score, zero_score = get_f_score(sum_tp, sum_fp, sum_fn)
             line = '{}, {}, {}, {}'.format(model,
                                            i,
-                                           ','.join(map(str, mean_tmp_scores.tolist())),
-                                           ','.join(map(str, dev_tmp_scores.tolist())))
+                                           all_score,
+                                           dep_score,
+                                           zero_score,
+                                           count)
             print(line)
             f.write(line + '\n')
 
