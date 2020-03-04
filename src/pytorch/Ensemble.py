@@ -243,7 +243,7 @@ def get_bertsp_bccwj(mode="global"):
     return items0, items1, items2, items3, items4
 
 
-def main(mode, corpus):
+def main(mode, corpus, with_softmax=False):
     mode = '{}_{}'.format(mode, corpus)
     tag_sl = ['sl_ntc', 'sl_bccwj', 'bertsl_ntc', 'bertsl_bccwj']
     tag_sp = ['spg_ntc', 'spl_ntc', 'spn_ntc',
@@ -272,7 +272,7 @@ def main(mode, corpus):
             t_props = [i0[1]]
             t_labels = [i0[2]]
 
-            sum_prediction /= 5
+            sum_predication /= 5
 
             if with_softmax:
                 sum_predication = F.softmax(torch.Tensor([sum_predication.tolist()]), dim=1)
@@ -456,9 +456,9 @@ if __name__ == "__main__":
     arguments = parser.parse_args()
     if arguments.mode == "all":
         for mode in tag_sl + tag_sp:
-            main(mode=mode, corpus=arguments.corpus)
+            main(mode=mode, corpus=arguments.corpus, with_softmax=arguments.with_softmax)
     else:
-        main(mode=arguments.mode, corpus=arguments.corpus)
+        main(mode=arguments.mode, corpus=arguments.corpus, with_softmax=arguments.with_softmax)
 
 
 '''
