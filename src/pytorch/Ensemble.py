@@ -450,7 +450,7 @@ if __name__ == "__main__":
     tag_sp = ['spg', 'spl', 'spn',
               'bertspg', 'bertspl', 'bertspn']
     parser = argparse.ArgumentParser(description='PASA Ensamble')
-    parser.add_argument('--mode', default=None, type=str, choices=tag_sl + tag_sp)
+    parser.add_argument('--mode', default=None, type=str, choices=tag_sl + tag_sp + ['all'])
     parser.add_argument('--corpus', default=None, type=str, choices=['ntc', 'bccwj'])
     parser.add_argument('--with_softmax', action='store_true')
     arguments = parser.parse_args()
