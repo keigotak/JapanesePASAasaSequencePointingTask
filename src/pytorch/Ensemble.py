@@ -12,20 +12,7 @@ from Decoders import get_restricted_prediction, get_no_decode_prediction, get_or
 from utils.HelperFunctions import concat_labels
 from Validation import get_pr_numbers, get_f_score
 import argparse
-
-
-tag_sl = ['sl_ntc', 'sl_bccwj', 'bertsl_ntc', 'bertsl_bccwj']
-tag_sp = ['sp_global_ntc', 'sp_local_ntc', 'sp_none_ntc',
-          'sp_global_bccwj', 'sp_local_bccwj', 'sp_none_bccwj',
-          'bertsp_global_ntc', 'bertsp_local_ntc', 'bertsp_none_ntc',
-          'bertsp_global_bccwj', 'bertsp_local_bccwj',
-          'bertsp_none_bccwj']
-
-parser = argparse.ArgumentParser(description='PASA Ensamble')
-parser.add_argument('--mode', default=None, type=str, choices=tag_sl + tag_sp)
-arguments = parser.parse_args()
-
-mode = arguments.mode
+import torch.nn.functional as F
 
 
 def get_sl_ntc():
@@ -255,184 +242,224 @@ def get_bertsp_bccwj(mode="global"):
             items4 = pickle.load(f)
     return items0, items1, items2, items3, items4
 
-if mode in tag_sl:
-    items0, items1, items2, items3, items4 = [], [], [], [], []
-    if mode == 'sl_ntc':
-        items0, items1, items2, items3, items4 = get_sl_ntc()
-    elif mode == 'sl_bccwj':
-        items0, items1, items2, items3, items4 = get_sl_bccwj()
-    elif mode == 'bertsl_ntc':
-        items0, items1, items2, items3, items4 = get_bertsl_ntc()
-    elif mode == 'bertsl_bccwj':
-        items0, items1, items2, items3, items4 = get_bertsl_bccwj()
 
-    num_tp = np.array([0] * 6)
-    num_fp = np.array([0] * 6)
-    num_fn = np.array([0] * 6)
+def main(mode, corpus):
+    mode = '{}_{}'.format(mode, corpus)
+    tag_sl = ['sl_ntc', 'sl_bccwj', 'bertsl_ntc', 'bertsl_bccwj']
+    tag_sp = ['spg_ntc', 'spl_ntc', 'spn_ntc',
+              'spg_bccwj', 'spl_bccwj', 'spn_bccwj',
+              'bertspg_ntc', 'bertspl_ntc', 'bertspn_ntc',
+              'bertspg_bccwj', 'bertspl_bccwj',
+              'bertspn_bccwj']
 
-    for i0, i1, i2, i3, i4 in zip(items0, items1, items2, items3, items4):
-        sum_predication = np.array(i0[0]) + np.array(i1[0]) + np.array(i2[0]) + np.array(i3[0]) + np.array(i4[0])
-        t_props = [i0[1]]
-        t_labels = [i0[2]]
-        sum_predication = torch.Tensor([sum_predication.tolist()])
-        _, prediction = torch.max(sum_predication, 2)
-        prediction = prediction.tolist()
+    if mode in tag_sl:
+        items0, items1, items2, items3, items4 = [], [], [], [], []
+        if mode == 'sl_ntc':
+            items0, items1, items2, items3, items4 = get_sl_ntc()
+        elif mode == 'sl_bccwj':
+            items0, items1, items2, items3, items4 = get_sl_bccwj()
+        elif mode == 'bertsl_ntc':
+            items0, items1, items2, items3, items4 = get_bertsl_ntc()
+        elif mode == 'bertsl_bccwj':
+            items0, items1, items2, items3, items4 = get_bertsl_bccwj()
 
-        one_tp, one_fp, one_fn = get_pr_numbers(prediction, t_labels, t_props)
-        num_tp = num_tp + one_tp
-        num_fp = num_fp + one_fp
-        num_fn = num_fn + one_fn
-    all_score, dep_score, zero_score = get_f_score(num_tp, num_fp, num_fn)
+        num_tp = np.array([0] * 6)
+        num_fp = np.array([0] * 6)
+        num_fn = np.array([0] * 6)
 
-    precisions = []
-    recalls = []
-    f1s = []
-    num_tn = np.array([0] * len(num_tp))
-    for _tp, _fp, _fn, _tn in zip(num_tp, num_fp, num_fn, num_tn):
-        precision = 0.0
-        if _tp + _fp != 0:
-            precision = _tp / (_tp + _fp)
-        precisions.append(precision)
+        for i0, i1, i2, i3, i4 in zip(items0, items1, items2, items3, items4):
+            sum_predication = np.array(i0[0]) + np.array(i1[0]) + np.array(i2[0]) + np.array(i3[0]) + np.array(i4[0])
+            t_props = [i0[1]]
+            t_labels = [i0[2]]
 
-        recall = 0.0
-        if _tp + _fn != 0:
-            recall = _tp / (_tp + _fn)
-        recalls.append(recall)
+            sum_prediction /= 5
 
-        f1 = 0.0
-        if precision + recall != 0:
-            f1 = 2 * precision * recall / (precision + recall)
-        f1s.append(f1)
-    print('[Seq]')
-    print('All: {}, Dep: {}, Zero: {} / tp: {}, fp: {}, fn: {}'.format(all_score, dep_score, zero_score, num_tp, num_fp, num_fn))
-    print(', '.join(map(str, f1s)))
-    print('{}, {}, {}, {}, {}, {}, {}, {}, {}'.format(Decimal(str(all_score)).quantize(Decimal('0.0001'),
-                                                                                   rounding=ROUND_HALF_UP),
-                                                  Decimal(str(dep_score)).quantize(Decimal('0.0001'),
-                                                                                   rounding=ROUND_HALF_UP),
-                                                  Decimal(str(f1s[0])).quantize(Decimal('0.0001'),
-                                                                                   rounding=ROUND_HALF_UP),
-                                                  Decimal(str(f1s[1])).quantize(Decimal('0.0001'),
-                                                                                   rounding=ROUND_HALF_UP),
-                                                  Decimal(str(f1s[2])).quantize(Decimal('0.0001'),
-                                                                                   rounding=ROUND_HALF_UP),
-                                                  Decimal(str(zero_score)).quantize(Decimal('0.0001'),
-                                                                                   rounding=ROUND_HALF_UP),
-                                                  Decimal(str(f1s[3])).quantize(Decimal('0.0001'),
-                                                                                   rounding=ROUND_HALF_UP),
-                                                  Decimal(str(f1s[4])).quantize(Decimal('0.0001'),
-                                                                                rounding=ROUND_HALF_UP),
-                                                  Decimal(str(f1s[5])).quantize(Decimal('0.0001'),
-                                                                                rounding=ROUND_HALF_UP)
-                                                  ))
+            if with_softmax:
+                sum_predication = F.softmax(torch.Tensor([sum_predication.tolist()]), dim=1)
+            else:
+                sum_predication = torch.Tensor([sum_predication.tolist()])
 
-elif mode in tag_sp:
-    items0, items1, items2, items3, items4 = [], [], [], [], []
-    if mode == 'sp_global_ntc':
-        items0, items1, items2, items3, items4 = get_sp_ntc(mode='global')
-    elif mode == 'sp_local_ntc':
-        items0, items1, items2, items3, items4 = get_sp_ntc(mode='local')
-    elif mode == 'sp_none_ntc':
-        items0, items1, items2, items3, items4 = get_sp_ntc(mode='none')
-    elif mode == 'sp_global_bccwj':
-        items0, items1, items2, items3, items4 = get_sp_bccwj(mode='global')
-    elif mode == 'sp_local_bccwj':
-        items0, items1, items2, items3, items4 = get_sp_bccwj(mode='local')
-    elif mode == 'sp_none_bccwj':
-        items0, items1, items2, items3, items4 = get_sp_bccwj(mode='none')
-    elif mode == 'bertsp_global_ntc':
-        items0, items1, items2, items3, items4 = get_bertsp_ntc(mode='global')
-    elif mode == 'bertsp_local_ntc':
-        items0, items1, items2, items3, items4 = get_bertsp_ntc(mode='local')
-    elif mode == 'bertsp_none_ntc':
-        items0, items1, items2, items3, items4 = get_bertsp_ntc(mode='none')
-    elif mode == 'bertsp_global_bccwj':
-        items0, items1, items2, items3, items4 = get_bertsp_bccwj(mode='global')
-    elif mode == 'bertsp_local_bccwj':
-        items0, items1, items2, items3, items4 = get_bertsp_bccwj(mode='local')
-    elif mode == 'bertsp_none_bccwj':
-        items0, items1, items2, items3, items4 = get_bertsp_bccwj(mode='none')
+            _, prediction = torch.max(sum_predication, 2)
+            prediction = prediction.tolist()
 
-    num_tp = np.array([0] * 6)
-    num_fp = np.array([0] * 6)
-    num_fn = np.array([0] * 6)
+            one_tp, one_fp, one_fn = get_pr_numbers(prediction, t_labels, t_props)
+            num_tp = num_tp + one_tp
+            num_fp = num_fp + one_fp
+            num_fn = num_fn + one_fn
+        all_score, dep_score, zero_score = get_f_score(num_tp, num_fp, num_fn)
 
-    for i0, i1, i2, i3, i4 in zip(items0, items1, items2, items3, items4):
-        sum_ga = np.array(i0[0]) + np.array(i1[0]) + np.array(i2[0]) + np.array(i3[0]) + np.array(i4[0])
-        sum_ni = np.array(i0[1]) + np.array(i1[1]) + np.array(i2[1]) + np.array(i3[1]) + np.array(i4[1])
-        sum_wo = np.array(i0[2]) + np.array(i1[2]) + np.array(i2[2]) + np.array(i3[2]) + np.array(i4[2])
-        t_props = [i0[3]]
-        t_labels = [i0[4]]
+        precisions = []
+        recalls = []
+        f1s = []
+        num_tn = np.array([0] * len(num_tp))
+        for _tp, _fp, _fn, _tn in zip(num_tp, num_fp, num_fn, num_tn):
+            precision = 0.0
+            if _tp + _fp != 0:
+                precision = _tp / (_tp + _fp)
+            precisions.append(precision)
 
-        sum_ga = torch.Tensor([sum_ga.tolist()])
-        sum_ni = torch.Tensor([sum_ni.tolist()])
-        sum_wo = torch.Tensor([sum_wo.tolist()])
+            recall = 0.0
+            if _tp + _fn != 0:
+                recall = _tp / (_tp + _fn)
+            recalls.append(recall)
 
-        if 'global' in mode:
-            ga_prediction, ni_prediction, wo_prediction = get_restricted_prediction(sum_ga, sum_ni, sum_wo)
-        elif 'local' in mode:
-            ga_prediction, ni_prediction, wo_prediction = get_ordered_prediction(sum_ga, sum_ni, sum_wo)
-        else:
-            ga_prediction, ni_prediction, wo_prediction = get_no_decode_prediction(sum_ga, sum_ni, sum_wo)
-        s_size = sum_ga.shape[1]
-        ga_prediction = np.identity(s_size)[ga_prediction].astype(np.int64)
-        ni_prediction = np.identity(s_size)[ni_prediction].astype(np.int64)
-        wo_prediction = np.identity(s_size)[wo_prediction].astype(np.int64)
-        t_prediction = concat_labels(ga_prediction, ni_prediction, wo_prediction)
+            f1 = 0.0
+            if precision + recall != 0:
+                f1 = 2 * precision * recall / (precision + recall)
+            f1s.append(f1)
+        print('[{}]'.format(mode))
+        print('All: {}, Dep: {}, Zero: {} / tp: {}, fp: {}, fn: {}'.format(all_score, dep_score, zero_score, num_tp, num_fp, num_fn))
+        print(', '.join(map(str, f1s)))
+        print('{}, {}, {}, {}, {}, {}, {}, {}, {}'.format(Decimal(str(all_score)).quantize(Decimal('0.0001'),
+                                                                                       rounding=ROUND_HALF_UP),
+                                                      Decimal(str(dep_score)).quantize(Decimal('0.0001'),
+                                                                                       rounding=ROUND_HALF_UP),
+                                                      Decimal(str(f1s[0])).quantize(Decimal('0.0001'),
+                                                                                       rounding=ROUND_HALF_UP),
+                                                      Decimal(str(f1s[1])).quantize(Decimal('0.0001'),
+                                                                                       rounding=ROUND_HALF_UP),
+                                                      Decimal(str(f1s[2])).quantize(Decimal('0.0001'),
+                                                                                       rounding=ROUND_HALF_UP),
+                                                      Decimal(str(zero_score)).quantize(Decimal('0.0001'),
+                                                                                       rounding=ROUND_HALF_UP),
+                                                      Decimal(str(f1s[3])).quantize(Decimal('0.0001'),
+                                                                                       rounding=ROUND_HALF_UP),
+                                                      Decimal(str(f1s[4])).quantize(Decimal('0.0001'),
+                                                                                    rounding=ROUND_HALF_UP),
+                                                      Decimal(str(f1s[5])).quantize(Decimal('0.0001'),
+                                                                                    rounding=ROUND_HALF_UP)
+                                                      ))
 
-        one_tp, one_fp, one_fn = get_pr_numbers(t_prediction, t_labels, t_props)
-        num_tp = num_tp + one_tp
-        num_fp = num_fp + one_fp
-        num_fn = num_fn + one_fn
-    all_score, dep_score, zero_score = get_f_score(num_tp, num_fp, num_fn)
+    elif mode in tag_sp:
+        items0, items1, items2, items3, items4 = [], [], [], [], []
+        if mode == 'spg_ntc':
+            items0, items1, items2, items3, items4 = get_sp_ntc(mode='global')
+        elif mode == 'spl_ntc':
+            items0, items1, items2, items3, items4 = get_sp_ntc(mode='local')
+        elif mode == 'spn_ntc':
+            items0, items1, items2, items3, items4 = get_sp_ntc(mode='none')
+        elif mode == 'spg_bccwj':
+            items0, items1, items2, items3, items4 = get_sp_bccwj(mode='global')
+        elif mode == 'spl_bccwj':
+            items0, items1, items2, items3, items4 = get_sp_bccwj(mode='local')
+        elif mode == 'spn_bccwj':
+            items0, items1, items2, items3, items4 = get_sp_bccwj(mode='none')
+        elif mode == 'bertspg_ntc':
+            items0, items1, items2, items3, items4 = get_bertsp_ntc(mode='global')
+        elif mode == 'bertspl_ntc':
+            items0, items1, items2, items3, items4 = get_bertsp_ntc(mode='local')
+        elif mode == 'bertspn_ntc':
+            items0, items1, items2, items3, items4 = get_bertsp_ntc(mode='none')
+        elif mode == 'bertspg_bccwj':
+            items0, items1, items2, items3, items4 = get_bertsp_bccwj(mode='global')
+        elif mode == 'bertspl_bccwj':
+            items0, items1, items2, items3, items4 = get_bertsp_bccwj(mode='local')
+        elif mode == 'bertspn_bccwj':
+            items0, items1, items2, items3, items4 = get_bertsp_bccwj(mode='none')
 
-    precisions = []
-    recalls = []
-    f1s = []
-    num_tn = np.array([0] * len(num_tp))
-    for _tp, _fp, _fn, _tn in zip(num_tp, num_fp, num_fn, num_tn):
-        precision = 0.0
-        if _tp + _fp != 0:
-            precision = _tp / (_tp + _fp)
-        precisions.append(precision)
+        num_tp = np.array([0] * 6)
+        num_fp = np.array([0] * 6)
+        num_fn = np.array([0] * 6)
 
-        recall = 0.0
-        if _tp + _fn != 0:
-            recall = _tp / (_tp + _fn)
-        recalls.append(recall)
+        for i0, i1, i2, i3, i4 in zip(items0, items1, items2, items3, items4):
+            sum_ga = np.array(i0[0]) + np.array(i1[0]) + np.array(i2[0]) + np.array(i3[0]) + np.array(i4[0])
+            sum_ni = np.array(i0[1]) + np.array(i1[1]) + np.array(i2[1]) + np.array(i3[1]) + np.array(i4[1])
+            sum_wo = np.array(i0[2]) + np.array(i1[2]) + np.array(i2[2]) + np.array(i3[2]) + np.array(i4[2])
 
-        f1 = 0.0
-        if precision + recall != 0:
-            f1 = 2 * precision * recall / (precision + recall)
-        f1s.append(f1)
-    if 'global' in mode:
-        print('[global_argmax]')
-    elif 'local' in mode:
-        print('[local_argmax]')
-    elif 'none' in mode:
-        print('[no_restricted]')
-    print('All: {}, Dep: {}, Zero: {} / tp: {}, fp: {}, fn: {}'.format(all_score, dep_score, zero_score, num_tp, num_fp,
-                                                                       num_fn))
-    print(', '.join(map(str, f1s)))
-    print('{}, {}, {}, {}, {}, {}, {}, {}, {}'.format(Decimal(str(all_score)).quantize(Decimal('0.0001'),
-                                                                                   rounding=ROUND_HALF_UP),
-                                                  Decimal(str(dep_score)).quantize(Decimal('0.0001'),
-                                                                                   rounding=ROUND_HALF_UP),
-                                                  Decimal(str(f1s[0])).quantize(Decimal('0.0001'),
-                                                                                   rounding=ROUND_HALF_UP),
-                                                  Decimal(str(f1s[1])).quantize(Decimal('0.0001'),
-                                                                                   rounding=ROUND_HALF_UP),
-                                                  Decimal(str(f1s[2])).quantize(Decimal('0.0001'),
-                                                                                   rounding=ROUND_HALF_UP),
-                                                  Decimal(str(zero_score)).quantize(Decimal('0.0001'),
-                                                                                   rounding=ROUND_HALF_UP),
-                                                  Decimal(str(f1s[3])).quantize(Decimal('0.0001'),
-                                                                                   rounding=ROUND_HALF_UP),
-                                                  Decimal(str(f1s[4])).quantize(Decimal('0.0001'),
-                                                                                rounding=ROUND_HALF_UP),
-                                                  Decimal(str(f1s[5])).quantize(Decimal('0.0001'),
-                                                                                rounding=ROUND_HALF_UP)
-                                                  ))
+            sum_ga /= 5
+            sum_ni /= 5
+            sum_wo /= 5
+
+            t_props = [i0[3]]
+            t_labels = [i0[4]]
+
+            if with_softmax:
+                sum_ga = F.softmax(torch.Tensor([sum_ga.tolist()]), dim=1)
+                sum_ni = F.softmax(torch.Tensor([sum_ni.tolist()]), dim=1)
+                sum_wo = F.softmax(torch.Tensor([sum_wo.tolist()]), dim=1)
+            else:
+                sum_ga = torch.Tensor([sum_ga.tolist()])
+                sum_ni = torch.Tensor([sum_ni.tolist()])
+                sum_wo = torch.Tensor([sum_wo.tolist()])
+
+
+            if 'global' in mode:
+                ga_prediction, ni_prediction, wo_prediction = get_restricted_prediction(sum_ga, sum_ni, sum_wo)
+            elif 'local' in mode:
+                ga_prediction, ni_prediction, wo_prediction = get_ordered_prediction(sum_ga, sum_ni, sum_wo)
+            else:
+                ga_prediction, ni_prediction, wo_prediction = get_no_decode_prediction(sum_ga, sum_ni, sum_wo)
+            s_size = sum_ga.shape[1]
+            ga_prediction = np.identity(s_size)[ga_prediction].astype(np.int64)
+            ni_prediction = np.identity(s_size)[ni_prediction].astype(np.int64)
+            wo_prediction = np.identity(s_size)[wo_prediction].astype(np.int64)
+            t_prediction = concat_labels(ga_prediction, ni_prediction, wo_prediction)
+
+            one_tp, one_fp, one_fn = get_pr_numbers(t_prediction, t_labels, t_props)
+            num_tp = num_tp + one_tp
+            num_fp = num_fp + one_fp
+            num_fn = num_fn + one_fn
+        all_score, dep_score, zero_score = get_f_score(num_tp, num_fp, num_fn)
+
+        precisions = []
+        recalls = []
+        f1s = []
+        num_tn = np.array([0] * len(num_tp))
+        for _tp, _fp, _fn, _tn in zip(num_tp, num_fp, num_fn, num_tn):
+            precision = 0.0
+            if _tp + _fp != 0:
+                precision = _tp / (_tp + _fp)
+            precisions.append(precision)
+
+            recall = 0.0
+            if _tp + _fn != 0:
+                recall = _tp / (_tp + _fn)
+            recalls.append(recall)
+
+            f1 = 0.0
+            if precision + recall != 0:
+                f1 = 2 * precision * recall / (precision + recall)
+            f1s.append(f1)
+        print('[{}]'.format(mode))
+        print('All: {}, Dep: {}, Zero: {} / tp: {}, fp: {}, fn: {}'.format(all_score, dep_score, zero_score, num_tp, num_fp,
+                                                                           num_fn))
+        print(', '.join(map(str, f1s)))
+        print('{}, {}, {}, {}, {}, {}, {}, {}, {}'.format(Decimal(str(all_score)).quantize(Decimal('0.0001'),
+                                                                                       rounding=ROUND_HALF_UP),
+                                                      Decimal(str(dep_score)).quantize(Decimal('0.0001'),
+                                                                                       rounding=ROUND_HALF_UP),
+                                                      Decimal(str(f1s[0])).quantize(Decimal('0.0001'),
+                                                                                       rounding=ROUND_HALF_UP),
+                                                      Decimal(str(f1s[1])).quantize(Decimal('0.0001'),
+                                                                                       rounding=ROUND_HALF_UP),
+                                                      Decimal(str(f1s[2])).quantize(Decimal('0.0001'),
+                                                                                       rounding=ROUND_HALF_UP),
+                                                      Decimal(str(zero_score)).quantize(Decimal('0.0001'),
+                                                                                       rounding=ROUND_HALF_UP),
+                                                      Decimal(str(f1s[3])).quantize(Decimal('0.0001'),
+                                                                                       rounding=ROUND_HALF_UP),
+                                                      Decimal(str(f1s[4])).quantize(Decimal('0.0001'),
+                                                                                    rounding=ROUND_HALF_UP),
+                                                      Decimal(str(f1s[5])).quantize(Decimal('0.0001'),
+                                                                                    rounding=ROUND_HALF_UP)
+                                                      ))
+
+
+if __name__ == "__main__":
+    tag_sl = ['sl', 'bertsl']
+    tag_sp = ['spg', 'spl', 'spn',
+              'bertspg', 'bertspl', 'bertspn']
+    parser = argparse.ArgumentParser(description='PASA Ensamble')
+    parser.add_argument('--mode', default=None, type=str, choices=tag_sl + tag_sp)
+    parser.add_argument('--corpus', default=None, type=str, choices=['ntc', 'bccwj'])
+    parser.add_argument('--with_softmax', action='store_true')
+    arguments = parser.parse_args()
+    if arguments.mode == "all":
+        for mode in tag_sl + tag_sp:
+            if arguments.corpus in mode:
+                main(mode=mode, corpus=arguments.corpus)
+    else:
+        main(mode=arguments.mode, corpus=arguments.corpus)
 
 
 '''
