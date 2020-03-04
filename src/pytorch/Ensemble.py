@@ -456,8 +456,7 @@ if __name__ == "__main__":
     arguments = parser.parse_args()
     if arguments.mode == "all":
         for mode in tag_sl + tag_sp:
-            if arguments.corpus in mode:
-                main(mode=mode, corpus=arguments.corpus)
+            main(mode=mode, corpus=arguments.corpus)
     else:
         main(mode=arguments.mode, corpus=arguments.corpus)
 
