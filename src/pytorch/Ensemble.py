@@ -452,13 +452,16 @@ if __name__ == "__main__":
     parser.add_argument('--corpus', default=None, type=str, choices=['ntc', 'bccwj', 'all'])
     parser.add_argument('--with_softmax', action='store_true')
     arguments = parser.parse_args()
-    if arguments.mode == "all":
+    if arguments.corpus == "all" and arguments.mode == "all":
+        for corpus in ['ntc', 'bccwj']:
+            for mode in tags:
+                main(mode=mode, corpus=corpus, with_softmax=arguments.with_softmax)
+    elif arguments.corpus == "all" and arguments.mode != "all":
+        for corpus in ['ntc', 'bccwj']:
+            main(mode=arguments.mode, corpus=corpus, with_softmax=arguments.with_softmax)
+    elif arguments.corpus != "all" and arguments.mode == "all":
         for mode in tags:
-            if arguments.corpus == "all":
-                for corpus in ['ntc', 'bccwj']:
-                    main(mode=mode, corpus=corpus, with_softmax=arguments.with_softmax)
-            else:
-                main(mode=mode, corpus=arguments.corpus, with_softmax=arguments.with_softmax)
+            main(mode=mode, corpus=arguments.corpus, with_softmax=arguments.with_softmax)
     else:
         main(mode=arguments.mode, corpus=arguments.corpus, with_softmax=arguments.with_softmax)
 
