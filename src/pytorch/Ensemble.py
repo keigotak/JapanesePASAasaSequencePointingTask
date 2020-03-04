@@ -449,12 +449,16 @@ if __name__ == "__main__":
     tags = ['sl', 'spg', 'spl', 'spn', 'bertsl', 'bertspg', 'bertspl', 'bertspn']
     parser = argparse.ArgumentParser(description='PASA Ensamble')
     parser.add_argument('--mode', default=None, type=str, choices=tags + ['all'])
-    parser.add_argument('--corpus', default=None, type=str, choices=['ntc', 'bccwj'])
+    parser.add_argument('--corpus', default=None, type=str, choices=['ntc', 'bccwj', 'all'])
     parser.add_argument('--with_softmax', action='store_true')
     arguments = parser.parse_args()
     if arguments.mode == "all":
         for mode in tags:
-            main(mode=mode, corpus=arguments.corpus, with_softmax=arguments.with_softmax)
+            if arguments.corpus == "all":
+                for corpus in ['ntc', 'bccwj']:
+                    main(mode=mode, corpus=corpus, with_softmax=arguments.with_softmax)
+            else:
+                main(mode=mode, corpus=arguments.corpus, with_softmax=arguments.with_softmax)
     else:
         main(mode=arguments.mode, corpus=arguments.corpus, with_softmax=arguments.with_softmax)
 
