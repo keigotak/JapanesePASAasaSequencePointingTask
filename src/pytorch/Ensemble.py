@@ -275,7 +275,7 @@ def main(mode, corpus, with_softmax=False):
             sum_predication /= 5
 
             if with_softmax:
-                sum_predication = F.softmax(torch.Tensor([sum_predication.tolist()]), dim=1)
+                sum_predication = F.softmax(torch.Tensor([sum_predication.tolist()]), dim=2)
             else:
                 sum_predication = torch.Tensor([sum_predication.tolist()])
 
