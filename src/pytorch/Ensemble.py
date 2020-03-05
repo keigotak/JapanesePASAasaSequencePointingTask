@@ -268,16 +268,19 @@ def main(mode, corpus, with_softmax=False):
         num_fn = np.array([0] * 6)
 
         for i0, i1, i2, i3, i4 in zip(items0, items1, items2, items3, items4):
-            sum_predication = np.array(i0[0]) + np.array(i1[0]) + np.array(i2[0]) + np.array(i3[0]) + np.array(i4[0])
             t_props = [i0[1]]
             t_labels = [i0[2]]
 
-            sum_predication /= 5
 
             if with_softmax:
-                sum_predication = F.softmax(torch.Tensor([sum_predication.tolist()]), dim=2)
+                sum_predication = F.softmax(torch.Tensor(np.array(i0[0])), dim=2) \
+                                  + F.softmax(torch.Tensor(np.array(i1[0])), dim=2) \
+                                  + F.softmax(torch.Tensor(np.array(i2[0])), dim=2) \
+                                  + F.softmax(torch.Tensor(np.array(i3[0])), dim=2) \
+                                  + F.softmax(torch.Tensor(np.array(i4[0])), dim=2)
             else:
-                sum_predication = torch.Tensor([sum_predication.tolist()])
+                sum_predication = np.array(i0[0]) + np.array(i1[0]) + np.array(i2[0]) + np.array(i3[0]) + np.array(i4[0])
+            sum_predication /= 5
 
             _, prediction = torch.max(sum_predication, 2)
             prediction = prediction.tolist()
@@ -362,26 +365,35 @@ def main(mode, corpus, with_softmax=False):
         num_fn = np.array([0] * 6)
 
         for i0, i1, i2, i3, i4 in zip(items0, items1, items2, items3, items4):
-            sum_ga = np.array(i0[0]) + np.array(i1[0]) + np.array(i2[0]) + np.array(i3[0]) + np.array(i4[0])
-            sum_ni = np.array(i0[1]) + np.array(i1[1]) + np.array(i2[1]) + np.array(i3[1]) + np.array(i4[1])
-            sum_wo = np.array(i0[2]) + np.array(i1[2]) + np.array(i2[2]) + np.array(i3[2]) + np.array(i4[2])
-
-            sum_ga /= 5
-            sum_ni /= 5
-            sum_wo /= 5
-
             t_props = [i0[3]]
             t_labels = [i0[4]]
 
             if with_softmax:
-                sum_ga = F.softmax(torch.Tensor([sum_ga.tolist()]), dim=1)
-                sum_ni = F.softmax(torch.Tensor([sum_ni.tolist()]), dim=1)
-                sum_wo = F.softmax(torch.Tensor([sum_wo.tolist()]), dim=1)
+                sum_ga = F.softmax(torch.Tensor(np.array(i0[0])), dim=0) \
+                            + F.softmax(torch.Tensor(np.array(i1[0])), dim=0) \
+                            + F.softmax(torch.Tensor(np.array(i2[0])), dim=0) \
+                            + F.softmax(torch.Tensor(np.array(i3[0])), dim=0) \
+                            + F.softmax(torch.Tensor(np.array(i4[0])), dim=0)
+                sum_ni = F.softmax(torch.Tensor(np.array(i0[1])), dim=0) \
+                             + F.softmax(torch.Tensor(np.array(i1[1])), dim=0) \
+                             + F.softmax(torch.Tensor(np.array(i2[1])), dim=0) \
+                             + F.softmax(torch.Tensor(np.array(i3[1])), dim=0) \
+                             + F.softmax(torch.Tensor(np.array(i4[1])), dim=0)
+                sum_wo = F.softmax(torch.Tensor(np.array(i0[2])), dim=0) \
+                             + F.softmax(torch.Tensor(np.array(i1[2])), dim=0) \
+                             + F.softmax(torch.Tensor(np.array(i2[2])), dim=0) \
+                             + F.softmax(torch.Tensor(np.array(i3[2])), dim=0) \
+                             + F.softmax(torch.Tensor(np.array(i4[2])), dim=0)
+                sum_ga = sum_ga.unsqueeze(0)
+                sum_ni = sum_ni.unsqueeze(0)
+                sum_wo = sum_wo.unsqueeze(0)
             else:
-                sum_ga = torch.Tensor([sum_ga.tolist()])
-                sum_ni = torch.Tensor([sum_ni.tolist()])
-                sum_wo = torch.Tensor([sum_wo.tolist()])
-
+                sum_ga = np.array(i0[0]) + np.array(i1[0]) + np.array(i2[0]) + np.array(i3[0]) + np.array(i4[0])
+                sum_ni = np.array(i0[1]) + np.array(i1[1]) + np.array(i2[1]) + np.array(i3[1]) + np.array(i4[1])
+                sum_wo = np.array(i0[2]) + np.array(i1[2]) + np.array(i2[2]) + np.array(i3[2]) + np.array(i4[2])
+            sum_ga /= 5
+            sum_ni /= 5
+            sum_wo /= 5
 
             if 'global' in mode:
                 ga_prediction, ni_prediction, wo_prediction = get_restricted_prediction(sum_ga, sum_ni, sum_wo)
