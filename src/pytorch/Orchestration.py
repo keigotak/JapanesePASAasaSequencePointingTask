@@ -24,51 +24,57 @@ test_base_list = ["--spreadsheet",
                   "--save_output"]
 
 processes = [
+    # train esl
     # ["python", "SequenceLabelingElmo.py", "--model", "elmosl"] + train_base_list + ["--device", device, "--seed", "0"],
     # ["python", "SequenceLabelingElmo.py", "--model", "elmosl"] + train_base_list + ["--device", device, "--seed", "1"],
     # ["python", "SequenceLabelingElmo.py", "--model", "elmosl"] + train_base_list + ["--device", device, "--seed", "2"],
     # ["python", "SequenceLabelingElmo.py", "--model", "elmosl"] + train_base_list + ["--device", device, "--seed", "3"],
     # ["python", "SequenceLabelingElmo.py", "--model", "elmosl"] + train_base_list + ["--device", device, "--seed", "4"]
 
+    # train bspl
     # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "ordered"] + train_base_list + ["--device", device, "--seed", "0"],
     # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "ordered"] + train_base_list + ["--device", device, "--seed", "1"],
     # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "ordered"] + train_base_list + ["--device", device, "--seed", "2"],
     # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "ordered"] + train_base_list + ["--device", device, "--seed", "3"],
     # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "ordered"] + train_base_list + ["--device", device, "--seed", "4"]
 
+    # train bspg
     # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "global_argmax"] + train_base_list + ["--device", device, "--seed", "0"],
     # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "global_argmax"] + train_base_list + ["--device", device, "--seed", "1"],
     # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "global_argmax"] + train_base_list + ["--device", device, "--seed", "2"],
     # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "global_argmax"] + train_base_list + ["--device", device, "--seed", "3"],
     # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "global_argmax"] + train_base_list + ["--device", device, "--seed", "4"]
 
-    # ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl"] + test_base_list + [
-    #     "--init_checkpoint", "../../results/pasa-bertsl-20191207-150951/model-0/epoch14-f0.8620.h5"],
-    # ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl"] + test_base_list + [
-    #     "--init_checkpoint", "../../results/pasa-bertsl-20191207-151017/model-0/epoch12-f0.8650.h5"],
-    # ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl"] + test_base_list + [
-    #     "--init_checkpoint", "../../results/pasa-bertsl-20191207-151044/model-0/epoch10-f0.8611.h5"],
-    # ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl"] + test_base_list + [
-    #     "--init_checkpoint", "../../results/pasa-bertsl-20191207-151112/model-0/epoch16-f0.8647.h5"],
-    # ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl"] + test_base_list + [
-    #     "--init_checkpoint", "../../results/pasa-bertsl-20191207-151132/model-0/epoch12-f0.8631.h5"],
+    # test bsl ntc
+    ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl"] + test_base_list + [
+        "--init_checkpoint", "../../results/pasa-bertsl-20191207-150951/model-0/epoch14-f0.8620.h5"],
+    ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl"] + test_base_list + [
+        "--init_checkpoint", "../../results/pasa-bertsl-20191207-151017/model-0/epoch12-f0.8650.h5"],
+    ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl"] + test_base_list + [
+        "--init_checkpoint", "../../results/pasa-bertsl-20191207-151044/model-0/epoch10-f0.8611.h5"],
+    ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl"] + test_base_list + [
+        "--init_checkpoint", "../../results/pasa-bertsl-20191207-151112/model-0/epoch16-f0.8647.h5"],
+    ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl"] + test_base_list + [
+        "--init_checkpoint", "../../results/pasa-bertsl-20191207-151132/model-0/epoch12-f0.8631.h5"],
 
-    # ["python", "EvalSequencePointingBert.py", "--device", device, "--decode", "global_argmax", "--model", "bertptr"]
-    # + test_base_list + ["--init_checkpoint",
-    #                     "../../results/pasa-bertptr-20191207-151236/model-0/epoch11-f0.8709.h5"],
-    # ["python", "EvalSequencePointingBert.py", "--device", device, "--decode", "global_argmax", "--model", "bertptr"]
-    # + test_base_list + ["--init_checkpoint",
-    #                     "../../results/pasa-bertptr-20191207-151258/model-0/epoch15-f0.8707.h5"],
-    # ["python", "EvalSequencePointingBert.py", "--device", device, "--decode", "global_argmax", "--model", "bertptr"]
-    # + test_base_list + ["--init_checkpoint",
-    #                     "../../results/pasa-bertptr-20191207-151316/model-0/epoch15-f0.8719.h5"],
-    # ["python", "EvalSequencePointingBert.py", "--device", device, "--decode", "global_argmax", "--model", "bertptr"]
-    # + test_base_list + ["--init_checkpoint",
-    #                     "../../results/pasa-bertptr-20191207-151338/model-0/epoch16-f0.8703.h5"],
-    # ["python", "EvalSequencePointingBert.py", "--device", device, "--decode", "global_argmax", "--model", "bertptr"]
-    # + test_base_list + ["--init_checkpoint",
-    #                     "../../results/pasa-bertptr-20191207-151354/model-0/epoch15-f0.8709.h5"],
-    #
+    # test bspg ntc
+    ["python", "EvalSequencePointingBert.py", "--device", device, "--decode", "global_argmax", "--model", "bertptr"]
+    + test_base_list + ["--init_checkpoint",
+                        "../../results/pasa-bertptr-20191207-151236/model-0/epoch11-f0.8709.h5"],
+    ["python", "EvalSequencePointingBert.py", "--device", device, "--decode", "global_argmax", "--model", "bertptr"]
+    + test_base_list + ["--init_checkpoint",
+                        "../../results/pasa-bertptr-20191207-151258/model-0/epoch15-f0.8707.h5"],
+    ["python", "EvalSequencePointingBert.py", "--device", device, "--decode", "global_argmax", "--model", "bertptr"]
+    + test_base_list + ["--init_checkpoint",
+                        "../../results/pasa-bertptr-20191207-151316/model-0/epoch15-f0.8719.h5"],
+    ["python", "EvalSequencePointingBert.py", "--device", device, "--decode", "global_argmax", "--model", "bertptr"]
+    + test_base_list + ["--init_checkpoint",
+                        "../../results/pasa-bertptr-20191207-151338/model-0/epoch16-f0.8703.h5"],
+    ["python", "EvalSequencePointingBert.py", "--device", device, "--decode", "global_argmax", "--model", "bertptr"]
+    + test_base_list + ["--init_checkpoint",
+                        "../../results/pasa-bertptr-20191207-151354/model-0/epoch15-f0.8709.h5"]
+
+    # test bspn ntc
     # ["python", "EvalSequencePointingBert.py", "--device", device, "--decode", "no_decoder", "--model", "bertptr"]
     # + test_base_list + ["--init_checkpoint",
     #                     "../../results/pasa-bertptr-20191214-092336/model-0/epoch11-f0.8702.h5"],
@@ -84,7 +90,8 @@ processes = [
     # ["python", "EvalSequencePointingBert.py", "--device", device, "--decode", "no_decoder", "--model", "bertptr"]
     # + test_base_list + ["--init_checkpoint",
     #                     "../../results/pasa-bertptr-20191220-073733/model-0/epoch15-f0.8706.h5"],
-    #
+
+    # test bspl ntc
     # ["python", "EvalSequencePointingBert.py", "--device", device, "--decode", "ordered", "--model", "bertptr"]
     # + test_base_list + ["--init_checkpoint",
     #                     "../../results/pasa-bertptr-20191214-092106/model-0/epoch11-f0.8710.h5"],
@@ -101,6 +108,7 @@ processes = [
     # + test_base_list + ["--init_checkpoint",
     #                     "../../results/pasa-bertptr-20191220-073648/model-0/epoch15-f0.8707.h5"]
 
+    # test sl bccwj
     # ["python", "EvalSequenceLabeling.py", "--device", device, "--model", "lstm", "--with_bccwj",
     #  "--embed", "glove-retrofitting"] + test_base_list + [
     #     "--init_checkpoint", "../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20191118-210943/model-0/epoch19-f0.7649.h5"],
@@ -117,6 +125,7 @@ processes = [
     #  "--embed", "glove-retrofitting"] + test_base_list + [
     #     "--init_checkpoint", "../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20191120-014216/model-0/epoch17-f0.7641.h5"]
 
+    # test spg bccwj
     # ["python", "EvalSequenceLabelingPointer.py", "--device", device, "--model", "pointer", "--with_bccwj",
     #  "--embed", "glove-retrofitting", "--decode", "global_argmax"] + test_base_list + [
     #     "--init_checkpoint", "../../results/pasa-pointer-20191222-091011/model-0/epoch11-f0.7589.h5"],
@@ -132,7 +141,8 @@ processes = [
     # ["python", "EvalSequenceLabelingPointer.py", "--device", device, "--model", "pointer", "--with_bccwj",
     #  "--embed", "glove-retrofitting", "--decode", "global_argmax"] + test_base_list + [
     #     "--init_checkpoint", "../../results/pasa-pointer-20191222-091147/model-0/epoch14-f0.7616.h5"],
-    #
+
+    # test spn bccwj
     # ["python", "EvalSequenceLabelingPointer.py", "--device", device, "--model", "pointer", "--with_bccwj",
     #  "--embed", "glove-retrofitting", "--decode", "no_decoder"] + test_base_list + [
     #     "--init_checkpoint", "../../results/pasa-pointer-20191229-015104/model-0/epoch10-f0.7614.h5"],
@@ -148,7 +158,8 @@ processes = [
     # ["python", "EvalSequenceLabelingPointer.py", "--device", device, "--model", "pointer", "--with_bccwj",
     #  "--embed", "glove-retrofitting", "--decode", "no_decoder"] + test_base_list + [
     #     "--init_checkpoint", "../../results/pasa-pointer-20191228-205407/model-0/epoch12-f0.7615.h5"],
-    #
+
+    # test spl bccwj
     # ["python", "EvalSequenceLabelingPointer.py", "--device", device, "--model", "pointer", "--with_bccwj",
     #  "--embed", "glove-retrofitting", "--decode", "ordered"] + test_base_list + [
     #     "--init_checkpoint", "../../results/pasa-pointer-20191229-014829/model-0/epoch10-f0.7619.h5"],
@@ -164,7 +175,8 @@ processes = [
     # ["python", "EvalSequenceLabelingPointer.py", "--device", device, "--model", "pointer", "--with_bccwj",
     #  "--embed", "glove-retrofitting", "--decode", "ordered"] + test_base_list + [
     #     "--init_checkpoint", "../../results/pasa-pointer-20191228-205223/model-0/epoch15-f0.7618.h5"],
-    #
+
+    # test bsl bccwj
     # ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl", "--with_bccwj"]
     # + test_base_list + ["--init_checkpoint", "../../results/pasa-bertsl-20191215-190021/model-0/epoch11-f0.7916.h5"],
     # ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl", "--with_bccwj"]
@@ -176,6 +188,7 @@ processes = [
     # ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl", "--with_bccwj"]
     # + test_base_list + ["--init_checkpoint", "../../results/pasa-bertsl-20191217-070856/model-0/epoch13-f0.7877.h5"],
 
+    # test bspn bccwj
     # ["python", "EvalSequencePointingBert.py", "--device", device, "--model", "bertptr", "--with_bccwj",
     #  "--decode", "no_decoder"] + test_base_list + [
     #     "--init_checkpoint", "../../results/pasa-bertptr-20191220-073831/model-0/epoch16-f0.7924.h5"],
@@ -192,12 +205,13 @@ processes = [
     #  "--decode", "no_decoder"] + test_base_list + [
     #     "--init_checkpoint", "../../results/pasa-bertptr-20191220-073944/model-0/epoch14-f0.7937.h5"]
 
-    ["python", "EvalSequencePointingBert.py", "--device", device, "--model", "bertptr", "--with_bccwj",
-     "--decode", "global_argmax"] + test_base_list + [
-        "--init_checkpoint", "../../results/pasa-bertptr-20200107-235157/model-0/epoch16-f0.7939.h5"],
-    ["python", "EvalSequencePointingBert.py", "--device", device, "--model", "bertptr", "--with_bccwj",
-     "--decode", "global_argmax"] + test_base_list + [
-        "--init_checkpoint", "../../results/pasa-bertptr-20200107-235217/model-0/epoch16-f0.7955.h5"],
+    # test bspg bccwj
+    # ["python", "EvalSequencePointingBert.py", "--device", device, "--model", "bertptr", "--with_bccwj",
+    #  "--decode", "global_argmax"] + test_base_list + [
+    #     "--init_checkpoint", "../../results/pasa-bertptr-20200107-235157/model-0/epoch16-f0.7939.h5"],
+    # ["python", "EvalSequencePointingBert.py", "--device", device, "--model", "bertptr", "--with_bccwj",
+    #  "--decode", "global_argmax"] + test_base_list + [
+    #     "--init_checkpoint", "../../results/pasa-bertptr-20200107-235217/model-0/epoch16-f0.7955.h5"],
     # ["python", "EvalSequencePointingBert.py", "--device", device, "--model", "bertptr", "--with_bccwj",
     #  "--decode", "global_argmax"] + test_base_list + [
     #     "--init_checkpoint", "../../results/pasa-bertptr-20200107-235238/model-0/epoch14-f0.7943.h5"],
@@ -208,21 +222,22 @@ processes = [
     #  "--decode", "global_argmax"] + test_base_list + [
     #     "--init_checkpoint", "../../results/pasa-bertptr-20200107-235337/model-0/epoch13-f0.7943.h5"],
 
-    ["python", "EvalSequencePointingBert.py", "--device", device, "--model", "bertptr", "--with_bccwj",
-     "--decode", "ordered"] + test_base_list + [
-        "--init_checkpoint", "../../results/pasa-bertptr-20200127-152715/model-0/epoch14-f0.7955.h5"],
+    # test bspl bccwj
+    # ["python", "EvalSequencePointingBert.py", "--device", device, "--model", "bertptr", "--with_bccwj",
+    #  "--decode", "ordered"] + test_base_list + [
+    #     "--init_checkpoint", "../../results/pasa-bertptr-20200127-152715/model-0/epoch14-f0.7955.h5"],
     # ["python", "EvalSequencePointingBert.py", "--device", device, "--model", "bertptr", "--with_bccwj",
     #  "--decode", "ordered"] + test_base_list + [
     #     "--init_checkpoint", "../../results/pasa-bertptr-20200127-152723/model-0/epoch17-f0.7940.h5"],
-    ["python", "EvalSequencePointingBert.py", "--device", device, "--model", "bertptr", "--with_bccwj",
-     "--decode", "ordered"] + test_base_list + [
-        "--init_checkpoint", "../../results/pasa-bertptr-20200127-152722/model-0/epoch14-f0.7944.h5"],
+    # ["python", "EvalSequencePointingBert.py", "--device", device, "--model", "bertptr", "--with_bccwj",
+    #  "--decode", "ordered"] + test_base_list + [
+    #     "--init_checkpoint", "../../results/pasa-bertptr-20200127-152722/model-0/epoch14-f0.7944.h5"],
     # ["python", "EvalSequencePointingBert.py", "--device", device, "--model", "bertptr", "--with_bccwj",
     #  "--decode", "ordered"] + test_base_list + [
     #     "--init_checkpoint", "../../results/pasa-bertptr-20200127-152714/model-0/epoch13-f0.7963.h5"],
-    ["python", "EvalSequencePointingBert.py", "--device", device, "--model", "bertptr", "--with_bccwj",
-     "--decode", "ordered"] + test_base_list + [
-        "--init_checkpoint", "../../results/pasa-bertptr-20200127-152713/model-0/epoch13-f0.7924.h5"]
+    # ["python", "EvalSequencePointingBert.py", "--device", device, "--model", "bertptr", "--with_bccwj",
+    #  "--decode", "ordered"] + test_base_list + [
+    #     "--init_checkpoint", "../../results/pasa-bertptr-20200127-152713/model-0/epoch13-f0.7924.h5"]
 ]
 
 
