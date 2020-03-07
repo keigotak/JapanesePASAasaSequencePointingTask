@@ -242,17 +242,17 @@ def get_bertsp_bccwj(mode="global"):
             items4 = pickle.load(f)
     return items0, items1, items2, items3, items4
 
-def get_mean_std_of_softmax(item1, item2, item3, item4, item5):
-    avg_prediction = torch.mean(torch.Tensor([F.softmax(torch.Tensor(np.array(item1)), dim=1).tolist(),
-                                              F.softmax(torch.Tensor(np.array(item2)), dim=1).tolist(),
-                                              F.softmax(torch.Tensor(np.array(item3)), dim=1).tolist(),
-                                              F.softmax(torch.Tensor(np.array(item4)), dim=1).tolist(),
-                                              F.softmax(torch.Tensor(np.array(item5)), dim=1).tolist()]), dim=0)
-    dev_prediction = torch.std(torch.Tensor([F.softmax(torch.Tensor(np.array(item1)), dim=1).tolist(),
-                                             F.softmax(torch.Tensor(np.array(item2)), dim=1).tolist(),
-                                             F.softmax(torch.Tensor(np.array(item3)), dim=1).tolist(),
-                                             F.softmax(torch.Tensor(np.array(item4)), dim=1).tolist(),
-                                             F.softmax(torch.Tensor(np.array(item5)), dim=1).tolist()]), dim=0)
+def get_mean_std_of_softmax(item1, item2, item3, item4, item5, dim):
+    avg_prediction = torch.mean(torch.Tensor([F.softmax(torch.Tensor(np.array(item1)), dim=dim).tolist(),
+                                              F.softmax(torch.Tensor(np.array(item2)), dim=dim).tolist(),
+                                              F.softmax(torch.Tensor(np.array(item3)), dim=dim).tolist(),
+                                              F.softmax(torch.Tensor(np.array(item4)), dim=dim).tolist(),
+                                              F.softmax(torch.Tensor(np.array(item5)), dim=dim).tolist()]), dim=0).unsqueeze(0)
+    dev_prediction = torch.std(torch.Tensor([F.softmax(torch.Tensor(np.array(item1)), dim=dim).tolist(),
+                                             F.softmax(torch.Tensor(np.array(item2)), dim=dim).tolist(),
+                                             F.softmax(torch.Tensor(np.array(item3)), dim=dim).tolist(),
+                                             F.softmax(torch.Tensor(np.array(item4)), dim=dim).tolist(),
+                                             F.softmax(torch.Tensor(np.array(item5)), dim=dim).tolist()]), dim=0).unsqueeze(0)
     return avg_prediction, dev_prediction
 
 def main(mode, corpus):
@@ -264,11 +264,6 @@ def main(mode, corpus):
               'bertspg_ntc', 'bertspl_ntc', 'bertspn_ntc',
               'bertspg_bccwj', 'bertspl_bccwj',
               'bertspn_bccwj']
-
-    avg_preds = []
-    std_preds = []
-
-    labels = []
 
     if mode in tag_sl:
         items0, items1, items2, items3, items4 = [], [], [], [], []
@@ -288,9 +283,11 @@ def main(mode, corpus):
         for i0, i1, i2, i3, i4 in zip(items0, items1, items2, items3, items4):
             t_props = [i0[1]]
             t_labels = [i0[2]]
-            avg_prediction, std_prediction = get_mean_std_of_softmax(i0[0], i1[0], i2[0], i3[0], i4[0])
-            _, prediction = torch.max(avg_prediction, 1)
-            prediction = [prediction.tolist()]
+
+            avg_prediction, std_prediction = get_mean_std_of_softmax(i0[0], i1[0], i2[0], i3[0], i4[0], dim=1)
+
+            _, prediction = torch.max(avg_prediction, 2)
+            prediction = prediction.tolist()
 
             one_tp, one_fp, one_fn = get_pr_numbers(prediction, t_labels, t_props)
             num_tp = num_tp + one_tp
@@ -373,21 +370,17 @@ def main(mode, corpus):
         for i0, i1, i2, i3, i4 in zip(items0, items1, items2, items3, items4):
             t_props = [i0[3]]
             t_labels = [i0[4]]
-            avg_ga, std_ga = get_mean_std_of_softmax(i0[0], i1[0], i2[0], i3[0], i4[0])
-            avg_ni, std_ni = get_mean_std_of_softmax(i0[1], i1[1], i2[1], i3[1], i4[1])
-            avg_wo, std_wo = get_mean_std_of_softmax(i0[2], i1[2], i2[2], i3[2], i4[2])
-
-            sum_ga = avg_ga.unsqueeze(0)
-            sum_ni = avg_ni.unsqueeze(0)
-            sum_wo = avg_wo.unsqueeze(0)
+            avg_ga, std_ga = get_mean_std_of_softmax(i0[0], i1[0], i2[0], i3[0], i4[0], dim=0)
+            avg_ni, std_ni = get_mean_std_of_softmax(i0[1], i1[1], i2[1], i3[1], i4[1], dim=0)
+            avg_wo, std_wo = get_mean_std_of_softmax(i0[2], i1[2], i2[2], i3[2], i4[2], dim=0)
 
             if 'global' in mode:
-                ga_prediction, ni_prediction, wo_prediction = get_restricted_prediction(sum_ga, sum_ni, sum_wo)
+                ga_prediction, ni_prediction, wo_prediction = get_restricted_prediction(avg_ga, avg_ni, avg_wo)
             elif 'local' in mode:
-                ga_prediction, ni_prediction, wo_prediction = get_ordered_prediction(sum_ga, sum_ni, sum_wo)
+                ga_prediction, ni_prediction, wo_prediction = get_ordered_prediction(avg_ga, avg_ni, avg_wo)
             else:
-                ga_prediction, ni_prediction, wo_prediction = get_no_decode_prediction(sum_ga, sum_ni, sum_wo)
-            s_size = sum_ga.shape[1]
+                ga_prediction, ni_prediction, wo_prediction = get_no_decode_prediction(avg_ga, avg_ni, avg_wo)
+            s_size = avg_ga.shape[1]
             ga_prediction = np.identity(s_size)[ga_prediction].astype(np.int64)
             ni_prediction = np.identity(s_size)[ni_prediction].astype(np.int64)
             wo_prediction = np.identity(s_size)[wo_prediction].astype(np.int64)
@@ -448,17 +441,18 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='PASA Ensamble')
     parser.add_argument('--mode', default=None, type=str, choices=tags + ['all'])
     parser.add_argument('--corpus', default=None, type=str, choices=['ntc', 'bccwj', 'all'])
+    parser.add_argument('--with_softmax', action='store_true')
     arguments = parser.parse_args()
     if arguments.corpus == "all" and arguments.mode == "all":
         for corpus in ['ntc', 'bccwj']:
             for mode in tags:
-                main(mode=mode, corpus=corpus)
+                main(mode=mode, corpus=corpus, with_softmax=arguments.with_softmax)
     elif arguments.corpus == "all" and arguments.mode != "all":
         for corpus in ['ntc', 'bccwj']:
-            main(mode=arguments.mode, corpus=corpus)
+            main(mode=arguments.mode, corpus=corpus, with_softmax=arguments.with_softmax)
     elif arguments.corpus != "all" and arguments.mode == "all":
         for mode in tags:
-            main(mode=mode, corpus=arguments.corpus)
+            main(mode=mode, corpus=arguments.corpus, with_softmax=arguments.with_softmax)
     else:
         main(mode=arguments.mode, corpus=arguments.corpus)
 
