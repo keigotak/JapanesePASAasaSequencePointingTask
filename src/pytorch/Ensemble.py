@@ -52,7 +52,7 @@ def get_bertsl_ntc():
         items2 = pickle.load(f)
     with Path("../../results/pasa-bertsl-20200306-042253/bsl_20200306-042253_model-0_epoch16-f0.8647.h5.pkl").open('rb') as f:
         items3 = pickle.load(f)
-    with Path("../../results/pasa-bertsl-20200306-065438/bsl_20200306-053732_model-0_epoch12-f0.8631.h5.pkl").open('rb') as f:
+    with Path("../../results/pasa-bertsl-20200306-053732/bsl_20200306-053732_model-0_epoch12-f0.8631.h5.pkl").open('rb') as f:
         items4 = pickle.load(f)
     return items0, items1, items2, items3, items4
 
@@ -242,15 +242,33 @@ def get_bertsp_bccwj(mode="global"):
             items4 = pickle.load(f)
     return items0, items1, items2, items3, items4
 
+def get_mean_std_of_softmax(item1, item2, item3, item4, item5):
+    avg_prediction = torch.mean(torch.Tensor([F.softmax(torch.Tensor(np.array(item1)), dim=1).tolist(),
+                                              F.softmax(torch.Tensor(np.array(item2)), dim=1).tolist(),
+                                              F.softmax(torch.Tensor(np.array(item3)), dim=1).tolist(),
+                                              F.softmax(torch.Tensor(np.array(item4)), dim=1).tolist(),
+                                              F.softmax(torch.Tensor(np.array(item5)), dim=1).tolist()]), dim=0)
+    dev_prediction = torch.std(torch.Tensor([F.softmax(torch.Tensor(np.array(item1)), dim=1).tolist(),
+                                             F.softmax(torch.Tensor(np.array(item2)), dim=1).tolist(),
+                                             F.softmax(torch.Tensor(np.array(item3)), dim=1).tolist(),
+                                             F.softmax(torch.Tensor(np.array(item4)), dim=1).tolist(),
+                                             F.softmax(torch.Tensor(np.array(item5)), dim=1).tolist()]), dim=0)
+    return avg_prediction, dev_prediction
 
-def main(mode, corpus, with_softmax=False):
+def main(mode, corpus):
     mode = '{}_{}'.format(mode, corpus)
+    print('[{}]'.format(mode))
     tag_sl = ['sl_ntc', 'sl_bccwj', 'bertsl_ntc', 'bertsl_bccwj']
     tag_sp = ['spg_ntc', 'spl_ntc', 'spn_ntc',
               'spg_bccwj', 'spl_bccwj', 'spn_bccwj',
               'bertspg_ntc', 'bertspl_ntc', 'bertspn_ntc',
               'bertspg_bccwj', 'bertspl_bccwj',
               'bertspn_bccwj']
+
+    avg_preds = []
+    std_preds = []
+
+    labels = []
 
     if mode in tag_sl:
         items0, items1, items2, items3, items4 = [], [], [], [], []
@@ -270,21 +288,9 @@ def main(mode, corpus, with_softmax=False):
         for i0, i1, i2, i3, i4 in zip(items0, items1, items2, items3, items4):
             t_props = [i0[1]]
             t_labels = [i0[2]]
-
-
-            if with_softmax:
-                sum_prediction = F.softmax(torch.Tensor(np.array(i0[0])), dim=1) \
-                                  + F.softmax(torch.Tensor(np.array(i1[0])), dim=1) \
-                                  + F.softmax(torch.Tensor(np.array(i2[0])), dim=1) \
-                                  + F.softmax(torch.Tensor(np.array(i3[0])), dim=1) \
-                                  + F.softmax(torch.Tensor(np.array(i4[0])), dim=1)
-                sum_prediction = sum_prediction.unsqueeze(0)
-            else:
-                sum_prediction = np.array(i0[0]) + np.array(i1[0]) + np.array(i2[0]) + np.array(i3[0]) + np.array(i4[0])
-            sum_prediction /= 5
-
-            _, prediction = torch.max(sum_prediction, 2)
-            prediction = prediction.tolist()
+            avg_prediction, std_prediction = get_mean_std_of_softmax(i0[0], i1[0], i2[0], i3[0], i4[0])
+            _, prediction = torch.max(avg_prediction, 1)
+            prediction = [prediction.tolist()]
 
             one_tp, one_fp, one_fn = get_pr_numbers(prediction, t_labels, t_props)
             num_tp = num_tp + one_tp
@@ -311,7 +317,6 @@ def main(mode, corpus, with_softmax=False):
             if precision + recall != 0:
                 f1 = 2 * precision * recall / (precision + recall)
             f1s.append(f1)
-        print('[{}]'.format(mode))
         print('All: {}, Dep: {}, Zero: {} / tp: {}, fp: {}, fn: {}'.format(all_score, dep_score, zero_score, num_tp, num_fp, num_fn))
         print(', '.join(map(str, f1s)))
         print('{}, {}, {}, {}, {}, {}, {}, {}, {}'.format(Decimal(str(all_score)).quantize(Decimal('0.0001'),
@@ -368,33 +373,13 @@ def main(mode, corpus, with_softmax=False):
         for i0, i1, i2, i3, i4 in zip(items0, items1, items2, items3, items4):
             t_props = [i0[3]]
             t_labels = [i0[4]]
+            avg_ga, std_ga = get_mean_std_of_softmax(i0[0], i1[0], i2[0], i3[0], i4[0])
+            avg_ni, std_ni = get_mean_std_of_softmax(i0[1], i1[1], i2[1], i3[1], i4[1])
+            avg_wo, std_wo = get_mean_std_of_softmax(i0[2], i1[2], i2[2], i3[2], i4[2])
 
-            if with_softmax:
-                sum_ga = F.softmax(torch.Tensor(np.array(i0[0])), dim=0) \
-                            + F.softmax(torch.Tensor(np.array(i1[0])), dim=0) \
-                            + F.softmax(torch.Tensor(np.array(i2[0])), dim=0) \
-                            + F.softmax(torch.Tensor(np.array(i3[0])), dim=0) \
-                            + F.softmax(torch.Tensor(np.array(i4[0])), dim=0)
-                sum_ni = F.softmax(torch.Tensor(np.array(i0[1])), dim=0) \
-                             + F.softmax(torch.Tensor(np.array(i1[1])), dim=0) \
-                             + F.softmax(torch.Tensor(np.array(i2[1])), dim=0) \
-                             + F.softmax(torch.Tensor(np.array(i3[1])), dim=0) \
-                             + F.softmax(torch.Tensor(np.array(i4[1])), dim=0)
-                sum_wo = F.softmax(torch.Tensor(np.array(i0[2])), dim=0) \
-                             + F.softmax(torch.Tensor(np.array(i1[2])), dim=0) \
-                             + F.softmax(torch.Tensor(np.array(i2[2])), dim=0) \
-                             + F.softmax(torch.Tensor(np.array(i3[2])), dim=0) \
-                             + F.softmax(torch.Tensor(np.array(i4[2])), dim=0)
-                sum_ga = sum_ga.unsqueeze(0)
-                sum_ni = sum_ni.unsqueeze(0)
-                sum_wo = sum_wo.unsqueeze(0)
-            else:
-                sum_ga = np.array(i0[0]) + np.array(i1[0]) + np.array(i2[0]) + np.array(i3[0]) + np.array(i4[0])
-                sum_ni = np.array(i0[1]) + np.array(i1[1]) + np.array(i2[1]) + np.array(i3[1]) + np.array(i4[1])
-                sum_wo = np.array(i0[2]) + np.array(i1[2]) + np.array(i2[2]) + np.array(i3[2]) + np.array(i4[2])
-            sum_ga /= 5
-            sum_ni /= 5
-            sum_wo /= 5
+            sum_ga = avg_ga.unsqueeze(0)
+            sum_ni = avg_ni.unsqueeze(0)
+            sum_wo = avg_wo.unsqueeze(0)
 
             if 'global' in mode:
                 ga_prediction, ni_prediction, wo_prediction = get_restricted_prediction(sum_ga, sum_ni, sum_wo)
@@ -463,20 +448,19 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='PASA Ensamble')
     parser.add_argument('--mode', default=None, type=str, choices=tags + ['all'])
     parser.add_argument('--corpus', default=None, type=str, choices=['ntc', 'bccwj', 'all'])
-    parser.add_argument('--with_softmax', action='store_true')
     arguments = parser.parse_args()
     if arguments.corpus == "all" and arguments.mode == "all":
         for corpus in ['ntc', 'bccwj']:
             for mode in tags:
-                main(mode=mode, corpus=corpus, with_softmax=arguments.with_softmax)
+                main(mode=mode, corpus=corpus)
     elif arguments.corpus == "all" and arguments.mode != "all":
         for corpus in ['ntc', 'bccwj']:
-            main(mode=arguments.mode, corpus=corpus, with_softmax=arguments.with_softmax)
+            main(mode=arguments.mode, corpus=corpus)
     elif arguments.corpus != "all" and arguments.mode == "all":
         for mode in tags:
-            main(mode=mode, corpus=arguments.corpus, with_softmax=arguments.with_softmax)
+            main(mode=mode, corpus=arguments.corpus)
     else:
-        main(mode=arguments.mode, corpus=arguments.corpus, with_softmax=arguments.with_softmax)
+        main(mode=arguments.mode, corpus=arguments.corpus)
 
 
 '''
