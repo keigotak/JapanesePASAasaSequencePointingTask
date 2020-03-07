@@ -48,7 +48,7 @@ if tag in {'jsaislntcglove', 'paclingslntcglove', 'acmslntcglove', 'acmslntcbert
         log3 = Path("../../results/testresult_acl2019/detaillog_lstm_20190416-014450.txt")
         log4 = Path("../../results/testresult_acl2019/detaillog_lstm_20190416-014525.txt")
         log5 = Path("../../results/testresult_acl2019/detaillog_lstm_20190416-014719.txt")
-
+    # For acm 2020
     elif tag == 'acmslntcglove':
         log1 = Path("../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20190427-110202/detaillog_lstm_20190427-110202.txt")
         log2 = Path("../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20190427-110222/detaillog_lstm_20190427-110222.txt")
@@ -106,6 +106,12 @@ elif tag in {'jsaispgntcglove', 'jsaisplntcglove',
         log3 = Path("../../results/packed/global_argmax/detaillog_pointer_20190214-165654.txt")
         log4 = Path("../../results/packed/global_argmax/detaillog_pointer_20190214-165702.txt")
         log5 = Path("../../results/packed/global_argmax/detaillog_pointer_20190214-165835.txt")
+    elif tag == 'jsaisplntcglove':
+        log1 = Path("../../results/packed/ordered/detaillog_pointer_20190210-220541.txt")
+        log2 = Path("../../results/packed/ordered/detaillog_pointer_20190210-220636.txt")
+        log3 = Path("../../results/packed/ordered/detaillog_pointer_20190210-220640.txt")
+        log4 = Path("../../results/packed/ordered/detaillog_pointer_20190210-220732.txt")
+        log5 = Path("../../results/packed/ordered/detaillog_pointer_20190210-220903.txt")
     # For PACLING 2019
     elif tag == 'paclingspgntcglove':
         log1 = Path("../../results/testresult_acl2019/detaillog_pointer_20190415-001425.txt")
@@ -113,32 +119,25 @@ elif tag in {'jsaispgntcglove', 'jsaisplntcglove',
         log3 = Path("../../results/testresult_acl2019/detaillog_pointer_20190415-001538.txt")
         log4 = Path("../../results/testresult_acl2019/detaillog_pointer_20190415-001642.txt")
         log5 = Path("../../results/testresult_acl2019/detaillog_pointer_20190415-001652.txt")
-    elif tag == 'jsaisplntcglove':
-        log1 = Path("../../results/packed/ordered/detaillog_pointer_20190210-220541.txt")
-        log2 = Path("../../results/packed/ordered/detaillog_pointer_20190210-220636.txt")
-        log3 = Path("../../results/packed/ordered/detaillog_pointer_20190210-220640.txt")
-        log4 = Path("../../results/packed/ordered/detaillog_pointer_20190210-220732.txt")
-        log5 = Path("../../results/packed/ordered/detaillog_pointer_20190210-220903.txt")
-    # For PACLING 2019 local argmax
     elif tag == 'paclingsplntcglove':
         log1 = Path("../../results/testresult_pacling2019/local_argmax/detaillog_pointer_20190611-215418.txt")
         log2 = Path("../../results/testresult_pacling2019/local_argmax/detaillog_pointer_20190611-222931.txt")
         log3 = Path("../../results/testresult_pacling2019/local_argmax/detaillog_pointer_20190611-215710.txt")
         log4 = Path("../../results/testresult_pacling2019/local_argmax/detaillog_pointer_20190611-215849.txt")
         log5 = Path("../../results/testresult_pacling2019/local_argmax/detaillog_pointer_20190611-220002.txt")
-    elif tag == 'acmspgntcglove':
-        log1 = Path("../../results/testresult_pacling2019/local_argmax/detaillog_pointer_20190611-215418.txt")
-        log2 = Path("../../results/testresult_pacling2019/local_argmax/detaillog_pointer_20190611-222931.txt")
-        log3 = Path("../../results/testresult_pacling2019/local_argmax/detaillog_pointer_20190611-215710.txt")
-        log4 = Path("../../results/testresult_pacling2019/local_argmax/detaillog_pointer_20190611-215849.txt")
-        log5 = Path("../../results/testresult_pacling2019/local_argmax/detaillog_pointer_20190611-220002.txt")
-    elif tag == 'acmsplntcglove':
-        log1 = Path("../../results/testresult_pacling2019/local_argmax/detaillog_pointer_20190611-215418.txt")
-        log2 = Path("../../results/testresult_pacling2019/local_argmax/detaillog_pointer_20190611-222931.txt")
-        log3 = Path("../../results/testresult_pacling2019/local_argmax/detaillog_pointer_20190611-215710.txt")
-        log4 = Path("../../results/testresult_pacling2019/local_argmax/detaillog_pointer_20190611-215849.txt")
-        log5 = Path("../../results/testresult_pacling2019/local_argmax/detaillog_pointer_20190611-220002.txt")
     # For ACM TALLIP
+    elif tag == 'acmspgntcglove':
+        log1 = Path("../../../PhD/projects/180630_oomorisan_PASA/results/pasa-pointer-20190427-114743/detaillog_pointer_20190427-114743.txt")
+        log2 = Path("../../../PhD/projects/180630_oomorisan_PASA/results/pasa-pointer-20190427-114739/detaillog_pointer_20190427-114739.txt")
+        log3 = Path("../../../PhD/projects/180630_oomorisan_PASA/results/pasa-pointer-20190427-120937/detaillog_pointer_20190427-120937.txt")
+        log4 = Path("../../../PhD/projects/180630_oomorisan_PASA/results/pasa-pointer-20190427-114749/detaillog_pointer_20190427-114749.txt")
+        log5 = Path("../../../PhD/projects/180630_oomorisan_PASA/results/pasa-pointer-20190427-114838/detaillog_pointer_20190427-114838.txt")
+    elif tag == 'acmsplntcglove':
+        log1 = Path("../../../PhD/projects/180630_oomorisan_PASA/results/pasa-pointer-20190611-215418/detaillog_pointer_20190611-215418.txt")
+        log2 = Path("../../../PhD/projects/180630_oomorisan_PASA/results/pasa-pointer-20190611-222931/detaillog_pointer_20190611-222931.txt")
+        log3 = Path("../../../PhD/projects/180630_oomorisan_PASA/results/pasa-pointer-20190611-215710/detaillog_pointer_20190611-215710.txt")
+        log4 = Path("../../../PhD/projects/180630_oomorisan_PASA/results/pasa-pointer-20190611-215849/detaillog_pointer_20190611-215849.txt")
+        log5 = Path("../../../PhD/projects/180630_oomorisan_PASA/results/pasa-pointer-20190611-220002/detaillog_pointer_20190611-220002.txt")
     elif tag == 'acmspgntcbert':
         log1 = Path("../../results/pasa-bertptr-20200306-003313/detaillog_bertptr_20200306-003313.txt")
         log2 = Path("../../results/pasa-bertptr-20200306-013908/detaillog_bertptr_20200306-013908.txt")
