@@ -68,11 +68,11 @@ if tag in {'jsaislntcglove', 'paclingslntcglove', 'acmslntcglove', 'acmslntcbert
         log4 = Path("../../results/pasa-lstm-20200105-040101/detaillog_lstm_20200105-040101.txt")
         log5 = Path("../../results/pasa-lstm-20200105-040118/detaillog_lstm_20200105-040118.txt")
     elif tag == 'acmslbccwjbert':
-        log1 = Path("../../results/pasa-bertsl-20200104-152437/detaillog_lstm_20200104-152437.txt")
-        log2 = Path("../../results/pasa-bertsl-20200104-153949/detaillog_lstm_20200104-153949.txt")
-        log3 = Path("../../results/pasa-bertsl-20200104-154415/detaillog_lstm_20200104-154415.txt")
-        log4 = Path("../../results/pasa-bertsl-20200104-154538/detaillog_lstm_20200104-154538.txt")
-        log5 = Path("../../results/pasa-bertsl-20200104-163623/detaillog_lstm_20200104-163623.txt")
+        log1 = Path("../../results/pasa-bertsl-20200104-152437/detaillog_bertsl_20200104-152437.txt")
+        log2 = Path("../../results/pasa-bertsl-20200104-153949/detaillog_bertsl_20200104-153949.txt")
+        log3 = Path("../../results/pasa-bertsl-20200104-154415/detaillog_bertsl_20200104-154415.txt")
+        log4 = Path("../../results/pasa-bertsl-20200104-154538/detaillog_bertsl_20200104-154538.txt")
+        log5 = Path("../../results/pasa-bertsl-20200104-163623/detaillog_bertsl_20200104-163623.txt")
 
     with log1.open("r", encoding="utf-8") as f:
         data1 = pd.read_csv(f, names=("arg", "pred", "prop", "word_distance", "ku_distance", "pred_or_not", "label", "sl1"))
@@ -145,11 +145,11 @@ elif tag in {'jsaispgntcglove', 'jsaisplntcglove',
         log4 = Path("../../results/pasa-bertptr-20200306-035112/detaillog_bertptr_20200306-035112.txt")
         log5 = Path("../../results/pasa-bertptr-20200306-045715/detaillog_bertptr_20200306-045715.txt")
     elif tag == 'acmsplntcbert':
-        log1 = Path("../../results/pasa-bertptr-20200104-111614/detaillog_pointer_20200104-111614.txt")
-        log2 = Path("../../results/pasa-bertptr-20200104-111812/detaillog_pointer_20200104-111812.txt")
-        log3 = Path("../../results/pasa-bertptr-20200104-130215/detaillog_pointer_20200104-130215.txt")
-        log4 = Path("../../results/pasa-bertptr-20200104-130233/detaillog_pointer_20200104-130233.txt")
-        log5 = Path("../../results/pasa-bertptr-20200104-130251/detaillog_pointer_20200104-130251.txt")
+        log1 = Path("../../results/pasa-bertptr-20200104-111614/detaillog_bertptr_20200104-111614.txt")
+        log2 = Path("../../results/pasa-bertptr-20200104-111812/detaillog_bertptr_20200104-111812.txt")
+        log3 = Path("../../results/pasa-bertptr-20200104-130215/detaillog_bertptr_20200104-130215.txt")
+        log4 = Path("../../results/pasa-bertptr-20200104-130233/detaillog_bertptr_20200104-130233.txt")
+        log5 = Path("../../results/pasa-bertptr-20200104-130251/detaillog_bertptr_20200104-130251.txt")
     elif tag == 'acmspgbccwjglove':
         log1 = Path("../../results/pasa-pointer-20200104-130555/detaillog_pointer_20200104-130555.txt")
         log2 = Path("../../results/pasa-pointer-20200104-130624/detaillog_pointer_20200104-130624.txt")
@@ -163,17 +163,17 @@ elif tag in {'jsaispgntcglove', 'jsaisplntcglove',
         log4 = Path("../../results/pasa-pointer-20200104-165511/detaillog_pointer_20200104-165511.txt")
         log5 = Path("../../results/pasa-pointer-20200104-165543/detaillog_pointer_20200104-165543.txt")
     elif tag == 'acmspgbccwjbert':
-        log1 = Path("../../results/pasa-bertptr-20200204-225742/detaillog_pointer_20200204-225742.txt")
-        log2 = Path("../../results/pasa-bertptr-20200204-233732/detaillog_pointer_20200204-233732.txt")
-        log3 = Path("../../results/pasa-bertptr-20200204-000531/detaillog_pointer_20200204-000531.txt")
-        log4 = Path("../../results/pasa-bertptr-20200204-000527/detaillog_pointer_20200204-000527.txt")
-        log5 = Path("../../results/pasa-bertptr-20200204-000523/detaillog_pointer_20200204-000523.txt")
+        log1 = Path("../../results/pasa-bertptr-20200204-225742/detaillog_bertptr_20200204-225742.txt")
+        log2 = Path("../../results/pasa-bertptr-20200204-233732/detaillog_bertptr_20200204-233732.txt")
+        log3 = Path("../../results/pasa-bertptr-20200204-000531/detaillog_bertptr_20200204-000531.txt")
+        log4 = Path("../../results/pasa-bertptr-20200204-000527/detaillog_bertptr_20200204-000527.txt")
+        log5 = Path("../../results/pasa-bertptr-20200204-000523/detaillog_bertptr_20200204-000523.txt")
     elif tag == 'acmsplbccwjbert':
-        log1 = Path("../../results/pasa-bertptr-20200205-001801/detaillog_pointer_20200205-001801.txt")
-        log2 = Path("../../results/pasa-bertptr-20200204-004930/detaillog_pointer_20200204-004930.txt")
-        log3 = Path("../../results/pasa-bertptr-20200205-005949/detaillog_pointer_20200205-005949.txt")
-        log4 = Path("../../results/pasa-bertptr-20200204-004932/detaillog_pointer_20200204-004932.txt")
-        log5 = Path("../../results/pasa-bertptr-20200205-014243/detaillog_pointer_20200205-014243.txt")
+        log1 = Path("../../results/pasa-bertptr-20200205-001801/detaillog_bertptr_20200205-001801.txt")
+        log2 = Path("../../results/pasa-bertptr-20200204-004930/detaillog_bertptr_20200204-004930.txt")
+        log3 = Path("../../results/pasa-bertptr-20200205-005949/detaillog_bertptr_20200205-005949.txt")
+        log4 = Path("../../results/pasa-bertptr-20200204-004932/detaillog_bertptr_20200204-004932.txt")
+        log5 = Path("../../results/pasa-bertptr-20200205-014243/detaillog_bertptr_20200205-014243.txt")
 
     with log1.open("r", encoding="utf-8") as f:
         data1 = pd.read_csv(f, names=("arg", "pred", "prop", "word_distance", "ku_distance", "pred_or_not", "label", "sp1", "sentence", "conflict"))
@@ -222,11 +222,11 @@ elif tag in {'jsaispnntcglove', 'paclingspnntcglove', 'acmspnntcglove', 'acmspnn
         log4 = Path("../../../PhD/projects/180630_oomorisan_PASA/results/pasa-pointer-20190611-224120/detaillog_pointer_20190611-224120.txt")
         log5 = Path("../../../PhD/projects/180630_oomorisan_PASA/results/pasa-pointer-20190611-231229/detaillog_pointer_20190611-231229.txt")
     elif tag == 'acmspnntcbert':
-        log1 = Path("../../results/pasa-bertptr-20200104-200900/detaillog_pointer_20200104-200900.txt")
-        log2 = Path("../../results/pasa-bertptr-20200104-093250/detaillog_pointer_20200104-093250.txt")
-        log3 = Path("../../results/pasa-bertptr-20200104-093509/detaillog_pointer_20200104-093509.txt")
-        log4 = Path("../../results/pasa-bertptr-20200104-111557/detaillog_pointer_20200104-111557.txt")
-        log5 = Path("../../results/pasa-bertptr-20200104-111556/detaillog_pointer_20200104-111556.txt")
+        log1 = Path("../../results/pasa-bertptr-20200104-200900/detaillog_bertptr_20200104-200900.txt")
+        log2 = Path("../../results/pasa-bertptr-20200104-093250/detaillog_bertptr_20200104-093250.txt")
+        log3 = Path("../../results/pasa-bertptr-20200104-093509/detaillog_bertptr_20200104-093509.txt")
+        log4 = Path("../../results/pasa-bertptr-20200104-111557/detaillog_bertptr_20200104-111557.txt")
+        log5 = Path("../../results/pasa-bertptr-20200104-111556/detaillog_bertptr_20200104-111556.txt")
     elif tag == 'acmspnbccwjglove':
         log1 = Path("../../results/pasa-pointer-20200104-150500/detaillog_pointer_20200104-150500.txt")
         log2 = Path("../../results/pasa-pointer-20200104-150547/detaillog_pointer_20200104-150547.txt")
@@ -234,11 +234,11 @@ elif tag in {'jsaispnntcglove', 'paclingspnntcglove', 'acmspnntcglove', 'acmspnn
         log4 = Path("../../results/pasa-pointer-20200104-152527/detaillog_pointer_20200104-152527.txt")
         log5 = Path("../../results/pasa-pointer-20200104-152703/detaillog_pointer_20200104-152703.txt")
     elif tag == 'acmspnbccwjbert':
-        log1 = Path("../../results/pasa-bertptr-20200104-165547/detaillog_pointer_20200104-165547.txt")
-        log2 = Path("../../results/pasa-bertptr-20200104-170518/detaillog_pointer_20200104-170518.txt")
-        log3 = Path("../../results/pasa-bertptr-20200104-171529/detaillog_pointer_20200104-171529.txt")
-        log4 = Path("../../results/pasa-bertptr-20200104-172439/detaillog_pointer_20200104-172439.txt")
-        log5 = Path("../../results/pasa-bertptr-20200104-172634/detaillog_pointer_20200104-172634.txt")
+        log1 = Path("../../results/pasa-bertptr-20200104-165547/detaillog_bertptr_20200104-165547.txt")
+        log2 = Path("../../results/pasa-bertptr-20200104-170518/detaillog_bertptr_20200104-170518.txt")
+        log3 = Path("../../results/pasa-bertptr-20200104-171529/detaillog_bertptr_20200104-171529.txt")
+        log4 = Path("../../results/pasa-bertptr-20200104-172439/detaillog_bertptr_20200104-172439.txt")
+        log5 = Path("../../results/pasa-bertptr-20200104-172634/detaillog_bertptr_20200104-172634.txt")
 
     with log1.open("r", encoding="utf-8") as f:
         data1 = pd.read_csv(f, names=("arg", "pred", "prop", "word_distance", "ku_distance", "pred_or_not", "label", "sp1", "sentence", "conflict"))
