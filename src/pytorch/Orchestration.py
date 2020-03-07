@@ -6,6 +6,7 @@ import argparse
 parser = argparse.ArgumentParser(description='PASA Orchestration')
 parser.add_argument('--device', default=None, type=str)
 parser.add_argument('--num_worker', default=1, type=int)
+parser.add_argument('--mode', default=None, type=str)
 arguments = parser.parse_args()
 
 device = arguments.device
