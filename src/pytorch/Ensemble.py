@@ -413,7 +413,6 @@ def main(mode, corpus):
             if precision + recall != 0:
                 f1 = 2 * precision * recall / (precision + recall)
             f1s.append(f1)
-        print('[{}]'.format(mode))
         print('All: {}, Dep: {}, Zero: {} / tp: {}, fp: {}, fn: {}'.format(all_score, dep_score, zero_score, num_tp, num_fp,
                                                                            num_fn))
         print(', '.join(map(str, f1s)))
