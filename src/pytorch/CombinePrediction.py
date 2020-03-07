@@ -3,12 +3,7 @@ from pathlib import Path
 import collections
 import argparse
 
-# ref = Path("../../results/packed/lstm/detaillog_lstm.txt")
-# with ref.open("r", encoding="utf-8") as f:
-#     ref_data = pd.read_csv(f, names=("arg", "pred", "prop", "word_distance", "ku_distance", "pred_or_not", "label", "pointer", "sentence"))
-# sentence_data = ref_data['sentence']
-# ref_data = ref_data.drop('pointer', axis=1)
-# ref_data = ref_data.drop('sentence', axis=1)
+
 
 def main(tag):
     log = None
@@ -65,8 +60,21 @@ def main(tag):
         with log5.open("r", encoding="utf-8") as f:
             data5 = [line.strip().split(',') for line in f.readlines()]
 
-        log = [i1[:7] + [i2[7]] + [i3[7]] + [i4[7]] + [i5[7]] + i1[7:] for i1, i2, i3, i4, i5 in zip(data1, data2, data3, data4, data5)]
-        log = pd.DataFrame(log, columns=["arg", "pred", "prop", "word_distance", "ku_distance", "pred_or_not", "label", "sl1", "sl2", "sl3", "sl4", "sl5", "sentence", "conflict"])
+        if tag in ['acmslntcglove', 'acmslbccwjglove']:
+            if tag in ['acmslntcglove']:
+                ref = Path("../../results/packed/sentences_ntc.txt")
+            else:
+                ref = Path("../../results/packed/sentence_bccwj.txt")
+            with ref.open("r", encoding="utf-8") as f:
+                sentences = f.readlines()
+            log = [i1[:7] + [i2[7]] + [i3[7]] + [i4[7]] + [i5[7]] + i1[7:] + [s[-2]] for i1, i2, i3, i4, i5, s in
+                   zip(data1, data2, data3, data4, data5, sentences)]
+            columns = ["arg", "pred", "prop", "word_distance", "ku_distance", "pred_or_not", "label", "sl1", "sl2", "sl3", "sl4", "sl5", "sentence"]
+        else:
+            log = [i1[:7] + [i2[7]] + [i3[7]] + [i4[7]] + [i5[7]] + i1[7:] for i1, i2, i3, i4, i5 in
+                   zip(data1, data2, data3, data4, data5)]
+            columns = ["arg", "pred", "prop", "word_distance", "ku_distance", "pred_or_not", "label", "sl1", "sl2", "sl3", "sl4", "sl5", "sentence", "conflict"]
+        log = pd.DataFrame(log, columns=columns)
 
         item1 = log.sl1.values
         item2 = log.sl2.values
@@ -108,8 +116,6 @@ def main(tag):
         item3 = log.sl3.values
         item4 = log.sl4.values
         item5 = log.sl5.values
-
-
 
     elif tag in {'jsaispgntcglove', 'jsaisplntcglove',
                  'paclingspgntcglove', 'paclingsplntcglove',
@@ -272,7 +278,7 @@ def main(tag):
         item4 = [item[-1] for item in data4]
         item5 = [item[-1] for item in data5]
 
-        for idx in range(data1.shape[0]):
+        for idx in range(len(item1)):
             items = [item1[idx], item2[idx], item3[idx], item4[idx], item5[idx]]
             c = collections.Counter(items)
 
