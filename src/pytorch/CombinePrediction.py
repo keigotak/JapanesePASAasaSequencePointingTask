@@ -324,7 +324,6 @@ if __name__ == '__main__':
     parser.add_argument('--emb', default=None, type=str, choices=['glove', 'bert'])
     arguments = parser.parse_args()
 
-    # tag = arguments.event + arguments.model + arguments.corpus + arguments.emb
-    tag = "acmslntcbert"
+    tag = arguments.event + arguments.model + arguments.corpus + arguments.emb
     print(tag)
     main(tag)
