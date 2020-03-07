@@ -1,6 +1,7 @@
 import pandas as pd
 from pathlib import Path
 import collections
+import argparse
 
 ref = Path("../../results/packed/lstm/detaillog_lstm.txt")
 with ref.open("r", encoding="utf-8") as f:
@@ -22,12 +23,14 @@ item4 = None
 item5 = None
 summary_conflict = []
 
-events = ['jsai', 'pacling', 'acm']
-tags = ['sl', 'spg', 'spl', 'spn']
-corpus = ['ntc', 'bccwj']
-model = ['glove', 'bert']
+parser = argparse.ArgumentParser(description='PASA results combination')
+parser.add_argument('--event', default=None, type=str, choices=['jsai', 'pacling', 'acm'])
+parser.add_argument('--model', default=None, type=str, choices=['sl', 'spg', 'spl', 'spn'])
+parser.add_argument('--corpus', default=None, type=str, choices=['ntc', 'bccwj'])
+parser.add_argument('--emb', default=None, type=str, choices=['glove', 'bert'])
+arguments = parser.parse_args()
 
-tag = events[2] + tags[0] + corpus[0] + model[0]
+tag = arguments.event + arguments.tag + arguments.corpus + arguments.emb
 
 if tag in {'jsaislntcglove', 'paclingslntcglove', 'acmslntcglove', 'acmslntcbert', 'acmslbccwjglove', 'acmslbccwjbert'}:
     # For JSAI 2019
