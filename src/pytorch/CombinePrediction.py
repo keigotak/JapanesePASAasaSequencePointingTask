@@ -87,11 +87,11 @@ if tag in {'jsaislntcglove', 'paclingslntcglove', 'acmslntcglove', 'acmslntcbert
 
     log = data1.join([data2["sl2"], data3["sl3"], data4["sl4"], data5["sl5"]])
 
-    item1 = log.lstm1.values
-    item2 = log.lstm2.values
-    item3 = log.lstm3.values
-    item4 = log.lstm4.values
-    item5 = log.lstm5.values
+    item1 = log.sl1.values
+    item2 = log.sl2.values
+    item3 = log.sl3.values
+    item4 = log.sl4.values
+    item5 = log.sl5.values
 elif tag in {'jsaispgntcglove', 'jsaisplntcglove',
              'paclingspgntcglove', 'paclingsplntcglove',
              'acmspgntcglove', 'acmsplntcglove',
@@ -194,11 +194,11 @@ elif tag in {'jsaispgntcglove', 'jsaisplntcglove',
 
     log = data1.join([data2["sp2"], data3["sp3"], data4["sp4"], data5["sp5"]])
 
-    item1 = log.ptr1.values
-    item2 = log.ptr2.values
-    item3 = log.ptr3.values
-    item4 = log.ptr4.values
-    item5 = log.ptr5.values
+    item1 = log.sp1.values
+    item2 = log.sp2.values
+    item3 = log.sp3.values
+    item4 = log.sp4.values
+    item5 = log.sp5.values
 
 elif tag in {'jsaispnntcglove', 'paclingspnntcglove', 'acmspnntcglove', 'acmspnntcbert', 'acmspnbccwjglove', 'acmspnbccwjbert'}:
     if tag == 'jsaispnntcglove':
@@ -280,11 +280,11 @@ elif tag in {'jsaispnntcglove', 'paclingspnntcglove', 'acmspnntcglove', 'acmspnn
 
     log = data1.join([data2["sp2"], data3["sp3"], data4["sp4"], data5["sp5"]])
 
-    item1 = log.ptr1.values
-    item2 = log.ptr2.values
-    item3 = log.ptr3.values
-    item4 = log.ptr4.values
-    item5 = log.ptr5.values
+    item1 = log.sp1.values
+    item2 = log.sp2.values
+    item3 = log.sp3.values
+    item4 = log.sp4.values
+    item5 = log.sp5.values
 
 summary = []
 for idx in range(log.shape[0]):
