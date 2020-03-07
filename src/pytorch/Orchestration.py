@@ -46,33 +46,33 @@ processes = [
     # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "global_argmax"] + train_base_list + ["--device", device, "--seed", "4"]
 
     # test bsl ntc
-    ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl"] + test_base_list + [
-        "--init_checkpoint", "../../results/pasa-bertsl-20191207-150951/model-0/epoch14-f0.8620.h5"],
-    ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl"] + test_base_list + [
-        "--init_checkpoint", "../../results/pasa-bertsl-20191207-151017/model-0/epoch12-f0.8650.h5"],
-    ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl"] + test_base_list + [
-        "--init_checkpoint", "../../results/pasa-bertsl-20191207-151044/model-0/epoch10-f0.8611.h5"],
-    ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl"] + test_base_list + [
-        "--init_checkpoint", "../../results/pasa-bertsl-20191207-151112/model-0/epoch16-f0.8647.h5"],
-    ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl"] + test_base_list + [
-        "--init_checkpoint", "../../results/pasa-bertsl-20191207-151132/model-0/epoch12-f0.8631.h5"],
+    # ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl"] + test_base_list + [
+    #     "--init_checkpoint", "../../results/pasa-bertsl-20191207-150951/model-0/epoch14-f0.8620.h5"],
+    # ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl"] + test_base_list + [
+    #     "--init_checkpoint", "../../results/pasa-bertsl-20191207-151017/model-0/epoch12-f0.8650.h5"],
+    # ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl"] + test_base_list + [
+    #     "--init_checkpoint", "../../results/pasa-bertsl-20191207-151044/model-0/epoch10-f0.8611.h5"],
+    # ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl"] + test_base_list + [
+    #     "--init_checkpoint", "../../results/pasa-bertsl-20191207-151112/model-0/epoch16-f0.8647.h5"],
+    # ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl"] + test_base_list + [
+    #     "--init_checkpoint", "../../results/pasa-bertsl-20191207-151132/model-0/epoch12-f0.8631.h5"],
 
     # test bspg ntc
-    ["python", "EvalSequencePointingBert.py", "--device", device, "--decode", "global_argmax", "--model", "bertptr"]
-    + test_base_list + ["--init_checkpoint",
-                        "../../results/pasa-bertptr-20191207-151236/model-0/epoch11-f0.8709.h5"],
-    ["python", "EvalSequencePointingBert.py", "--device", device, "--decode", "global_argmax", "--model", "bertptr"]
-    + test_base_list + ["--init_checkpoint",
-                        "../../results/pasa-bertptr-20191207-151258/model-0/epoch15-f0.8707.h5"],
-    ["python", "EvalSequencePointingBert.py", "--device", device, "--decode", "global_argmax", "--model", "bertptr"]
-    + test_base_list + ["--init_checkpoint",
-                        "../../results/pasa-bertptr-20191207-151316/model-0/epoch15-f0.8719.h5"],
-    ["python", "EvalSequencePointingBert.py", "--device", device, "--decode", "global_argmax", "--model", "bertptr"]
-    + test_base_list + ["--init_checkpoint",
-                        "../../results/pasa-bertptr-20191207-151338/model-0/epoch16-f0.8703.h5"],
-    ["python", "EvalSequencePointingBert.py", "--device", device, "--decode", "global_argmax", "--model", "bertptr"]
-    + test_base_list + ["--init_checkpoint",
-                        "../../results/pasa-bertptr-20191207-151354/model-0/epoch15-f0.8709.h5"]
+    # ["python", "EvalSequencePointingBert.py", "--device", device, "--decode", "global_argmax", "--model", "bertptr"]
+    # + test_base_list + ["--init_checkpoint",
+    #                     "../../results/pasa-bertptr-20191207-151236/model-0/epoch11-f0.8709.h5"],
+    # ["python", "EvalSequencePointingBert.py", "--device", device, "--decode", "global_argmax", "--model", "bertptr"]
+    # + test_base_list + ["--init_checkpoint",
+    #                     "../../results/pasa-bertptr-20191207-151258/model-0/epoch15-f0.8707.h5"],
+    # ["python", "EvalSequencePointingBert.py", "--device", device, "--decode", "global_argmax", "--model", "bertptr"]
+    # + test_base_list + ["--init_checkpoint",
+    #                     "../../results/pasa-bertptr-20191207-151316/model-0/epoch15-f0.8719.h5"],
+    # ["python", "EvalSequencePointingBert.py", "--device", device, "--decode", "global_argmax", "--model", "bertptr"]
+    # + test_base_list + ["--init_checkpoint",
+    #                     "../../results/pasa-bertptr-20191207-151338/model-0/epoch16-f0.8703.h5"],
+    # ["python", "EvalSequencePointingBert.py", "--device", device, "--decode", "global_argmax", "--model", "bertptr"]
+    # + test_base_list + ["--init_checkpoint",
+    #                     "../../results/pasa-bertptr-20191207-151354/model-0/epoch15-f0.8709.h5"]
 
     # test bspn ntc
     # ["python", "EvalSequencePointingBert.py", "--device", device, "--decode", "no_decoder", "--model", "bertptr"]
@@ -238,6 +238,24 @@ processes = [
     # ["python", "EvalSequencePointingBert.py", "--device", device, "--model", "bertptr", "--with_bccwj",
     #  "--decode", "ordered"] + test_base_list + [
     #     "--init_checkpoint", "../../results/pasa-bertptr-20200127-152713/model-0/epoch13-f0.7924.h5"]
+
+    # combine results
+    ["python", "CombinePrediction.py", "--event", "acm", "--model", "sl", "--corpus", "ntc", "--emb", "glove"],
+    ["python", "CombinePrediction.py", "--event", "acm", "--model", "spg", "--corpus", "ntc", "--emb", "glove"],
+    ["python", "CombinePrediction.py", "--event", "acm", "--model", "spl", "--corpus", "ntc", "--emb", "glove"],
+    ["python", "CombinePrediction.py", "--event", "acm", "--model", "spn", "--corpus", "ntc", "--emb", "glove"],
+    ["python", "CombinePrediction.py", "--event", "acm", "--model", "sl", "--corpus", "ntc", "--emb", "bert"],
+    ["python", "CombinePrediction.py", "--event", "acm", "--model", "spg", "--corpus", "ntc", "--emb", "bert"],
+    ["python", "CombinePrediction.py", "--event", "acm", "--model", "spl", "--corpus", "ntc", "--emb", "bert"],
+    ["python", "CombinePrediction.py", "--event", "acm", "--model", "spn", "--corpus", "ntc", "--emb", "bert"],
+    ["python", "CombinePrediction.py", "--event", "acm", "--model", "sl", "--corpus", "bccwj", "--emb", "glove"],
+    ["python", "CombinePrediction.py", "--event", "acm", "--model", "spg", "--corpus", "bccwj", "--emb", "glove"],
+    ["python", "CombinePrediction.py", "--event", "acm", "--model", "spl", "--corpus", "bccwj", "--emb", "glove"],
+    ["python", "CombinePrediction.py", "--event", "acm", "--model", "spn", "--corpus", "bccwj", "--emb", "glove"],
+    ["python", "CombinePrediction.py", "--event", "acm", "--model", "sl", "--corpus", "bccwj", "--emb", "bert"],
+    ["python", "CombinePrediction.py", "--event", "acm", "--model", "spg", "--corpus", "bccwj", "--emb", "bert"],
+    ["python", "CombinePrediction.py", "--event", "acm", "--model", "spl", "--corpus", "bccwj", "--emb", "bert"],
+    ["python", "CombinePrediction.py", "--event", "acm", "--model", "spn", "--corpus", "bccwj", "--emb", "bert"]
 ]
 
 
