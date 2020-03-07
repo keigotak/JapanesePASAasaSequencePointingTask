@@ -31,7 +31,7 @@ parser.add_argument('--emb', default=None, type=str, choices=['glove', 'bert'])
 arguments = parser.parse_args()
 
 tag = arguments.event + arguments.model + arguments.corpus + arguments.emb
-
+print(tag)
 if tag in {'jsaislntcglove', 'paclingslntcglove', 'acmslntcglove', 'acmslntcbert', 'acmslbccwjglove', 'acmslbccwjbert'}:
     # For JSAI 2019
     if tag == 'jsaislntcglove':
