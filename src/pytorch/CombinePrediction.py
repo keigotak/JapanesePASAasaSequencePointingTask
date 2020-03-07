@@ -64,7 +64,7 @@ def main(tag):
             if tag in ['acmslntcglove']:
                 ref = Path("../../results/packed/sentences_ntc.txt")
             else:
-                ref = Path("../../results/packed/sentence_bccwj.txt")
+                ref = Path("../../results/packed/sentences_bccwj.txt")
             with ref.open("r", encoding="utf-8") as f:
                 sentences = f.readlines()
             log = [i1[:7] + [i2[7]] + [i3[7]] + [i4[7]] + [i5[7]] + i1[7:] + [s[-2]] + ['False'] for i1, i2, i3, i4, i5, s in
