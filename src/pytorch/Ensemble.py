@@ -242,6 +242,7 @@ def get_bertsp_bccwj(mode="global"):
             items4 = pickle.load(f)
     return items0, items1, items2, items3, items4
 
+
 def get_mean_std_of_softmax(item1, item2, item3, item4, item5, dim):
     avg_prediction = torch.mean(torch.Tensor([F.softmax(torch.Tensor(np.array(item1)), dim=dim).tolist(),
                                               F.softmax(torch.Tensor(np.array(item2)), dim=dim).tolist(),
@@ -254,6 +255,7 @@ def get_mean_std_of_softmax(item1, item2, item3, item4, item5, dim):
                                              F.softmax(torch.Tensor(np.array(item4)), dim=dim).tolist(),
                                              F.softmax(torch.Tensor(np.array(item5)), dim=dim).tolist()]), dim=0).unsqueeze(0)
     return avg_prediction, dev_prediction
+
 
 def main(mode, corpus):
     mode = '{}_{}'.format(mode, corpus)
@@ -446,13 +448,13 @@ if __name__ == "__main__":
     if arguments.corpus == "all" and arguments.mode == "all":
         for corpus in ['ntc', 'bccwj']:
             for mode in tags:
-                main(mode=mode, corpus=corpus, with_softmax=arguments.with_softmax)
+                main(mode=mode, corpus=corpus)
     elif arguments.corpus == "all" and arguments.mode != "all":
         for corpus in ['ntc', 'bccwj']:
-            main(mode=arguments.mode, corpus=corpus, with_softmax=arguments.with_softmax)
+            main(mode=arguments.mode, corpus=corpus)
     elif arguments.corpus != "all" and arguments.mode == "all":
         for mode in tags:
-            main(mode=mode, corpus=arguments.corpus, with_softmax=arguments.with_softmax)
+            main(mode=mode, corpus=arguments.corpus)
     else:
         main(mode=arguments.mode, corpus=arguments.corpus)
 
