@@ -67,14 +67,12 @@ def main(tag):
                 ref = Path("../../results/packed/sentence_bccwj.txt")
             with ref.open("r", encoding="utf-8") as f:
                 sentences = f.readlines()
-            log = [i1[:7] + [i2[7]] + [i3[7]] + [i4[7]] + [i5[7]] + i1[7:] + [s[-2]] for i1, i2, i3, i4, i5, s in
+            log = [i1[:7] + [i2[7]] + [i3[7]] + [i4[7]] + [i5[7]] + i1[7:] + [s[-2] + ['False']] for i1, i2, i3, i4, i5, s in
                    zip(data1, data2, data3, data4, data5, sentences)]
-            columns = ["arg", "pred", "prop", "word_distance", "ku_distance", "pred_or_not", "label", "sl1", "sl2", "sl3", "sl4", "sl5", "sentence"]
         else:
             log = [i1[:7] + [i2[7]] + [i3[7]] + [i4[7]] + [i5[7]] + i1[7:] for i1, i2, i3, i4, i5 in
                    zip(data1, data2, data3, data4, data5)]
-            columns = ["arg", "pred", "prop", "word_distance", "ku_distance", "pred_or_not", "label", "sl1", "sl2", "sl3", "sl4", "sl5", "sentence", "conflict"]
-        log = pd.DataFrame(log, columns=columns)
+        log = pd.DataFrame(log, columns=["arg", "pred", "prop", "word_distance", "ku_distance", "pred_or_not", "label", "sl1", "sl2", "sl3", "sl4", "sl5", "sentence", "conflict"])
 
         item1 = log.sl1.values
         item2 = log.sl2.values
