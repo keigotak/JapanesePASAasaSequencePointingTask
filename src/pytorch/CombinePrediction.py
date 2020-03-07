@@ -67,7 +67,7 @@ def main(tag):
                 ref = Path("../../results/packed/sentence_bccwj.txt")
             with ref.open("r", encoding="utf-8") as f:
                 sentences = f.readlines()
-            log = [i1[:7] + [i2[7]] + [i3[7]] + [i4[7]] + [i5[7]] + i1[7:] + [s[-2] + ['False']] for i1, i2, i3, i4, i5, s in
+            log = [i1[:7] + [i2[7]] + [i3[7]] + [i4[7]] + [i5[7]] + i1[7:] + [s[-2]] + ['False'] for i1, i2, i3, i4, i5, s in
                    zip(data1, data2, data3, data4, data5, sentences)]
         else:
             log = [i1[:7] + [i2[7]] + [i3[7]] + [i4[7]] + [i5[7]] + i1[7:] for i1, i2, i3, i4, i5 in
