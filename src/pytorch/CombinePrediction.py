@@ -66,11 +66,11 @@ def main(tag):
             else:
                 ref = Path("../../results/packed/sentences_bccwj.txt")
             with ref.open("r", encoding="utf-8") as f:
-                sentences = f.readlines()
-            log = [i1[:7] + [i2[7], i3[7], i4[7], i5[7], [[i1[7], i2[7], i3[7], i4[7], i5[7]].count(i1[6])]] + i1[7:] + [s[-2]] + ['False'] for i1, i2, i3, i4, i5, s in
+                sentences = [line.strip().split(',') for line in f.readlines()]
+            log = [i1[:8] + [i2[7], i3[7], i4[7], i5[7], [i1[7], i2[7], i3[7], i4[7], i5[7]].count(i1[6])] + i1[8:] + [s[-2]] + ['False'] for i1, i2, i3, i4, i5, s in
                    zip(data1, data2, data3, data4, data5, sentences)]
         else:
-            log = [i1[:7] + [i2[7], i3[7], i4[7], i5[7], [[i1[7], i2[7], i3[7], i4[7], i5[7]].count(i1[6])]] + i1[7:] for
+            log = [i1[:8] + [i2[7], i3[7], i4[7], i5[7], [i1[7], i2[7], i3[7], i4[7], i5[7]].count(i1[6])] + i1[8:] for
                    i1, i2, i3, i4, i5 in
                    zip(data1, data2, data3, data4, data5)]
         log = pd.DataFrame(log, columns=["arg", "pred", "prop", "word_distance", "ku_distance", "pred_or_not", "label", "sl1", "sl2", "sl3", "sl4", "sl5", "counts", "sentence", "conflict"])
@@ -107,7 +107,7 @@ def main(tag):
         with log5.open("r", encoding="utf-8") as f:
             data5 = [line.strip().split(',') for line in f.readlines()]
 
-        log = [i1[:7] + [i2[7], i3[7], i4[7], i5[7], [[i1[7], i2[7], i3[7], i4[7], i5[7]].count(i1[6])]] + i1[7:] for
+        log = [i1[:8] + [i2[7], i3[7], i4[7], i5[7], [i1[7], i2[7], i3[7], i4[7], i5[7]].count(i1[6])] + i1[8:] for
                i1, i2, i3, i4, i5 in
                zip(data1, data2, data3, data4, data5)]
         log = pd.DataFrame(log, columns=["arg", "pred", "prop", "word_distance", "ku_distance", "pred_or_not", "label", "sl1", "sl2", "sl3", "sl4", "sl5", "counts", "sentence", "conflict"])
@@ -212,7 +212,7 @@ def main(tag):
         with log5.open("r", encoding="utf-8") as f:
             data5 = [line.strip().split(',') for line in f.readlines()]
 
-        log = [i1[:7] + [i2[7], i3[7], i4[7], i5[7], [[i1[7], i2[7], i3[7], i4[7], i5[7]].count(i1[6])]] + i1[7:] for
+        log = [i1[:8] + [i2[7], i3[7], i4[7], i5[7], [i1[7], i2[7], i3[7], i4[7], i5[7]].count(i1[6])] + i1[8:] for
                i1, i2, i3, i4, i5 in
                zip(data1, data2, data3, data4, data5)]
         log = pd.DataFrame(log, columns=["arg", "pred", "prop", "word_distance", "ku_distance", "pred_or_not", "label", "sp1", "sp2", "sp3", "sp4", "sp5", "counts", "sentence", "conflict"])
@@ -296,7 +296,7 @@ def main(tag):
                     break
             summary_conflict.append(ans)
 
-        log = [i1[:7] + [i2[7], i3[7], i4[7], i5[7], [[i1[7], i2[7], i3[7], i4[7], i5[7]].count(i1[6])]] + i1[7:] for
+        log = [i1[:8] + [i2[7], i3[7], i4[7], i5[7], [i1[7], i2[7], i3[7], i4[7], i5[7]].count(i1[6])] + i1[8:] for
                i1, i2, i3, i4, i5 in
                zip(data1, data2, data3, data4, data5)]
         log = pd.DataFrame(log, columns=["arg", "pred", "prop", "word_distance", "ku_distance", "pred_or_not", "label", "sp1", "sp2", "sp3", "sp4", "sp5", "counts", "sentence", "conflict"])
