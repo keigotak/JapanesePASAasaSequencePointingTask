@@ -73,7 +73,7 @@ def main(tag):
             log = [i1[:7] + [i2[7], i3[7], i4[7], i5[7], [[i1[7], i2[7], i3[7], i4[7], i5[7]].count(i1[6])]] + i1[7:] for
                    i1, i2, i3, i4, i5 in
                    zip(data1, data2, data3, data4, data5)]
-        log = pd.DataFrame(log, columns=["arg", "pred", "prop", "word_distance", "ku_distance", "pred_or_not", "label", "sl1", "sl2", "sl3", "sl4", "sl5", "sentence", "conflict"])
+        log = pd.DataFrame(log, columns=["arg", "pred", "prop", "word_distance", "ku_distance", "pred_or_not", "label", "sl1", "sl2", "sl3", "sl4", "sl5", "counts", "sentence", "conflict"])
 
         item1 = log.sl1.values
         item2 = log.sl2.values
@@ -110,7 +110,7 @@ def main(tag):
         log = [i1[:7] + [i2[7], i3[7], i4[7], i5[7], [[i1[7], i2[7], i3[7], i4[7], i5[7]].count(i1[6])]] + i1[7:] for
                i1, i2, i3, i4, i5 in
                zip(data1, data2, data3, data4, data5)]
-        log = pd.DataFrame(log, columns=["arg", "pred", "prop", "word_distance", "ku_distance", "pred_or_not", "label", "sl1", "sl2", "sl3", "sl4", "sl5", "sentence", "conflict"])
+        log = pd.DataFrame(log, columns=["arg", "pred", "prop", "word_distance", "ku_distance", "pred_or_not", "label", "sl1", "sl2", "sl3", "sl4", "sl5", "counts", "sentence", "conflict"])
 
         item1 = log.sl1.values
         item2 = log.sl2.values
@@ -215,7 +215,7 @@ def main(tag):
         log = [i1[:7] + [i2[7], i3[7], i4[7], i5[7], [[i1[7], i2[7], i3[7], i4[7], i5[7]].count(i1[6])]] + i1[7:] for
                i1, i2, i3, i4, i5 in
                zip(data1, data2, data3, data4, data5)]
-        log = pd.DataFrame(log, columns=["arg", "pred", "prop", "word_distance", "ku_distance", "pred_or_not", "label", "sp1", "sp2", "sp3", "sp4", "sp5", "sentence", "conflict"])
+        log = pd.DataFrame(log, columns=["arg", "pred", "prop", "word_distance", "ku_distance", "pred_or_not", "label", "sp1", "sp2", "sp3", "sp4", "sp5", "counts", "sentence", "conflict"])
 
         item1 = log.sp1.values
         item2 = log.sp2.values
@@ -299,7 +299,7 @@ def main(tag):
         log = [i1[:7] + [i2[7], i3[7], i4[7], i5[7], [[i1[7], i2[7], i3[7], i4[7], i5[7]].count(i1[6])]] + i1[7:] for
                i1, i2, i3, i4, i5 in
                zip(data1, data2, data3, data4, data5)]
-        log = pd.DataFrame(log, columns=["arg", "pred", "prop", "word_distance", "ku_distance", "pred_or_not", "label", "sp1", "sp2", "sp3", "sp4", "sp5", "sentence", "conflict"])
+        log = pd.DataFrame(log, columns=["arg", "pred", "prop", "word_distance", "ku_distance", "pred_or_not", "label", "sp1", "sp2", "sp3", "sp4", "sp5", "counts", "sentence", "conflict"])
 
         item1 = log.sp1.values
         item2 = log.sp2.values
