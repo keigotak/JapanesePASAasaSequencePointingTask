@@ -24,6 +24,20 @@ test_base_list = ["--spreadsheet",
                   "--save_output"]
 
 processes = [
+    # train sl bccwj
+    # ["python", "SequenceLabeling.py", "--model", "lstm"] + train_base_list + ["--device", device, "--seed", "0"],
+    # ["python", "SequenceLabeling.py", "--model", "lstm"] + train_base_list + ["--device", device, "--seed", "1"],
+    # ["python", "SequenceLabeling.py", "--model", "lstm"] + train_base_list + ["--device", device, "--seed", "2"],
+    # ["python", "SequenceLabeling.py", "--model", "lstm"] + train_base_list + ["--device", device, "--seed", "3"],
+    # ["python", "SequenceLabeling.py", "--model", "lstm"] + train_base_list + ["--device", device, "--seed", "4"]
+
+    # train spg ntc
+    ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax"] + train_base_list + ["--device", device, "--seed", "0"],
+    ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax"] + train_base_list + ["--device", device, "--seed", "1"],
+    ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax"] + train_base_list + ["--device", device, "--seed", "2"],
+    ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax"] + train_base_list + ["--device", device, "--seed", "3"],
+    ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax"] + train_base_list + ["--device", device, "--seed", "4"]
+
     # train esl
     # ["python", "SequenceLabelingElmo.py", "--model", "elmosl"] + train_base_list + ["--device", device, "--seed", "0"],
     # ["python", "SequenceLabelingElmo.py", "--model", "elmosl"] + train_base_list + ["--device", device, "--seed", "1"],
@@ -240,22 +254,22 @@ processes = [
     #     "--init_checkpoint", "../../results/pasa-bertptr-20200127-152713/model-0/epoch13-f0.7924.h5"]
 
     # combine results
-    ["python", "CombinePrediction.py", "--event", "acm", "--model", "sl", "--corpus", "ntc", "--emb", "glove"],
-    ["python", "CombinePrediction.py", "--event", "acm", "--model", "spg", "--corpus", "ntc", "--emb", "glove"],
-    ["python", "CombinePrediction.py", "--event", "acm", "--model", "spl", "--corpus", "ntc", "--emb", "glove"],
-    ["python", "CombinePrediction.py", "--event", "acm", "--model", "spn", "--corpus", "ntc", "--emb", "glove"],
-    ["python", "CombinePrediction.py", "--event", "acm", "--model", "sl", "--corpus", "ntc", "--emb", "bert"],
-    ["python", "CombinePrediction.py", "--event", "acm", "--model", "spg", "--corpus", "ntc", "--emb", "bert"],
-    ["python", "CombinePrediction.py", "--event", "acm", "--model", "spl", "--corpus", "ntc", "--emb", "bert"],
-    ["python", "CombinePrediction.py", "--event", "acm", "--model", "spn", "--corpus", "ntc", "--emb", "bert"],
-    ["python", "CombinePrediction.py", "--event", "acm", "--model", "sl", "--corpus", "bccwj", "--emb", "glove"],
-    ["python", "CombinePrediction.py", "--event", "acm", "--model", "spg", "--corpus", "bccwj", "--emb", "glove"],
-    ["python", "CombinePrediction.py", "--event", "acm", "--model", "spl", "--corpus", "bccwj", "--emb", "glove"],
-    ["python", "CombinePrediction.py", "--event", "acm", "--model", "spn", "--corpus", "bccwj", "--emb", "glove"],
-    ["python", "CombinePrediction.py", "--event", "acm", "--model", "sl", "--corpus", "bccwj", "--emb", "bert"],
-    ["python", "CombinePrediction.py", "--event", "acm", "--model", "spg", "--corpus", "bccwj", "--emb", "bert"],
-    ["python", "CombinePrediction.py", "--event", "acm", "--model", "spl", "--corpus", "bccwj", "--emb", "bert"],
-    ["python", "CombinePrediction.py", "--event", "acm", "--model", "spn", "--corpus", "bccwj", "--emb", "bert"]
+    # ["python", "CombinePrediction.py", "--event", "acm", "--model", "sl", "--corpus", "ntc", "--emb", "glove"],
+    # ["python", "CombinePrediction.py", "--event", "acm", "--model", "spg", "--corpus", "ntc", "--emb", "glove"],
+    # ["python", "CombinePrediction.py", "--event", "acm", "--model", "spl", "--corpus", "ntc", "--emb", "glove"],
+    # ["python", "CombinePrediction.py", "--event", "acm", "--model", "spn", "--corpus", "ntc", "--emb", "glove"],
+    # ["python", "CombinePrediction.py", "--event", "acm", "--model", "sl", "--corpus", "ntc", "--emb", "bert"],
+    # ["python", "CombinePrediction.py", "--event", "acm", "--model", "spg", "--corpus", "ntc", "--emb", "bert"],
+    # ["python", "CombinePrediction.py", "--event", "acm", "--model", "spl", "--corpus", "ntc", "--emb", "bert"],
+    # ["python", "CombinePrediction.py", "--event", "acm", "--model", "spn", "--corpus", "ntc", "--emb", "bert"],
+    # ["python", "CombinePrediction.py", "--event", "acm", "--model", "sl", "--corpus", "bccwj", "--emb", "glove"],
+    # ["python", "CombinePrediction.py", "--event", "acm", "--model", "spg", "--corpus", "bccwj", "--emb", "glove"],
+    # ["python", "CombinePrediction.py", "--event", "acm", "--model", "spl", "--corpus", "bccwj", "--emb", "glove"],
+    # ["python", "CombinePrediction.py", "--event", "acm", "--model", "spn", "--corpus", "bccwj", "--emb", "glove"],
+    # ["python", "CombinePrediction.py", "--event", "acm", "--model", "sl", "--corpus", "bccwj", "--emb", "bert"],
+    # ["python", "CombinePrediction.py", "--event", "acm", "--model", "spg", "--corpus", "bccwj", "--emb", "bert"],
+    # ["python", "CombinePrediction.py", "--event", "acm", "--model", "spl", "--corpus", "bccwj", "--emb", "bert"],
+    # ["python", "CombinePrediction.py", "--event", "acm", "--model", "spn", "--corpus", "bccwj", "--emb", "bert"]
 ]
 
 
