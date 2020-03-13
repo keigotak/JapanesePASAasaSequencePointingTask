@@ -139,7 +139,7 @@ trials = Trials()
 
 
 # @profile
-def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_ratio=0.4, null_weight=None, loss_weight=None, norm_type=None):
+def train(batch_size, learning_rate=0.2, fc1_size=128, optim="sgd",  dropout_ratio=0.4, null_weight=None, loss_weight=None, norm_type=None):
     np.random.seed(arguments.seed)
     random.seed(arguments.seed)
 
