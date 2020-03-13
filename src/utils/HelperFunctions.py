@@ -8,7 +8,7 @@ import sys
 
 
 def get_save_dir(_tag, _now):
-    dir_tag = _tag + "-{0:%Y%m%d-%H%M%S}".format(_now)
+    dir_tag = _tag + "-{0:%Y%m%d-%H%M%S-%f}".format(_now)
     _path = Path('../../results').joinpath(dir_tag)
     _path.mkdir(exist_ok=True)
     return _path, str(_path.resolve())
