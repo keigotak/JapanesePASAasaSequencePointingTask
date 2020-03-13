@@ -7,10 +7,11 @@ import torch
 import sys
 
 
-def get_save_dir(_tag, _now):
+def get_save_dir(_tag, _now, with_make=True):
     dir_tag = _tag + "-{0:%Y%m%d-%H%M%S-%f}".format(_now)
     _path = Path('../../results').joinpath(dir_tag)
-    _path.mkdir(exist_ok=True)
+    if with_make:
+        _path.mkdir(exist_ok=True)
     return _path, str(_path.resolve())
 
 

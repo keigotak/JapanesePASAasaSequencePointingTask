@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from pathlib import Path
+from utils.HelperFunctions import get_save_dir
 
 
 class OptCallbacks:
@@ -19,8 +20,7 @@ class OptCallbacks:
         self.params = _params
 
     def get_model_save_dir(self, _tag, _now):
-        dir_tag = _tag + "-{0:%Y%m%d-%H%M%S}".format(_now)
-        _path = Path('../../results').joinpath(dir_tag)
+        _path, _ = get_save_dir(_tag, _now, with_make=False)
         _path = _path.joinpath('model-{}'.format(self.counter))
         self.path = _path
         _path.mkdir(exist_ok=True)
