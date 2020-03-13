@@ -37,6 +37,7 @@ from utils.GoogleSpreadSheet import write_spreadsheet
 from utils.ParallelTrials import ParallelTrials
 from BertSequenceLabelingModel import BertSequenceLabelingModel
 from BertSequenceLabelingModelNoRnn import BertSequenceLabelingModelNoRnn
+from NictBertSequenceLabelingModel import NictBertSequenceLabelingModel
 
 from Loss import *
 from Batcher import SequenceBatcherBert
@@ -136,7 +137,7 @@ trials = Trials()
 
 
 # @profile
-def train(batch_size, learning_rate=1e-3, optim="adam",  dropout_ratio=0.4, null_weight=None, loss_weight=None, norm_type=None):
+def train(batch_size, learning_rate=0.2, optim="sgd",  dropout_ratio=0.4, null_weight=None, loss_weight=None, norm_type=None):
     np.random.seed(arguments.seed)
     random.seed(arguments.seed)
 
@@ -158,6 +159,20 @@ def train(batch_size, learning_rate=1e-3, optim="adam",  dropout_ratio=0.4, null
                                                mode_padding_idx=mode_indexer.get_pad_id(),
                                                device=device,
                                                seed=arguments.seed)
+    elif arguments.model == "nictbsl":
+        model = NictBertSequenceLabelingModel(target_size=4,
+                                              dropout_ratio=dropout_ratio,
+                                              word_pos_size=len(word_pos_indexer),
+                                              ku_pos_size=len(ku_pos_indexer),
+                                              mode_size=len(mode_indexer),
+                                              word_pos_pred_idx=word_pos_indexer.word2id(0),
+                                              vocab_padding_idx=vocab.get_pad_id(),
+                                              word_pos_padding_idx=word_pos_indexer.get_pad_id(),
+                                              ku_pos_padding_idx=ku_pos_indexer.get_pad_id(),
+                                              mode_padding_idx=mode_indexer.get_pad_id(),
+                                              device=device,
+                                              seed=arguments.seed,
+                                              trainbert=arguments.trainbert)
     else:
         model = BertSequenceLabelingModel(target_size=4,
                                           dropout_ratio=dropout_ratio,

@@ -43,6 +43,7 @@ from Decoders import get_restricted_prediction, get_ordered_prediction, get_no_d
 
 from BertSequencePointingModel import BertSequencePointingModel
 from BertSequencePointingModelNoRnn import BertSequencePointingModelNoRnn
+from NictBertSequencePointingModel import NictBertSequencePointingModel
 
 arguments = get_argparser()
 
@@ -160,6 +161,19 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                                                mode_padding_idx=mode_indexer.get_pad_id(),
                                                device=device,
                                                seed=arguments.seed)
+    elif arguments.model in ['nictbspg', 'nictbspl', 'nictbspn']:
+        model = NictBertSequencePointingModel(target_size=1,
+                                              dropout_ratio=dropout_ratio,
+                                              word_pos_size=len(word_pos_indexer),
+                                              ku_pos_size=len(ku_pos_indexer),
+                                              mode_size=len(mode_indexer),
+                                              word_pos_pred_idx=word_pos_indexer.word2id(0),
+                                              vocab_padding_idx=vocab.get_pad_id(),
+                                              word_pos_padding_idx=word_pos_indexer.get_pad_id(),
+                                              ku_pos_padding_idx=ku_pos_indexer.get_pad_id(),
+                                              mode_padding_idx=mode_indexer.get_pad_id(),
+                                              device=device,
+                                              seed=arguments.seed)
     else:
         model = BertSequencePointingModel(target_size=1,
                                           dropout_ratio=dropout_ratio,

@@ -77,7 +77,7 @@ class BertWithJumanModel():
 
         return {"embedding": all_encoder_layers, "token": token_tensor, "id": id_tensor}
 
-    def get_word_embedding(self, batched_words):
+    def get_word_embedding(self, batched_words, dup_mode='mean'):
         batched_bert_words = []
         batched_bert_ids = []
         batched_bert_embs = []
@@ -139,7 +139,11 @@ class BertWithJumanModel():
                         if dup_emb is None:
                             dup_emb = torch.mean(itemgetter(indexes)(embs), dim=0).unsqueeze(0)
                         else:
-                            dup_emb = torch.cat((dup_emb, torch.mean(itemgetter(indexes)(embs), dim=0).unsqueeze(0)), dim=0)
+                            if dup_mode == 'lead':
+                                dup_emb = torch.cat(
+                                    (dup_emb, embs[0].unsqueeze(0)), dim=0)
+                            else:
+                                dup_emb = torch.cat((dup_emb, torch.mean(itemgetter(indexes)(embs), dim=0).unsqueeze(0)), dim=0)
                 if tokens[current_pos] == "[SEP]":
                     break
                 current_pos += len(indexes)
@@ -202,7 +206,7 @@ class BertWithJumanModel():
 if __name__ == "__main__":
     _path = Path("../../data/bert-kyoto/Japanese_L-12_H-768_A-12_E-30_BPE").resolve()
     model = BertWithJumanModel(_path, trainable=True)
-    ret = model.get_word_embedding(u"どういたしまして．")
+    ret = model.get_word_embedding([[u"どういたしまして。"]], dup_mode='lead')
     print(ret)
     for k, v in model.named_parameters():
         print("{}, {}, {}".format(v.requires_grad, v.size(), k))
