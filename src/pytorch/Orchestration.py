@@ -79,11 +79,11 @@ processes = [
     # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "global_argmax"] + train_base_list + ["--device", device, "--seed", "4"]
 
     # train nictbsl ntc
-    ["python", "SequenceLabelingingBert.py", "--model", "nictbsl"] + train_base_list_ntc + ["--device", device, "--seed", "0"],
-    ["python", "SequenceLabelingingBert.py", "--model", "nictbsl"] + train_base_list_ntc + ["--device", device, "--seed", "1"],
-    ["python", "SequenceLabelingingBert.py", "--model", "nictbsl"] + train_base_list_ntc + ["--device", device, "--seed", "2"],
-    ["python", "SequenceLabelingingBert.py", "--model", "nictbsl"] + train_base_list_ntc + ["--device", device, "--seed", "3"],
-    ["python", "SequenceLabelingingBert.py", "--model", "nictbsl"] + train_base_list_ntc + ["--device", device, "--seed", "4"]
+    ["python", "SequenceLabelingBert.py", "--model", "nictbsl"] + train_base_list_ntc + ["--device", device, "--seed", "0"],
+    ["python", "SequenceLabelingBert.py", "--model", "nictbsl"] + train_base_list_ntc + ["--device", device, "--seed", "1"],
+    ["python", "SequenceLabelingBert.py", "--model", "nictbsl"] + train_base_list_ntc + ["--device", device, "--seed", "2"],
+    ["python", "SequenceLabelingBert.py", "--model", "nictbsl"] + train_base_list_ntc + ["--device", device, "--seed", "3"],
+    ["python", "SequenceLabelingBert.py", "--model", "nictbsl"] + train_base_list_ntc + ["--device", device, "--seed", "4"]
 
     # train nictbspg ntc
     # ["python", "SequencePointingBert.py", "--model", "nictbsl", "--decode", "global_argmax"] + train_base_list_ntc + ["--device", device, "--seed", "0"],
@@ -107,11 +107,11 @@ processes = [
     # ["python", "SequencePointingBert.py", "--model", "nictbsl", "--decode", "no_decoder"] + train_base_list_ntc + ["--device", device, "--seed", "4"],
 
     # train nictbsl bccwj
-    # ["python", "SequenceLabelingingBert.py", "--model", "nictbsl", "--with_bccwj"] + train_base_list + ["--device", device, "--seed", "0"],
-    # ["python", "SequenceLabelingingBert.py", "--model", "nictbsl", "--with_bccwj"] + train_base_list + ["--device", device, "--seed", "1"],
-    # ["python", "SequenceLabelingingBert.py", "--model", "nictbsl", "--with_bccwj"] + train_base_list + ["--device", device, "--seed", "2"],
-    # ["python", "SequenceLabelingingBert.py", "--model", "nictbsl", "--with_bccwj"] + train_base_list + ["--device", device, "--seed", "3"],
-    # ["python", "SequenceLabelingingBert.py", "--model", "nictbsl", "--with_bccwj"] + train_base_list + ["--device", device, "--seed", "4"]
+    # ["python", "SequenceLabelingBert.py", "--model", "nictbsl", "--with_bccwj"] + train_base_list + ["--device", device, "--seed", "0"],
+    # ["python", "SequenceLabelingBert.py", "--model", "nictbsl", "--with_bccwj"] + train_base_list + ["--device", device, "--seed", "1"],
+    # ["python", "SequenceLabelingBert.py", "--model", "nictbsl", "--with_bccwj"] + train_base_list + ["--device", device, "--seed", "2"],
+    # ["python", "SequenceLabelingBert.py", "--model", "nictbsl", "--with_bccwj"] + train_base_list + ["--device", device, "--seed", "3"],
+    # ["python", "SequenceLabelingBert.py", "--model", "nictbsl", "--with_bccwj"] + train_base_list + ["--device", device, "--seed", "4"]
 
     # train nictbspg bccwj
     # ["python", "SequencePointingBert.py", "--model", "nictbsl", "--decode", "global_argmax", "--with_bccwj"] + train_base_list + ["--device", device, "--seed", "0"],
