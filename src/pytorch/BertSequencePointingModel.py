@@ -177,7 +177,6 @@ class BertSequencePointingModel(Model):
         modified_state_dict_bert = OrderedDict()
         for k, v in state_dict_bert.items():
             modified_state_dict_bert['word_embeddings.model.' + k] = v
-        # state_dict.update(modified_state_dict_bert)
         self.load_state_dict(state_dict)
 
 
