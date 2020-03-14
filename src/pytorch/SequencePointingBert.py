@@ -551,7 +551,7 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
             str_loss_weight = [0] + list(map(str, loss_weight.values()))
         _file = Path(__file__).name
         _spreadline = ["{:%Y%m%d-%H%M%S} ".format(now),
-                       "{:%Y%m%d-%H%M%S} ".format(get_now()),
+                       "{:%Y%m%d-%H%M%S-%f} ".format(get_now()),
                        _file,
                        '{} {}'.format(sm.server_name, sm.device_name),
                        best_e,
