@@ -424,7 +424,7 @@ processes = {
 
 proc = []
 for tag in arguments.mode.split(","):
-    proc += processes[tag]
+    proc.extend(processes[tag])
 with futures.ProcessPoolExecutor(max_workers=arguments.num_worker) as executor:
     results = executor.map(subprocess.call, processes)
 
