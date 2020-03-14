@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 from pathlib import Path
-from operator import itemgetter
 
 import numpy as np
 import torch
 import torch.nn as nn
 from pytorch_transformers import BertTokenizer, BertModel
-from pyknp import Juman
 import os
 import sys
 sys.path.append(os.pardir)
@@ -27,7 +25,7 @@ class BertNictModel():
         self.device = device
         self.embedding_dim = self.model.embeddings.word_embeddings.embedding_dim
         self.vocab_size = self.model.embeddings.word_embeddings.num_embeddings
-        self.max_seq_length = 224
+        self.max_seq_length = 512
 
         if self.device != "cpu":
             if torch.cuda.device_count() > 1:
@@ -36,49 +34,42 @@ class BertNictModel():
 
         self.model.to(self.device)
 
-    def _preprocess_text(self, text):
-        return text.replace(" ", "")  # for Juman
+    # def _preprocess_text(self, text):
+    #     return text.replace(" ", "")  # for Juman
 
-    def get_sentence_embedding(self, text):
-        bert_tokens = self.bert_tokenizer.tokenize(" ".join(text))
-        token = ["[CLS]"] + bert_tokens[:self.max_seq_length] + ["[SEP]"]
-        id = self.bert_tokenizer.convert_tokens_to_ids(token) # max_seq_len-2
-
-        if len(np.array(token).shape) != 2:
-            token_tensor = np.array(token).reshape(1, -1)
-        else:
-            token_tensor = np.array(token)
-
-        if len(np.array(id).shape) != 2:
-            id_tensor = torch.tensor(id).reshape(1, -1)
-        else:
-            id_tensor = torch.tensor(id)
-
-        if self.device != "cpu":
-            if torch.cuda.device_count() > 1:
-                print("Let's use", torch.cuda.device_count(), "GPUs!")
-                self.model = nn.DataParallel(self.model, device_ids=get_cuda_id(self.device))
-        self.model.to(self.device)
-        all_encoder_layers, _ = self.model(id_tensor)
-
-        return {"embedding": all_encoder_layers, "token": token_tensor, "id": id_tensor}
+    # def get_sentence_embedding(self, text):
+    #     bert_tokens = self.bert_tokenizer.tokenize(" ".join(text))
+    #     token = ["[CLS]"] + bert_tokens[:self.max_seq_length] + ["[SEP]"]
+    #     id = self.bert_tokenizer.convert_tokens_to_ids(token) # max_seq_len-2
+    #
+    #     if len(np.array(token).shape) != 2:
+    #         token_tensor = np.array(token).reshape(1, -1)
+    #     else:
+    #         token_tensor = np.array(token)
+    #
+    #     if len(np.array(id).shape) != 2:
+    #         id_tensor = torch.tensor(id).reshape(1, -1)
+    #     else:
+    #         id_tensor = torch.tensor(id)
+    #
+    #     if self.device != "cpu":
+    #         if torch.cuda.device_count() > 1:
+    #             print("Let's use", torch.cuda.device_count(), "GPUs!")
+    #             self.model = nn.DataParallel(self.model, device_ids=get_cuda_id(self.device))
+    #     self.model.to(self.device)
+    #     all_encoder_layers, _ = self.model(id_tensor)
+    #
+    #     return {"embedding": all_encoder_layers, "token": token_tensor, "id": id_tensor}
 
     def get_word_embedding(self, batched_words):
         batched_bert_ids = []
-        batched_bert_embs = None
         for words in batched_words:
-        #     token = ["[CLS]"] + tokenized_bert_words[:self.max_seq_length] + ["[SEP]"]
+            words = [self.bert_tokenizer.cls_token] + words[:self.max_seq_length].tolist() + [self.bert_tokenizer.sep_token]
             id = self.bert_tokenizer.convert_tokens_to_ids(words)
-            batched_bert_ids.append(id)
-        #     batched_bert_seq_ids.append([-1] + seq_ids[:self.max_seq_length] + [seq_ids[-1] + 1])
+            batched_bert_ids.extend([id])
 
-            embedding, _ = self.model(torch.tensor(id).reshape(1, -1).to(self.device))
-            if batched_bert_embs is None:
-                batched_bert_embs = embedding
-            else:
-                batched_bert_embs = torch.cat((batched_bert_embs, embedding), dim=0)
-
-        return {"embedding": batched_bert_embs, "token": batched_words, "id": batched_bert_ids}
+        batched_bert_embs, _ = self.model(torch.tensor(batched_bert_ids).to(self.device))
+        return {"embedding": batched_bert_embs[:, 1:-1, :], "token": batched_words, "id": batched_bert_ids}
 
     def get_pred_embedding(self, batched_arg_embedding, batched_arg_token, batched_word_pos, pred_pos_index):
         batched_pred_embedding = None
@@ -94,19 +85,19 @@ class BertNictModel():
                     batched_pred_embedding[-1][i] = arg_embedding[i]
         return {"embedding": batched_pred_embedding, "id": pred_pos_index}
 
-    def get_embedding(self, text):
-        items = self.get_sentence_embedding(text)
-
-        tokens = items["tokens"]
-        embeddings = items["embedding"]
-
-        pool_tensors = torch.tensor()
-        for token, embedding in zip(tokens, embeddings):
-            if "##" in token:
-                pass
-            else:
-                pool_tensors.append(embedding)
-        return pool_tensors
+    # def get_embedding(self, text):
+    #     items = self.get_sentence_embedding(text)
+    #
+    #     tokens = items["tokens"]
+    #     embeddings = items["embedding"]
+    #
+    #     pool_tensors = torch.tensor()
+    #     for token, embedding in zip(tokens, embeddings):
+    #         if "##" in token:
+    #             pass
+    #         else:
+    #             pool_tensors.append(embedding)
+    #     return pool_tensors
 
     def state_dict(self):
         return self.model.state_dict()
