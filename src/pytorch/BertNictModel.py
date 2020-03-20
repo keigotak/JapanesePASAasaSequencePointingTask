@@ -223,7 +223,7 @@ if __name__ == "__main__":
                 for seqid, t_batch in enumerate(range(len(batcher))):
                     t_args, _, _, _, _, _, _ = batcher.get_batch()
                     ret = model.get_word_embedding(t_args)
-                    items.append([e, seqid, ptoz(ret)])
+                    items.append([e, seqid, ptoz(ret['embedding'])])
                 sql = "INSERT INTO dataset (epoch, seqid, obj) VALUES (?, ?, ?)"
                 c.executemany(sql, items)
                 conn.commit()
