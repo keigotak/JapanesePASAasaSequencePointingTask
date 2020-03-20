@@ -220,8 +220,8 @@ if __name__ == "__main__":
                 for seqid, t_batch in enumerate(range(len(train_batcher))):
                     t_args, _, _, _, _, _, _ = train_batcher.get_batch()
                     ret = model.get_word_embedding(t_args)
-                    items.append([e, seqid, ret])
-                sql = "INSERT INTO dataset (epoch, seqid, ptoz(embs)) VALUES (?, ?, ?)"
+                    items.append([e, seqid, ptoz(ret)])
+                sql = "INSERT INTO dataset (epoch, seqid, embs) VALUES (?, ?, ?)"
                 c.executemany(sql, items)
                 conn.commit()
                 train_batcher.reshuffle()
