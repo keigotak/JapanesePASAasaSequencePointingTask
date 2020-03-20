@@ -8,7 +8,7 @@ from pytorch_transformers import BertTokenizer, BertModel
 import os
 import sys
 sys.path.append(os.pardir)
-from utils.HelperFunctions import get_cuda_id
+from utils.HelperFunctions import get_cuda_id, ptoz
 
 
 class BertNictModel():
@@ -197,15 +197,6 @@ if __name__ == "__main__":
                                           mode_pad_id=mode_indexer.get_pad_id(), shuffle=True)
 
         import sqlite3
-        import pickle
-        import bz2
-        PROTOCOL = pickle.HIGHEST_PROTOCOL
-
-        def ptoz(obj):
-            return bz2.compress(pickle.dumps(obj, PROTOCOL), 3)
-
-        def ztop(b):
-            return pickle.loads(bz2.decompress(b))
 
         tag = 'train'
         train_db = Path('../../data/BCCWJ-DepParaPAS/nictbert-{}-embs.db'.format(tag))
@@ -221,7 +212,7 @@ if __name__ == "__main__":
                     t_args, _, _, _, _, _, _ = train_batcher.get_batch()
                     ret = model.get_word_embedding(t_args)
                     items.append([e, seqid, ptoz(ret)])
-                sql = "INSERT INTO dataset (epoch, seqid, embs) VALUES (?, ?, ?)"
+                sql = "INSERT INTO dataset (epoch, seqid, blob) VALUES (?, ?, ?)"
                 c.executemany(sql, items)
                 conn.commit()
                 train_batcher.reshuffle()
