@@ -5,6 +5,8 @@ import argparse
 import numpy as np
 import torch
 import sys
+import pickle
+import bz2
 
 
 def get_save_dir(_tag, _now, with_make=True):
@@ -79,6 +81,14 @@ def get_cuda_id(args):
     cuda_id = args.split(',')
     cuda_id = range(len(cuda_id))
     return cuda_id
+
+
+def ptoz(obj):
+    return bz2.compress(pickle.dumps(obj, pickle.HIGHEST_PROTOCOL), 3)
+
+
+def ztop(b):
+    return pickle.loads(bz2.decompress(b))
 
 
 def get_separated_label(labels):
