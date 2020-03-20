@@ -116,11 +116,10 @@ if __name__ == "__main__":
     device = arguments.device
     if device != 'cpu':
         os.environ["CUDA_VISIBLE_DEVICES"] = device
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     _path = Path("../../data/NICT_BERT-base_JapaneseWikipedia_100K").resolve()
-    model = BertNictModel(_path, trainable=False)
-    if device != 'cpu':
-        model.to(device)
+    model = BertNictModel(_path, trainable=False, device=device)
     # ret = model.get_word_embedding(np.array([["ど", "う", "いたしまし", "て", "。"]]))
     # print(ret)
     # for k, v in model.named_parameters():
@@ -130,7 +129,6 @@ if __name__ == "__main__":
     if with_vector:
         with_bccwj = False
         with_bert = False
-        device = 'cpu'
 
         TRAIN = "train2"
         DEV = "dev"
@@ -199,23 +197,31 @@ if __name__ == "__main__":
                                           mode_pad_id=mode_indexer.get_pad_id(), shuffle=True)
 
         import sqlite3
+        import pickle
+        import bz2
+        PROTOCOL = pickle.HIGHEST_PROTOCOL
+
+        def ptoz(obj):
+            return bz2.compress(pickle.dumps(obj, PROTOCOL), 3)
+
+        def ztop(b):
+            return pickle.loads(bz2.decompress(b))
+
         tag = 'train'
         train_db = Path('../../data/BCCWJ-DepParaPAS/nictbert-{}-embs.db'.format(tag))
         if train_db.exists():
             train_db.unlink()
         conn = sqlite3.connect(str(train_db.resolve()))
         c = conn.cursor()
-        c.execute('CREATE TABLE dataset (epoch integer, seqid integer, embs dict)')
+        c.execute('CREATE TABLE dataset (epoch integer, seqid integer, obj blob)')
         with torch.no_grad():
             for e in range(20):
                 items = []
                 for seqid, t_batch in enumerate(range(len(train_batcher))):
                     t_args, _, _, _, _, _, _ = train_batcher.get_batch()
-                    if device != 'cpu':
-                        model.to(device)
                     ret = model.get_word_embedding(t_args)
                     items.append([e, seqid, ret])
-                sql = "INSERT INTO dataset (epoch, seqid, embs) VALUES (?, ?, ?)"
+                sql = "INSERT INTO dataset (epoch, seqid, ptoz(embs)) VALUES (?, ?, ?)"
                 c.executemany(sql, items)
                 conn.commit()
                 train_batcher.reshuffle()
