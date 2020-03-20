@@ -107,11 +107,121 @@ class BertNictModel():
 
 
 if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description='nice bert vector')
+    parser.add_argument('--device', default='cpu', type=str)
+    arguments = parser.parse_args()
+
+    device = arguments.device
+    if device != 'cpu':
+        os.environ["CUDA_VISIBLE_DEVICES"] = device
+
     _path = Path("../../data/NICT_BERT-base_JapaneseWikipedia_100K").resolve()
-    model = BertNictModel(_path, trainable=True)
-    ret = model.get_word_embedding([["ど", "う", "いたしまし", "て", "。"]])
-    print(ret)
-    for k, v in model.named_parameters():
-        print("{}, {}, {}".format(v.requires_grad, v.size(), k))
+    model = BertNictModel(_path, trainable=False)
+    if device != 'cpu':
+        model.to(device)
+    # ret = model.get_word_embedding(np.array([["ど", "う", "いたしまし", "て", "。"]]))
+    # print(ret)
+    # for k, v in model.named_parameters():
+    #     print("{}, {}, {}".format(v.requires_grad, v.size(), k))
+
+    with_vector = True
+    if with_vector:
+        with_bccwj = False
+        with_bert = False
+        device = 'cpu'
+
+        TRAIN = "train2"
+        DEV = "dev"
+        TEST = "test"
+        from utils.Datasets import get_datasets_in_sentences
+        train_label, train_args, train_preds, train_prop, train_vocab, train_word_pos, train_ku_pos, train_modes, train_word_pos_id, train_ku_pos_id, train_modes_id = get_datasets_in_sentences(TRAIN, with_bccwj=with_bccwj, with_bert=with_bert)
+        dev_label, dev_args, dev_preds, dev_prop, dev_vocab, dev_word_pos, dev_ku_pos, dev_modes, dev_word_pos_id, dev_ku_pos_id, dev_modes_id = get_datasets_in_sentences(DEV, with_bccwj=with_bccwj, with_bert=with_bert)
+        test_label, test_args, test_preds, test_prop, test_vocab, test_word_pos, test_ku_pos, test_modes, test_word_pos_id, test_ku_pos_id, test_modes_id = get_datasets_in_sentences(TEST, with_bccwj=with_bccwj, with_bert=with_bert)
+
+        from utils.Vocab import Vocab
+        vocab = Vocab()
+        vocab.fit(train_vocab, -1)
+        vocab.fit(dev_vocab, -1)
+        vocab.fit(test_vocab, -1)
+        train_arg_id, train_pred_id = vocab.transform_sentences(train_args, train_preds)
+        dev_arg_id, dev_pred_id = vocab.transform_sentences(dev_args, dev_preds)
+        test_arg_id, test_pred_id = vocab.transform_sentences(test_args, test_preds)
+
+        from utils.Indexer import Indexer
+        word_pos_indexer = Indexer()
+        word_pos_id = np.concatenate([train_word_pos_id, dev_word_pos_id, test_word_pos_id])
+        word_pos_indexer.fit(word_pos_id)
+        train_word_pos = word_pos_indexer.transform_sentences(train_word_pos)
+        dev_word_pos = word_pos_indexer.transform_sentences(dev_word_pos)
+        test_word_pos = word_pos_indexer.transform_sentences(test_word_pos)
+
+        ku_pos_indexer = Indexer()
+        ku_pos_id = np.concatenate([train_ku_pos_id, dev_ku_pos_id, test_ku_pos_id])
+        ku_pos_indexer.fit(ku_pos_id)
+        train_ku_pos = ku_pos_indexer.transform_sentences(train_ku_pos)
+        dev_ku_pos = ku_pos_indexer.transform_sentences(dev_ku_pos)
+        test_ku_pos = ku_pos_indexer.transform_sentences(test_ku_pos)
+
+        mode_indexer = Indexer()
+        modes_id = np.concatenate([train_modes_id, dev_modes_id, test_modes_id])
+        mode_indexer.fit(modes_id)
+        train_modes = mode_indexer.transform_sentences(train_modes)
+        dev_modes = mode_indexer.transform_sentences(dev_modes)
+        test_modes = mode_indexer.transform_sentences(test_modes)
+
+        from Batcher import SequenceBatcherBert
+        train_batcher = SequenceBatcherBert(2,
+                                            train_args,
+                                            train_preds,
+                                            train_label,
+                                            train_prop,
+                                            train_word_pos,
+                                            train_ku_pos,
+                                            train_modes,
+                                            vocab_pad_id=vocab.get_pad_id(),
+                                            word_pos_pad_id=word_pos_indexer.get_pad_id(),
+                                            ku_pos_pad_id=ku_pos_indexer.get_pad_id(),
+                                            mode_pad_id=mode_indexer.get_pad_id(), shuffle=True)
+
+        dev_batcher = SequenceBatcherBert(2,
+                                          dev_args,
+                                          dev_preds,
+                                          dev_label,
+                                          dev_prop,
+                                          dev_word_pos,
+                                          dev_ku_pos,
+                                          dev_modes,
+                                          vocab_pad_id=vocab.get_pad_id(),
+                                          word_pos_pad_id=word_pos_indexer.get_pad_id(),
+                                          ku_pos_pad_id=ku_pos_indexer.get_pad_id(),
+                                          mode_pad_id=mode_indexer.get_pad_id(), shuffle=True)
+
+        import sqlite3
+        tag = 'train'
+        train_db = Path('../../data/BCCWJ-DepParaPAS/nictbert-{}-embs.db'.format(tag))
+        if train_db.exists():
+            train_db.unlink()
+        conn = sqlite3.connect(str(train_db.resolve()))
+        c = conn.cursor()
+        c.execute('CREATE TABLE dataset (epoch integer, seqid integer, embs dict)')
+        with torch.no_grad():
+            for e in range(20):
+                items = []
+                for seqid, t_batch in enumerate(range(len(train_batcher))):
+                    t_args, _, _, _, _, _, _ = train_batcher.get_batch()
+                    if device != 'cpu':
+                        model.to(device)
+                    ret = model.get_word_embedding(t_args)
+                    items.append([e, seqid, ret])
+                sql = "INSERT INTO dataset (epoch, seqid, embs) VALUES (?, ?, ?)"
+                c.executemany(sql, items)
+                conn.commit()
+                train_batcher.reshuffle()
+            conn.close()
+
+
+
 
 
