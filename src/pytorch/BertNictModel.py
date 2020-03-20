@@ -108,6 +108,11 @@ class BertNictModel():
 
 if __name__ == "__main__":
     import argparse
+    import sqlite3
+    from Batcher import SequenceBatcherBert
+    from utils.Datasets import get_datasets_in_sentences
+    from utils.Vocab import Vocab
+    from utils.Indexer import Indexer
 
     parser = argparse.ArgumentParser(description='nice bert vector')
     parser.add_argument('--device', default='cpu', type=str)
@@ -120,34 +125,25 @@ if __name__ == "__main__":
 
     _path = Path("../../data/NICT_BERT-base_JapaneseWikipedia_100K").resolve()
     model = BertNictModel(_path, trainable=False, device=device)
+    word_padding_idx = model.get_padding_idx()
     # ret = model.get_word_embedding(np.array([["ど", "う", "いたしまし", "て", "。"]]))
     # print(ret)
     # for k, v in model.named_parameters():
     #     print("{}, {}, {}".format(v.requires_grad, v.size(), k))
 
-    with_vector = True
-    if with_vector:
-        with_bccwj = False
-        with_bert = False
-
+    def get_batches(word_padding_idx, with_bccwj=False, with_bert=False):
         TRAIN = "train2"
         DEV = "dev"
         TEST = "test"
-        from utils.Datasets import get_datasets_in_sentences
         train_label, train_args, train_preds, train_prop, train_vocab, train_word_pos, train_ku_pos, train_modes, train_word_pos_id, train_ku_pos_id, train_modes_id = get_datasets_in_sentences(TRAIN, with_bccwj=with_bccwj, with_bert=with_bert)
         dev_label, dev_args, dev_preds, dev_prop, dev_vocab, dev_word_pos, dev_ku_pos, dev_modes, dev_word_pos_id, dev_ku_pos_id, dev_modes_id = get_datasets_in_sentences(DEV, with_bccwj=with_bccwj, with_bert=with_bert)
         test_label, test_args, test_preds, test_prop, test_vocab, test_word_pos, test_ku_pos, test_modes, test_word_pos_id, test_ku_pos_id, test_modes_id = get_datasets_in_sentences(TEST, with_bccwj=with_bccwj, with_bert=with_bert)
 
-        from utils.Vocab import Vocab
         vocab = Vocab()
         vocab.fit(train_vocab, -1)
         vocab.fit(dev_vocab, -1)
         vocab.fit(test_vocab, -1)
-        train_arg_id, train_pred_id = vocab.transform_sentences(train_args, train_preds)
-        dev_arg_id, dev_pred_id = vocab.transform_sentences(dev_args, dev_preds)
-        test_arg_id, test_pred_id = vocab.transform_sentences(test_args, test_preds)
 
-        from utils.Indexer import Indexer
         word_pos_indexer = Indexer()
         word_pos_id = np.concatenate([train_word_pos_id, dev_word_pos_id, test_word_pos_id])
         word_pos_indexer.fit(word_pos_id)
@@ -169,7 +165,6 @@ if __name__ == "__main__":
         dev_modes = mode_indexer.transform_sentences(dev_modes)
         test_modes = mode_indexer.transform_sentences(test_modes)
 
-        from Batcher import SequenceBatcherBert
         train_batcher = SequenceBatcherBert(2,
                                             train_args,
                                             train_preds,
@@ -178,12 +173,13 @@ if __name__ == "__main__":
                                             train_word_pos,
                                             train_ku_pos,
                                             train_modes,
-                                            vocab_pad_id=vocab.get_pad_id(),
+                                            vocab_pad_id=word_padding_idx,
                                             word_pos_pad_id=word_pos_indexer.get_pad_id(),
                                             ku_pos_pad_id=ku_pos_indexer.get_pad_id(),
-                                            mode_pad_id=mode_indexer.get_pad_id(), shuffle=True)
+                                            mode_pad_id=mode_indexer.get_pad_id(),
+                                            shuffle=True)
 
-        dev_batcher = SequenceBatcherBert(2,
+        dev_batcher = SequenceBatcherBert(4,
                                           dev_args,
                                           dev_preds,
                                           dev_label,
@@ -191,34 +187,56 @@ if __name__ == "__main__":
                                           dev_word_pos,
                                           dev_ku_pos,
                                           dev_modes,
-                                          vocab_pad_id=vocab.get_pad_id(),
+                                          vocab_pad_id=word_padding_idx,
                                           word_pos_pad_id=word_pos_indexer.get_pad_id(),
                                           ku_pos_pad_id=ku_pos_indexer.get_pad_id(),
-                                          mode_pad_id=mode_indexer.get_pad_id(), shuffle=True)
+                                          mode_pad_id=mode_indexer.get_pad_id(),
+                                          shuffle=True)
 
-        import sqlite3
+        test_batcher = SequenceBatcherBert(1,
+                                           test_args,
+                                           test_preds,
+                                           test_label,
+                                           test_prop,
+                                           test_word_pos,
+                                           test_ku_pos,
+                                           test_modes,
+                                           vocab_pad_id=word_padding_idx,
+                                           word_pos_pad_id=word_pos_indexer.get_pad_id(),
+                                           ku_pos_pad_id=ku_pos_indexer.get_pad_id(),
+                                           mode_pad_id=mode_indexer.get_pad_id(),
+                                           shuffle=True)
 
-        tag = 'train'
-        train_db = Path('../../data/BCCWJ-DepParaPAS/nictbert-{}-embs.db'.format(tag))
-        if train_db.exists():
-            train_db.unlink()
-        conn = sqlite3.connect(str(train_db.resolve()))
+        return {'train': train_batcher, 'dev': dev_batcher, 'test': test_batcher}
+
+    def save_embs(tag, batcher):
+        epochs = {'train': 20, 'dev': 20, 'test': 1}
+        file_db = Path('../../data/BCCWJ-DepParaPAS/nictbert-{}-embs.db'.format(tag))
+        if file_db.exists():
+            file_db.unlink()
+        conn = sqlite3.connect(str(file_db.resolve()))
         c = conn.cursor()
         c.execute('CREATE TABLE dataset (epoch integer, seqid integer, obj blob)')
         with torch.no_grad():
-            for e in range(20):
+            for e in range(epochs[tag]):
                 items = []
-                for seqid, t_batch in enumerate(range(len(train_batcher))):
-                    t_args, _, _, _, _, _, _ = train_batcher.get_batch()
+                for seqid, t_batch in enumerate(range(len(batcher))):
+                    t_args, _, _, _, _, _, _ = batcher.get_batch()
                     ret = model.get_word_embedding(t_args)
                     items.append([e, seqid, ptoz(ret)])
-                sql = "INSERT INTO dataset (epoch, seqid, blob) VALUES (?, ?, ?)"
+                sql = "INSERT INTO dataset (epoch, seqid, obj) VALUES (?, ?, ?)"
                 c.executemany(sql, items)
                 conn.commit()
-                train_batcher.reshuffle()
+                batcher.reshuffle()
             conn.close()
 
 
-
-
+    with_vector = True
+    if with_vector:
+        batchers = get_batches(word_padding_idx, with_bccwj=False, with_bert=False)
+        for tag in ['train', 'dev', 'test']:
+            save_embs(tag, batchers[tag])
+        batchers = get_batches(word_padding_idx, with_bccwj=True, with_bert=False)
+        for tag in ['train', 'dev', 'test']:
+            save_embs(tag, batchers[tag])
 
