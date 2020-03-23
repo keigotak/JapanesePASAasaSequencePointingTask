@@ -12,6 +12,7 @@ class CheckPoint:
             self.target_data = data
         else:
             if self.current_data <= self.target_data:
+                self.target_data = self.current_data
                 return True
         return False
 
@@ -21,5 +22,6 @@ class CheckPoint:
             self.target_data = data
         else:
             if self.current_data >= self.target_data:
+                self.target_data = self.current_data
                 return True
         return False
