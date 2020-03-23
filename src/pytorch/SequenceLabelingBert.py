@@ -454,8 +454,8 @@ def train(batch_size, learning_rate=0.2, optim="sgd",  dropout_ratio=0.4, null_w
             if cp.is_maximum(max_all_score) and arguments.save_model:
                 model_path = model_dir.joinpath('epoch{0}-f{1:.4f}.h5'.format(e, max_all_score))
                 torch.save(model.state_dict(), model_path)
-                model_path = model_dir.joinpath('epoch{0}-f{1:.4f}_bert.h5'.format(e, max_all_score))
-                torch.save(model.word_embeddings.state_dict(), model_path)
+                # model_path = model_dir.joinpath('epoch{0}-f{1:.4f}_bert.h5'.format(e, max_all_score))
+                # torch.save(model.word_embeddings.state_dict(), model_path)
                 best_model_path = model_path
 
             if es.is_over():
