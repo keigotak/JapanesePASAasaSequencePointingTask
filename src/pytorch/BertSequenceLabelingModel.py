@@ -155,10 +155,10 @@ class BertSequenceLabelingModel(Model):
         if '.h5' in path:
             path = path.replace('.h5', '')
         state_dict = torch.load(path + '.h5', map_location='cpu')
-        state_dict_bert = torch.load(path + '_bert.h5', map_location='cpu')
-        modified_state_dict_bert = OrderedDict()
-        for k, v in state_dict_bert.items():
-            modified_state_dict_bert['word_embeddings.model.' + k] = v
+        # state_dict_bert = torch.load(path + '_bert.h5', map_location='cpu')
+        # modified_state_dict_bert = OrderedDict()
+        # for k, v in state_dict_bert.items():
+        #     modified_state_dict_bert['word_embeddings.model.' + k] = v
         self.load_state_dict(state_dict)
 
 
