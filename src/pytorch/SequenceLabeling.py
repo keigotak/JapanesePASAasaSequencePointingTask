@@ -466,8 +466,8 @@ def train(batch_size, learning_rate=1e-3, optim="adam",  dropout_ratio=0.4, null
                 f.write(_line + '\n')
             vw_train_loss.reset()
 
-            if cp.is_maximum(max_all_score) and arguments.save_model:
-                model_path = model_dir.joinpath('epoch{0}-f{1:.4f}.h5'.format(e, max_all_score))
+            if cp.is_maximum(all_score) and arguments.save_model:
+                model_path = model_dir.joinpath('epoch{0}-f{1:.4f}.h5'.format(e, all_score))
                 torch.save(model.state_dict(), model_path)
                 best_model_path = model_path
 
