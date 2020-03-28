@@ -25,7 +25,9 @@ class NictBertSequenceLabelingModel(Model):
                  seed=1,
                  bidirectional=True, return_seq=False,
                  batch_first=True, continue_seq=False,
-                 trainbert=False):
+                 trainbert=False,
+                 corpus='ntc',
+                 with_db=False):
         super(NictBertSequenceLabelingModel, self).__init__()
         torch.manual_seed(seed)
 
@@ -41,7 +43,7 @@ class NictBertSequenceLabelingModel(Model):
         self.vocab_size = None
         self.embedding_dim = None
         self.word_embeddings = None
-        self.word_embeddings = BertNictModel(device=device, trainable=trainbert)
+        self.word_embeddings = BertNictModel(device=device, trainable=trainbert, with_db=with_db, corpus=corpus)
         self.embedding_dim = self.word_embeddings.embedding_dim
         self.vocab_padding_idx = self.word_embeddings.get_padding_idx()
 
@@ -61,6 +63,7 @@ class NictBertSequenceLabelingModel(Model):
         self.return_seq = return_seq
         self.continue_seq = continue_seq
         self.target_size = target_size
+        self.mode = 'train'
 
         self.f_lstm1 = nn.GRU(input_size=self.hidden_size,
                               hidden_size=self.hidden_size,
@@ -88,6 +91,9 @@ class NictBertSequenceLabelingModel(Model):
         if self.dropout_ratio > 0:
             self.dropout = nn.Dropout(self.dropout_ratio)
 
+    def set_mode(self, tag):
+        self.mode = tag
+
     def init_hidden(self):
         # Before we've done anything, we dont have any hidden state.
         # Refer to the Pytorch documentation to see exactly
@@ -96,9 +102,12 @@ class NictBertSequenceLabelingModel(Model):
         return (torch.zeros(1, 1, self.hidden_size),
                 torch.zeros(1, 1, self.hidden_size))
 
-    def forward(self, arg, pred, word_pos, ku_pos, mode):
+    def forward(self, arg, pred, word_pos, ku_pos, mode, tag=None, epoch=None, index=None):
         # output shape: Batch, Sentence_length, word_embed_size
-        arg_rets = self.word_embeddings.get_word_embedding(arg)
+        if tag is not None:
+            arg_rets = self.word_embeddings.get_word_embedding(arg, tag=tag, epoch=epoch, index=index)
+        else:
+            arg_rets = self.word_embeddings.get_word_embedding(arg)
         arg_embeds = arg_rets["embedding"]
         # arg_embeds = self.vocab_zero_padding_bert(arg_rets["id"], arg_rets["embedding"])
         pred_rets = self.word_embeddings.get_pred_embedding(arg_embeds, arg_rets["token"], word_pos, self.word_pos_pred_idx)
