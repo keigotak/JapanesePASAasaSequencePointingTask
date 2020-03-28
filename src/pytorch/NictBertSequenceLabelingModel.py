@@ -91,9 +91,6 @@ class NictBertSequenceLabelingModel(Model):
         if self.dropout_ratio > 0:
             self.dropout = nn.Dropout(self.dropout_ratio)
 
-    def set_mode(self, tag):
-        self.mode = tag
-
     def init_hidden(self):
         # Before we've done anything, we dont have any hidden state.
         # Refer to the Pytorch documentation to see exactly
