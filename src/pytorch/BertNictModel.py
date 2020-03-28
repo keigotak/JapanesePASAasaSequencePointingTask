@@ -11,9 +11,10 @@ sys.path.append(os.pardir)
 from utils.HelperFunctions import get_cuda_id, ptoz
 
 
-class BertNictModel():
+class BertNictModel:
     def __init__(self, bert_path=Path("../../data/NICT_BERT-base_JapaneseWikipedia_100K").resolve(),
                  vocab_file_name="vocab.txt",
+                 db_file=None,
                  device='cpu',
                  trainable=False):
         super().__init__()
@@ -32,7 +33,14 @@ class BertNictModel():
                 print("Let's use", torch.cuda.device_count(), "GPUs!")
                 self.model = nn.DataParallel(self.model, device_ids=get_cuda_id(self.device))
 
-        self.model.to(self.device)
+        self.db_file = db_file
+        self.conn = None
+        self.c = None
+        if db_file is not None:
+            self.conn = sqlite3.connect(str(self.db_file.resolve()))
+            self.c = self.conn.cursor()
+        else:
+            self.model.to(self.device)
 
     # def _preprocess_text(self, text):
     #     return text.replace(" ", "")  # for Juman
@@ -61,14 +69,17 @@ class BertNictModel():
     #
     #     return {"embedding": all_encoder_layers, "token": token_tensor, "id": id_tensor}
 
-    def get_word_embedding(self, batched_words):
+    def get_word_embedding(self, batched_words, tag=None, epoch=None, index=None):
         batched_bert_ids = []
         for words in batched_words:
             words = [self.bert_tokenizer.cls_token] + words[:self.max_seq_length].tolist() + [self.bert_tokenizer.sep_token]
             id = self.bert_tokenizer.convert_tokens_to_ids(words)
             batched_bert_ids.extend([id])
 
-        batched_bert_embs, _ = self.model(torch.tensor(batched_bert_ids).to(self.device))
+        if self.db_file is not None:
+            batched_bert_embs = None
+        else:
+            batched_bert_embs, _ = self.model(torch.tensor(batched_bert_ids).to(self.device))
         return {"embedding": batched_bert_embs[:, 1:-1, :], "token": batched_words, "id": batched_bert_ids}
 
     def get_pred_embedding(self, batched_arg_embedding, batched_arg_token, batched_word_pos, pred_pos_index):
@@ -209,9 +220,9 @@ if __name__ == "__main__":
 
         return {'train': train_batcher, 'dev': dev_batcher, 'test': test_batcher}
 
-    def save_embs(tag, batcher):
+    def save_embs(tag, batcher, corpus):
         epochs = {'train': 20, 'dev': 20, 'test': 1}
-        file_db = Path('../../data/BCCWJ-DepParaPAS/nictbert-{}-embs.db'.format(tag))
+        file_db = Path('../../data/NICTBERT/{}-{}-embs.db'.format(corpus, tag))
         if file_db.exists():
             file_db.unlink()
         conn = sqlite3.connect(str(file_db.resolve()))
@@ -235,8 +246,8 @@ if __name__ == "__main__":
     if with_vector:
         batchers = get_batches(word_padding_idx, with_bccwj=False, with_bert=False)
         for tag in ['train', 'dev', 'test']:
-            save_embs(tag, batchers[tag])
+            save_embs(tag, batchers[tag], 'ntc')
         batchers = get_batches(word_padding_idx, with_bccwj=True, with_bert=False)
         for tag in ['train', 'dev', 'test']:
-            save_embs(tag, batchers[tag])
+            save_embs(tag, batchers[tag], 'bccwj')
 
