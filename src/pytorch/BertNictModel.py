@@ -201,7 +201,7 @@ if __name__ == "__main__":
             return {'train': train_batcher, 'dev': dev_batcher, 'test': test_batcher}
 
         def save_embs(tag, batcher, corpus):
-            epochs = {'train': 20, 'dev': 20, 'test': 1}
+            epochs = {'train': 20, 'dev': 1, 'test': 1}
             file_db = Path('../../data/NICTBERT/{}-{}-embs.db'.format(corpus, tag))
             if file_db.exists():
                 file_db.unlink()
@@ -218,14 +218,16 @@ if __name__ == "__main__":
                     sql = "INSERT INTO dataset (epoch, seqid, obj) VALUES (?, ?, ?)"
                     c.executemany(sql, items)
                     conn.commit()
-                    batcher.reshuffle()
+                    if tag == 'train':
+                        batcher.reshuffle()
+
                 conn.close()
 
 
         with_vector = True
         if with_vector:
             batchers = get_batches(word_padding_idx, with_bccwj=False, with_bert=False)
-            for tag in ['train', 'dev', 'test']:
+            for tag in ['dev', 'test']:
                 save_embs(tag, batchers[tag], 'ntc')
             batchers = get_batches(word_padding_idx, with_bccwj=True, with_bert=False)
             for tag in ['train', 'dev', 'test']:
