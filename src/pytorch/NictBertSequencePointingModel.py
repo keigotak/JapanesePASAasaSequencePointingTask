@@ -98,9 +98,12 @@ class NictBertSequencePointingModel(Model):
         return (torch.zeros(1, 1, self.hidden_size),
                 torch.zeros(1, 1, self.hidden_size))
 
-    def forward(self, arg, pred, word_pos, ku_pos, mode):
+    def forward(self, arg, pred, word_pos, ku_pos, mode, tag=None, epoch=None, index=None):
         # output shape: Batch, Sentence_length, word_embed_size
-        arg_rets = self.word_embeddings.get_word_embedding(arg)
+        if tag is not None:
+            arg_rets = self.word_embeddings.get_word_embedding(arg, tag=tag, epoch=epoch, index=index)
+        else:
+            arg_rets = self.word_embeddings.get_word_embedding(arg)
         arg_embeds = arg_rets["embedding"]
         # arg_embeds = self.vocab_zero_padding_bert(arg_rets["id"], arg_rets["embedding"])
         pred_rets = self.word_embeddings.get_pred_embedding(arg_embeds, arg_rets["token"], word_pos, self.word_pos_pred_idx)

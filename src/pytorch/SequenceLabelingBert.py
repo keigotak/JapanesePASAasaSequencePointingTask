@@ -301,7 +301,8 @@ def train(batch_size, learning_rate=0.2, optim="sgd",  dropout_ratio=0.4, null_w
                'git sha: {}'.format(gm.sha),
                'seed: {}'.format(arguments.seed),
                "with_bccwj: {}".format(arguments.with_bccwj),
-               "trainbert: {}".format(arguments.trainbert)
+               "trainbert: {}".format(arguments.trainbert),
+               "with_db: {}".format(arguments.with_db)
                ]
 
     model_dir, _ = op.get_model_save_dir(tag, now)
@@ -326,7 +327,10 @@ def train(batch_size, learning_rate=0.2, optim="sgd",  dropout_ratio=0.4, null_w
             t_mode = torch.from_numpy(t_mode).long().to(device)
 
             # output shape: 3, Batch, Sentence_length
-            output = model(t_args, t_preds, t_word_pos, t_ku_pos, t_mode)
+            if arguments.with_db:
+                output = model(t_args, t_preds, t_word_pos, t_ku_pos, t_mode, tag='train', epoch=e, index=t_batch)
+            else:
+                output = model(t_args, t_preds, t_word_pos, t_ku_pos, t_mode)
 
             t_size = output.shape[2]
             t_labels = torch.from_numpy(t_labels).long().to(device)
@@ -359,7 +363,10 @@ def train(batch_size, learning_rate=0.2, optim="sgd",  dropout_ratio=0.4, null_w
                 d_mode = torch.from_numpy(d_mode).long().to(device)
 
                 # output shape: 3, Batch, Sentence_length+1
-                prediction = model(d_args, d_preds, d_word_pos, d_ku_pos, d_mode)
+                if arguments.with_db:
+                    prediction = model(d_args, d_preds, d_word_pos, d_ku_pos, d_mode, tag='dev', epoch=1, index=d_batch)
+                else:
+                    prediction = model(d_args, d_preds, d_word_pos, d_ku_pos, d_mode)
 
                 # output shape: Batch, Sentence_length+1
                 d_size = prediction.shape[2]
@@ -518,10 +525,11 @@ def train(batch_size, learning_rate=0.2, optim="sgd",  dropout_ratio=0.4, null_w
                       + [arguments.with_linear]\
                       + [num_params]\
                       + [arguments.num_data]\
-                      + ["no_decoder"]\
+                      + ["sl"]\
                       + [arguments.model]\
                       + [arguments.with_bccwj]\
-                      + [arguments.trainbert]
+                      + [arguments.trainbert]\
+                      + [arguments.with_db]
         write_spreadsheet(_spreadline)
 
     op.count_up()

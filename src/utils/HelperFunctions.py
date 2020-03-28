@@ -66,6 +66,7 @@ def get_argparser():
     parser.add_argument('--save_output', action='store_true')
     parser.add_argument('--with_bccwj', action='store_true')
     parser.add_argument('--trainbert', action='store_true')
+    parser.add_argument('--with_db', action='store_true')
     arguments = parser.parse_args()
     # print(arguments)
     return arguments

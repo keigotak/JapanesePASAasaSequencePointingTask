@@ -297,7 +297,9 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                'optim: {}'.format(optim),
                'git sha: {}'.format(gm.sha),
                'seed: {}'.format(arguments.seed),
-               "with_bccwj: {}".format(arguments.with_bccwj)
+               "with_bccwj: {}".format(arguments.with_bccwj),
+               "trainbert: {}".format(arguments.trainbert),
+               "with_db: {}".format(arguments.with_db)
                ]
 
     model_dir, _ = op.get_model_save_dir(tag, now)
@@ -322,7 +324,10 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
             t_mode = torch.from_numpy(t_mode).long().to(device)
 
             # output shape: 3, Batch, Sentence_length
-            output = model(t_args, t_preds, t_word_pos, t_ku_pos, t_mode)
+            if arguments.with_db:
+                output = model(t_args, t_preds, t_word_pos, t_ku_pos, t_mode, tag='train', epoch=e, index=t_batch)
+            else:
+                output = model(t_args, t_preds, t_word_pos, t_ku_pos, t_mode)
 
             # output shape: 3, Batch
             t_ga_labels, t_ni_labels, t_wo_labels = get_pointer_label(t_labels)
@@ -373,7 +378,10 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                     d_mode = torch.from_numpy(d_mode).long().to(device)
 
                     # output shape: 3, Batch, Sentence_length+1
-                    ga_prediction, ni_prediction, wo_prediction = model(d_args, d_preds, d_word_pos, d_ku_pos, d_mode)
+                    if arguments.with_db:
+                        ga_prediction, ni_prediction, wo_prediction = model(d_args, d_preds, d_word_pos, d_ku_pos, d_mode, tag='dev', epoch=1, index=d_batch)
+                    else:
+                        ga_prediction, ni_prediction, wo_prediction = model(d_args, d_preds, d_word_pos, d_ku_pos, d_mode)
 
                     # output shape: Batch, Sentence_length+1
                     b_size = ga_prediction.shape[0]
@@ -582,7 +590,9 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                       + [arguments.num_data]\
                       + [arguments.decode] \
                       + [arguments.model]\
-                      + [arguments.with_bccwj]
+                      + [arguments.with_bccwj]\
+                      + [arguments.trainbert]\
+                      + [arguments.with_db]
         write_spreadsheet(_spreadline)
 
     op.count_up()
