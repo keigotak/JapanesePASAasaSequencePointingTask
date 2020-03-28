@@ -379,7 +379,7 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
 
                     # output shape: 3, Batch, Sentence_length+1
                     if arguments.with_db:
-                        ga_prediction, ni_prediction, wo_prediction = model(d_args, d_preds, d_word_pos, d_ku_pos, d_mode, tag='dev', epoch=1, index=d_batch)
+                        ga_prediction, ni_prediction, wo_prediction = model(d_args, d_preds, d_word_pos, d_ku_pos, d_mode, tag='dev', epoch=0, index=d_batch)
                     else:
                         ga_prediction, ni_prediction, wo_prediction = model(d_args, d_preds, d_word_pos, d_ku_pos, d_mode)
 

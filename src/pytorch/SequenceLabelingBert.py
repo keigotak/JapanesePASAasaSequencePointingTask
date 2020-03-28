@@ -364,7 +364,7 @@ def train(batch_size, learning_rate=0.2, optim="sgd",  dropout_ratio=0.4, null_w
 
                 # output shape: 3, Batch, Sentence_length+1
                 if arguments.with_db:
-                    prediction = model(d_args, d_preds, d_word_pos, d_ku_pos, d_mode, tag='dev', epoch=1, index=d_batch)
+                    prediction = model(d_args, d_preds, d_word_pos, d_ku_pos, d_mode, tag='dev', epoch=0, index=d_batch)
                 else:
                     prediction = model(d_args, d_preds, d_word_pos, d_ku_pos, d_mode)
 
