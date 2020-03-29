@@ -40,7 +40,7 @@ class BertNictModel:
         if self.with_db:
             keys = ['train', 'dev', 'test']
             self.conn = {key: sqlite3.connect(str(Path('../../data/NICTBERT/{}-{}-embs.db'.format(self.corpus, key)).resolve())) for key in keys}
-            self.data_for_epochs = {key: [ztop(item[0]) for item in self.conn[key].cursor().execute("SELECT obj FROM dataset WHERE epoch = ?", (0,)).fetchall()] for key in keys}
+            self.data_for_epochs = {key: [ztop(item[0]).to('cpu') for item in self.conn[key].cursor().execute("SELECT obj FROM dataset WHERE epoch = ?", (0,)).fetchall()] for key in keys}
             self.epoch = 0
         else:
             self.model.to(self.device)
@@ -54,7 +54,7 @@ class BertNictModel:
 
         if self.with_db:
             if self.epoch != epoch:
-                self.data_for_epochs = {tag: [ztop(item[0]) for item in self.conn[tag].cursor().execute("SELECT obj FROM dataset WHERE epoch = ?", (epoch,)).fetchall()]}
+                self.data_for_epochs = {tag: [ztop(item[0]).to('cpu') for item in self.conn[tag].cursor().execute("SELECT obj FROM dataset WHERE epoch = ?", (epoch,)).fetchall()]}
                 self.epoch = epoch
             batched_bert_embs = self.data_for_epochs[tag][index].to(self.device)
         else:
