@@ -56,7 +56,7 @@ class BertNictModel:
             if self.epoch != epoch:
                 self.data_for_epochs = {tag: [ztop(item[0]) for item in self.conn[tag].cursor().execute("SELECT obj FROM dataset WHERE epoch = ?", (epoch,)).fetchall()]}
                 self.epoch = epoch
-            batched_bert_embs = self.data_for_epochs[tag][index]
+            batched_bert_embs = self.data_for_epochs[tag][index].to(self.device)
         else:
             batched_bert_embs, _ = self.model(torch.tensor(batched_bert_ids).to(self.device))
             batched_bert_embs = batched_bert_embs[:, 1:-1, :]
