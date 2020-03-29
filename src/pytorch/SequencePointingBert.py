@@ -184,7 +184,7 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                                               trainbert=arguments.trainbert,
                                               corpus=corpus,
                                               with_db=arguments.with_db)
-        else:
+    else:
         model = BertSequencePointingModel(target_size=1,
                                           dropout_ratio=dropout_ratio,
                                           word_pos_size=len(word_pos_indexer),
