@@ -114,11 +114,11 @@ processes = [
     # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "global_argmax"] + train_base_list + ["--device", device, "--seed", "4"]
 
     # train nictbsl ntc
-    ["python", "SequenceLabelingBert.py", "--model", "nictbsl", "--with_db"] + train_base_list_ntc + ["--device", device, "--seed", "0"],
-    ["python", "SequenceLabelingBert.py", "--model", "nictbsl", "--with_db"] + train_base_list_ntc + ["--device", device, "--seed", "1"],
-    ["python", "SequenceLabelingBert.py", "--model", "nictbsl", "--with_db"] + train_base_list_ntc + ["--device", device, "--seed", "2"],
-    ["python", "SequenceLabelingBert.py", "--model", "nictbsl", "--with_db"] + train_base_list_ntc + ["--device", device, "--seed", "3"],
-    ["python", "SequenceLabelingBert.py", "--model", "nictbsl", "--with_db"] + train_base_list_ntc + ["--device", device, "--seed", "4"]
+    # ["python", "SequenceLabelingBert.py", "--model", "nictbsl", "--with_db"] + train_base_list_ntc + ["--device", device, "--seed", "0"],
+    # ["python", "SequenceLabelingBert.py", "--model", "nictbsl", "--with_db"] + train_base_list_ntc + ["--device", device, "--seed", "1"],
+    # ["python", "SequenceLabelingBert.py", "--model", "nictbsl", "--with_db"] + train_base_list_ntc + ["--device", device, "--seed", "2"],
+    # ["python", "SequenceLabelingBert.py", "--model", "nictbsl", "--with_db"] + train_base_list_ntc + ["--device", device, "--seed", "3"],
+    # ["python", "SequenceLabelingBert.py", "--model", "nictbsl", "--with_db"] + train_base_list_ntc + ["--device", device, "--seed", "4"]
 
     # train nictbspg ntc
     # ["python", "SequencePointingBert.py", "--model", "nictbspg", "--decode", "global_argmax", "--with_db"] + train_base_list_ntc + ["--device", device, "--seed", "0"],
@@ -169,6 +169,23 @@ processes = [
     # ["python", "SequencePointingBert.py", "--model", "nictbspn", "--decode", "no_decoder"] + train_base_list + ["--device", device, "--seed", "3"],
     # ["python", "SequencePointingBert.py", "--model", "nictbspn", "--decode", "no_decoder"] + train_base_list + ["--device", device, "--seed", "4"]
 
+    # test sl bccwj
+    ["python", "EvalSequenceLabeling.py", "--device", device, "--model", "lstm",
+     "--embed", "glove-retrofitting"] + test_base_list + [
+        "--init_checkpoint", "../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20190414-135159/model-0/epoch17-f0.8438.h5"],
+    ["python", "EvalSequenceLabeling.py", "--device", device, "--model", "lstm",
+     "--embed", "glove-retrofitting"] + test_base_list + [
+        "--init_checkpoint", "../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20190414-135227/model-0/epoch16-f0.8438.h5"],
+    ["python", "EvalSequenceLabeling.py", "--device", device, "--model", "lstm",
+     "--embed", "glove-retrofitting"] + test_base_list + [
+        "--init_checkpoint", "../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20190414-134624/model-0/epoch16-f0.8465.h5"],
+    ["python", "EvalSequenceLabeling.py", "--device", device, "--model", "lstm",
+     "--embed", "glove-retrofitting"] + test_base_list + [
+        "--init_checkpoint", "../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20190414-134659/model-0/epoch13-f0.8473.h5"],
+    ["python", "EvalSequenceLabeling.py", "--device", device, "--model", "lstm",
+     "--embed", "glove-retrofitting"] + test_base_list + [
+        "--init_checkpoint", "../../../PhD/projects/180630_oomorisan_PASA/results/pasa-lstm-20190414-134727/model-0/epoch13-f0.8455.h5"],
+
     # # test spg ntc
     # ["python", "EvalSequenceLabelingPointer.py", "--device", device, "--model", "pointer",
     #  "--embed", "glove-retrofitting", "--decode", "global_argmax"] + test_base_list + [
@@ -186,6 +203,23 @@ processes = [
     #  "--embed", "glove-retrofitting", "--decode", "global_argmax"] + test_base_list + [
     #     "--init_checkpoint", "../../results/pasa-pointer-20200317-054738-269770/model-0/epoch10-f0.8466.h5"],
     #
+    # test spl ntc
+    ["python", "EvalSequenceLabelingPointer.py", "--device", device, "--model", "pointer",
+     "--embed", "glove-retrofitting", "--decode", "ordered"] + test_base_list + [
+        "--init_checkpoint", "../../../PhD/projects/180630_oomorisan_PASA/results/pasa-pointer-20190605-161652/model-0/epoch12-f0.8440.h5"],
+    ["python", "EvalSequenceLabelingPointer.py", "--device", device, "--model", "pointer",
+     "--embed", "glove-retrofitting", "--decode", "ordered"] + test_base_list + [
+        "--init_checkpoint", "../../../PhD/projects/180630_oomorisan_PASA/results/pasa-pointer-20190605-161741/model-0/epoch10-f0.8455.h5"],
+    ["python", "EvalSequenceLabelingPointer.py", "--device", device, "--model", "pointer",
+     "--embed", "glove-retrofitting", "--decode", "ordered"] + test_base_list + [
+        "--init_checkpoint", "../../../PhD/projects/180630_oomorisan_PASA/results/pasa-pointer-20190605-161931/model-0/epoch9-f0.8476.h5"],
+    ["python", "EvalSequenceLabelingPointer.py", "--device", device, "--model", "pointer",
+     "--embed", "glove-retrofitting", "--decode", "ordered"] + test_base_list + [
+        "--init_checkpoint", "../../../PhD/projects/180630_oomorisan_PASA/results/pasa-pointer-20190605-162212/model-0/epoch11-f0.8455.h5"],
+    ["python", "EvalSequenceLabelingPointer.py", "--device", device, "--model", "pointer",
+     "--embed", "glove-retrofitting", "--decode", "ordered"] + test_base_list + [
+        "--init_checkpoint", "../../../PhD/projects/180630_oomorisan_PASA/results/pasa-pointer-20190605-162413/model-0/epoch12-f0.8456.h5"]
+
     # # test spn ntc
     # ["python", "EvalSequenceLabelingPointer.py", "--device", device, "--model", "pointer",
     #  "--embed", "glove-retrofitting", "--decode", "no_decoder"] + test_base_list + [
