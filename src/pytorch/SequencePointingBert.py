@@ -166,6 +166,9 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                                                device=device,
                                                seed=arguments.seed)
     elif "nict" in arguments.model:
+        corpus = 'ntc'
+        if arguments.with_bccwj:
+            corpus = 'bccwj'
         model = NictBertSequencePointingModel(target_size=1,
                                               dropout_ratio=dropout_ratio,
                                               word_pos_size=len(word_pos_indexer),
@@ -177,8 +180,11 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                                               ku_pos_padding_idx=ku_pos_indexer.get_pad_id(),
                                               mode_padding_idx=mode_indexer.get_pad_id(),
                                               device=device,
-                                              seed=arguments.seed)
-    else:
+                                              seed=arguments.seed,
+                                              trainbert=arguments.trainbert,
+                                              corpus=corpus,
+                                              with_db=arguments.with_db)
+        else:
         model = BertSequencePointingModel(target_size=1,
                                           dropout_ratio=dropout_ratio,
                                           word_pos_size=len(word_pos_indexer),

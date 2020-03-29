@@ -164,6 +164,9 @@ def train(batch_size, learning_rate=0.2, optim="sgd",  dropout_ratio=0.4, null_w
                                                device=device,
                                                seed=arguments.seed)
     elif "nict" in arguments.model:
+        corpus = 'ntc'
+        if arguments.with_bccwj:
+            corpus = 'bccwj'
         model = NictBertSequenceLabelingModel(target_size=4,
                                               dropout_ratio=dropout_ratio,
                                               word_pos_size=len(word_pos_indexer),
@@ -176,7 +179,9 @@ def train(batch_size, learning_rate=0.2, optim="sgd",  dropout_ratio=0.4, null_w
                                               mode_padding_idx=mode_indexer.get_pad_id(),
                                               device=device,
                                               seed=arguments.seed,
-                                              trainbert=arguments.trainbert)
+                                              trainbert=arguments.trainbert,
+                                              corpus=corpus,
+                                              with_db=arguments.with_db)
     else:
         model = BertSequenceLabelingModel(target_size=4,
                                           dropout_ratio=dropout_ratio,

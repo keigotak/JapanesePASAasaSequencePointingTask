@@ -38,9 +38,10 @@ class BertNictModel:
         self.with_db = with_db
         self.corpus = corpus
         if self.with_db:
-            self.conn = {'train': sqlite3.connect(str(Path('../../data/NICTBERT/{}-train-embs.db'.format(self.corpus)).resolve())),
-                         'dev': sqlite3.connect(str(Path('../../data/NICTBERT/{}-dev-embs.db'.format(self.corpus)).resolve())),
-                         'test': sqlite3.connect(str(Path('../../data/NICTBERT/{}-test-embs.db'.format(self.corpus)).resolve()))}
+            keys = ['train', 'dev', 'test']
+            self.conn = {key: sqlite3.connect(str(Path('../../data/NICTBERT/{}-{}-embs.db'.format(self.corpus, key)).resolve())) for key in keys}
+            self.data_for_epochs = {key: [ztop(item[0]) for item in self.conn[key].cursor().execute("SELECT obj FROM dataset WHERE epoch = ?", (0,)).fetchall()] for key in keys}
+            self.epoch = 0
         else:
             self.model.to(self.device)
 
@@ -52,10 +53,10 @@ class BertNictModel:
             batched_bert_ids.extend([id])
 
         if self.with_db:
-            c = self.conn[tag].cursor()
-            c.execute("SELECT obj FROM dataset WHERE epoch = ? and seqid = ?", (epoch, index))
-            item = c.fetchone()
-            batched_bert_embs = ztop(item[0])
+            if self.epoch != epoch:
+                self.data_for_epochs = {tag: [ztop(item[0]) for item in self.conn[tag].cursor().execute("SELECT obj FROM dataset WHERE epoch = ?", (epoch,)).fetchall()]}
+                self.epoch = epoch
+            batched_bert_embs = self.data_for_epochs[tag][index]
         else:
             batched_bert_embs, _ = self.model(torch.tensor(batched_bert_ids).to(self.device))
             batched_bert_embs = batched_bert_embs[:, 1:-1, :]

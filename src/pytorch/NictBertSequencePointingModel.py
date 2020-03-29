@@ -24,7 +24,10 @@ class NictBertSequencePointingModel(Model):
                  dropout_ratio=.1,
                  seed=1,
                  bidirectional=True, return_seq=False,
-                 batch_first=True, continue_seq=False):
+                 batch_first=True, continue_seq=False,
+                 trainbert=False,
+                 corpus='ntc',
+                 with_db=False):
         super(NictBertSequencePointingModel, self).__init__()
         torch.manual_seed(seed)
 
@@ -41,7 +44,7 @@ class NictBertSequencePointingModel(Model):
         self.embedding_dim = None
         self.word_embeddings = None
         self.vocab_padding_idx = vocab_padding_idx
-        self.word_embeddings = BertNictModel(device=device)
+        self.word_embeddings = BertNictModel(device=device, trainable=trainbert, with_db=with_db, corpus=corpus)
         self.embedding_dim = self.word_embeddings.embedding_dim
 
         self.pos_embedding_dim = pos_embedding_dim
