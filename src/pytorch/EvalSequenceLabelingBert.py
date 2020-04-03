@@ -341,8 +341,9 @@ def eval(batch_size=1, null_weight=None, loss_weight=None):
                       + [gm.sha] \
                       + [arguments.with_linear] \
                       + [num_params]\
-                      + [arguments.decode]\
-                      + [arguments.with_bccwj]
+                      + ['']\
+                      + [arguments.with_bccwj]\
+                      + [_log_path]
         write_spreadsheet(_spreadline, type="test")
 
 
