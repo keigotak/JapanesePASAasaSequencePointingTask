@@ -254,6 +254,7 @@ def get_bertsp_bccwj(mode="global"):
 
 
 def get_mean_std_of_softmax(item1, item2, item3, item4, item5, dim):
+    ## それぞれに対してsoftmax 取ったのち和を取る
     avg_prediction = torch.mean(torch.Tensor([F.softmax(torch.Tensor(np.array(item1)), dim=dim).tolist(),
                                               F.softmax(torch.Tensor(np.array(item2)), dim=dim).tolist(),
                                               F.softmax(torch.Tensor(np.array(item3)), dim=dim).tolist(),
@@ -452,7 +453,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='PASA Ensamble')
     parser.add_argument('--mode', default=None, type=str, choices=tags + ['all'])
     parser.add_argument('--corpus', default=None, type=str, choices=['ntc', 'bccwj', 'all'])
-    parser.add_argument('--with_softmax', action='store_true')
     arguments = parser.parse_args()
     if arguments.corpus == "all" and arguments.mode == "all":
         for corpus in ['ntc', 'bccwj']:
