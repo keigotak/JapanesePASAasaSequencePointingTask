@@ -84,11 +84,11 @@ def main(tag):
     elif tag in {'acmslntcbert', 'acmslbccwjbert'}:
         # For acm 2020
         if tag == 'acmslntcbert':
-            log1 = Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertsl-20200402-123819-415751/detaillog_bertsl_20200306-123819.txt")
-            log2 = Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertsl-20200402-123818-814117/detaillog_bertsl_20200306-123818.txt")
-            log3 = Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertsl-20200402-123820-333582/detaillog_bertsl_20200306-123820.txt")
-            log4 = Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertsl-20200402-123820-545980/detaillog_bertsl_20200306-123820.txt")
-            log5 = Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertsl-20200402-201956-237530/detaillog_bertsl_20200306-201956.txt")
+            log1 = Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertsl-20200402-123819-415751/detaillog_bertsl_20200402-123819.txt")
+            log2 = Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertsl-20200402-123818-814117/detaillog_bertsl_20200402-123818.txt")
+            log3 = Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertsl-20200402-123820-333582/detaillog_bertsl_20200402-123820.txt")
+            log4 = Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertsl-20200402-123820-545980/detaillog_bertsl_20200402-123820.txt")
+            log5 = Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertsl-20200402-201956-237530/detaillog_bertsl_20200402-201956.txt")
         elif tag == 'acmslbccwjbert':
             log1 = Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertsl-20200403-112105-536009/detaillog_bertsl_20200403-112105.txt")
             log2 = Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertsl-20200402-225320-031641/detaillog_bertsl_20200402-225320.txt")
