@@ -449,7 +449,7 @@ processes = [
     # ["python", "CombinePrediction.py", "--event", "acm", "--model", "spl", "--corpus", "bccwj", "--emb", "bert"],
     # ["python", "CombinePrediction.py", "--event", "acm", "--model", "spn", "--corpus", "bccwj", "--emb", "bert"]
 
-    ['python', 'SegmentAnalysisBccwj.py', '--reset_scores', '--bin_size', '10']
+    ['python', 'SegmentAnalysisBccwj.py', '--model', 'all', '--reset_scores', '--bin_size', '10']
 ]
 
 
