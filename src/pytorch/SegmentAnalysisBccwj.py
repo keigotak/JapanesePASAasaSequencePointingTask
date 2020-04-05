@@ -397,7 +397,7 @@ def run(model, arguments):
     if bin_size != 1:
         file_extention = '-{}'.format(bin_size)
     if arguments.reset_scores:
-        remove_file(Path('../../results/fscores-avg{}.txt').format(file_extention))
+        remove_file(Path('../../results/fscores-avg{}.txt'.format(file_extention)))
     with Path('../../results/fscores-avg{}.txt'.format(file_extention)).open('a', encoding='utf-8') as f:
         for i in lengthwise_itr:
             sum_tp, sum_fp, sum_fn = np.array([0] * 6), np.array([0] * 6), np.array([0] * 6)
@@ -422,7 +422,7 @@ def run(model, arguments):
             f.write(line + '\n')
 
     if arguments.reset_scores:
-        remove_file(Path('../../results/final-results.txt').format(file_extention))
+        remove_file(Path('../../results/final-results.txt'.format(file_extention)))
     with Path('../../results/final-results.txt'.format(file_extention)).open('a', encoding='utf-8') as f:
         sum_tp, sum_fp, sum_fn = np.array([0] * 6), np.array([0] * 6), np.array([0] * 6)
         count = 0
