@@ -329,25 +329,25 @@ def main(mode, corpus):
             f1s.append(f1)
         print('All: {}, Dep: {}, Zero: {} / tp: {}, fp: {}, fn: {}'.format(all_score, dep_score, zero_score, num_tp, num_fp, num_fn))
         print(', '.join(map(str, f1s)))
-        print('{}, {}, {}, {}, {}, {}, {}, {}, {}'.format(Decimal(str(all_score)).quantize(Decimal('0.0001'),
-                                                                                       rounding=ROUND_HALF_UP),
-                                                      Decimal(str(dep_score)).quantize(Decimal('0.0001'),
-                                                                                       rounding=ROUND_HALF_UP),
-                                                      Decimal(str(f1s[0])).quantize(Decimal('0.0001'),
-                                                                                       rounding=ROUND_HALF_UP),
-                                                      Decimal(str(f1s[1])).quantize(Decimal('0.0001'),
-                                                                                       rounding=ROUND_HALF_UP),
-                                                      Decimal(str(f1s[2])).quantize(Decimal('0.0001'),
-                                                                                       rounding=ROUND_HALF_UP),
-                                                      Decimal(str(zero_score)).quantize(Decimal('0.0001'),
-                                                                                       rounding=ROUND_HALF_UP),
-                                                      Decimal(str(f1s[3])).quantize(Decimal('0.0001'),
-                                                                                       rounding=ROUND_HALF_UP),
-                                                      Decimal(str(f1s[4])).quantize(Decimal('0.0001'),
-                                                                                    rounding=ROUND_HALF_UP),
-                                                      Decimal(str(f1s[5])).quantize(Decimal('0.0001'),
-                                                                                    rounding=ROUND_HALF_UP)
-                                                      ))
+        print('{} & - & {} & {} & {}, {} & {} & {} & {} & {}'.format(Decimal(str(all_score * 100)).quantize(Decimal('0.01'),
+                                                                                                      rounding=ROUND_HALF_UP),
+                                                                     Decimal(str(dep_score * 100)).quantize(Decimal('0.01'),
+                                                                                                      rounding=ROUND_HALF_UP),
+                                                                     Decimal(str(f1s[0] * 100)).quantize(Decimal('0.01'),
+                                                                                                   rounding=ROUND_HALF_UP),
+                                                                     Decimal(str(f1s[1] * 100)).quantize(Decimal('0.01'),
+                                                                                                   rounding=ROUND_HALF_UP),
+                                                                     Decimal(str(f1s[2] * 100)).quantize(Decimal('0.01'),
+                                                                                                   rounding=ROUND_HALF_UP),
+                                                                     Decimal(str(zero_score * 100)).quantize(Decimal('0.01'),
+                                                                                                       rounding=ROUND_HALF_UP),
+                                                                     Decimal(str(f1s[3] * 100)).quantize(Decimal('0.01'),
+                                                                                                   rounding=ROUND_HALF_UP),
+                                                                     Decimal(str(f1s[4] * 100)).quantize(Decimal('0.01'),
+                                                                                                   rounding=ROUND_HALF_UP),
+                                                                     Decimal(str(f1s[5] * 100)).quantize(Decimal('0.01'),
+                                                                                                   rounding=ROUND_HALF_UP)
+                                                                     ))
 
     elif mode in tag_sp:
         items0, items1, items2, items3, items4 = [], [], [], [], []
@@ -427,25 +427,25 @@ def main(mode, corpus):
         print('All: {}, Dep: {}, Zero: {} / tp: {}, fp: {}, fn: {}'.format(all_score, dep_score, zero_score, num_tp, num_fp,
                                                                            num_fn))
         print(', '.join(map(str, f1s)))
-        print('{} & {} & {} & {} & {} & {} & {} & {} & {}'.format(Decimal(str(all_score)).quantize(Decimal('0.0001'),
-                                                                                                   rounding=ROUND_HALF_UP),
-                                                                  Decimal(str(dep_score)).quantize(Decimal('0.0001'),
-                                                                                                   rounding=ROUND_HALF_UP),
-                                                                  Decimal(str(f1s[0])).quantize(Decimal('0.0001'),
-                                                                                                rounding=ROUND_HALF_UP),
-                                                                  Decimal(str(f1s[1])).quantize(Decimal('0.0001'),
-                                                                                                rounding=ROUND_HALF_UP),
-                                                                  Decimal(str(f1s[2])).quantize(Decimal('0.0001'),
-                                                                                                rounding=ROUND_HALF_UP),
-                                                                  Decimal(str(zero_score)).quantize(Decimal('0.0001'),
+        print('{} & - & {} & {} & {} & {} & {} & {} & {} & {}'.format(Decimal(str(all_score * 100)).quantize(Decimal('0.01'),
+                                                                                                       rounding=ROUND_HALF_UP),
+                                                                      Decimal(str(dep_score * 100)).quantize(Decimal('0.01'),
+                                                                                                       rounding=ROUND_HALF_UP),
+                                                                      Decimal(str(f1s[0] * 100)).quantize(Decimal('0.01'),
                                                                                                     rounding=ROUND_HALF_UP),
-                                                                  Decimal(str(f1s[3])).quantize(Decimal('0.0001'),
-                                                                                                rounding=ROUND_HALF_UP),
-                                                                  Decimal(str(f1s[4])).quantize(Decimal('0.0001'),
-                                                                                                rounding=ROUND_HALF_UP),
-                                                                  Decimal(str(f1s[5])).quantize(Decimal('0.0001'),
-                                                                                                rounding=ROUND_HALF_UP)
-                                                                  ))
+                                                                      Decimal(str(f1s[1] * 100)).quantize(Decimal('0.01'),
+                                                                                                    rounding=ROUND_HALF_UP),
+                                                                      Decimal(str(f1s[2] * 100)).quantize(Decimal('0.01'),
+                                                                                                    rounding=ROUND_HALF_UP),
+                                                                      Decimal(str(zero_score * 100)).quantize(Decimal('0.01'),
+                                                                                                        rounding=ROUND_HALF_UP),
+                                                                      Decimal(str(f1s[3] * 100)).quantize(Decimal('0.01'),
+                                                                                                    rounding=ROUND_HALF_UP),
+                                                                      Decimal(str(f1s[4] * 100)).quantize(Decimal('0.01'),
+                                                                                                    rounding=ROUND_HALF_UP),
+                                                                      Decimal(str(f1s[5] * 100)).quantize(Decimal('0.01'),
+                                                                                                    rounding=ROUND_HALF_UP)
+                                                                      ))
 
 
 if __name__ == "__main__":
@@ -472,7 +472,7 @@ if __name__ == "__main__":
 [sl_ntc]
 All: 0.8560959146282665, Dep: 0.9138582526134075, Zero: 0.5575493209080995 / tp: [12913  9019  1890  2485   313    14], fp: [ 973  322  450 1270  215   32], fn: [1387  570  789 2279  470  197]
 0.9162704888951962, 0.9528790279978869, 0.7531380753138075, 0.5834018077239113, 0.47749809305873386, 0.10894941634241245
-0.8561, 0.9139, 0.9163, 0.9529, 0.7531, 0.5575, 0.5834, 0.4775, 0.1089
+0.8561 & 0.9139 & 0.9163 & 0.9529 & 0.7531 & 0.5575 & 0.5834 & 0.4775 & 0.1089
 [spn_ntc]
 All: 0.857993224202894, Dep: 0.9175306944683126, Zero: 0.5691523853635942 / tp: [13033  9055  1938  2735   321    16], fp: [ 987  295  461 1648  274   43], fn: [1282  549  745 2029  462  195]
 0.9199223575083818, 0.9554711406563258, 0.7626918536009445, 0.5980102765934185, 0.4658925979680697, 0.11851851851851852
@@ -488,7 +488,7 @@ All: 0.8570072911888907, Dep: 0.9162772065696354, Zero: 0.5694187338022955 / tp:
 [bertsl_ntc]
 All: 0.8751924103917318, Dep: 0.92562358276644, Zero: 0.6268378931695514 / tp: [13362  9164  1966  2962   383    23], fp: [ 940  248  672 1372  197   51], fn: [ 938  425  713 1802  400  188]
 0.9343402559261591, 0.9645808115362349, 0.7395147639646417, 0.6511321169487799, 0.561995597945708, 0.1614035087719298
-0.8752, 0.9256, 0.9343, 0.9646, 0.7395, 0.6268, 0.6511, 0.5620, 0.1614
+0.8752 & 0.9256 & 0.9343 & 0.9646 & 0.7395 & 0.6268 & 0.6511 & 0.5620 & 0.1614
 [bertspn_ntc]
 All: 0.8782098427353101, Dep: 0.9274137247872603, Zero: 0.6390977443609023 / tp: [13376  9151  2049  3040   422    23], fp: [ 950  263  612 1383  237   39], fn: [ 930  456  636 1725  363  189]
 0.9343392008941046, 0.9621996740444771, 0.7665544332211, 0.6617326948193296, 0.5844875346260386, 0.1678832116788321
@@ -504,7 +504,7 @@ All: 0.8780778707176599, Dep: 0.9270238590388324, Zero: 0.6389581601551676 / tp:
 [sl_bccwj]
 All: 0.7872246208347171, Dep: 0.8405507882658153, Zero: 0.5229146060006594 / tp: [6629 4315 1692 1337  219   30], fp: [983 608 406 682 167  51], fn: [1308  936  553 1352  413  229]
 0.8526593350054666, 0.8482406133280912, 0.7791848952337095, 0.5679694137638062, 0.4302554027504911, 0.17647058823529413
-0.7872, 0.8406, 0.8527, 0.8482, 0.7792, 0.5229, 0.5680, 0.4303, 0.1765
+0.7872 & 0.8406 & 0.8527 & 0.8482 & 0.7792 & 0.5229 & 0.5680 & 0.4303 & 0.1765
 [spn_bccwj]
 All: 0.7850462280584215, Dep: 0.842580771874693, Zero: 0.5252734259532958 / tp: [6716 4451 1703 1489  260   28], fp: [1067  747  404 1026  314   64], fn: [1233  809  549 1204  372  232]
 0.8538011695906433, 0.8512143813348633, 0.7813718742830924, 0.5718125960061444, 0.4311774461028193, 0.15909090909090912
@@ -520,7 +520,7 @@ All: 0.7824644930055902, Dep: 0.8390947038872946, Zero: 0.524170757102484 / tp: 
 [bertsl_bccwj]
 All: 0.8109907500886792, Dep: 0.8575557526193057, Zero: 0.582392776523702 / tp: [6789 4531 1735 1469  302   35], fp: [896 720 371 588 212  36], fn: [1135  711  504 1202  328  224]
 0.8698827599461848, 0.863623367959592, 0.7986191024165706, 0.621404399323181, 0.527972027972028, 0.21212121212121215
-0.8110, 0.8576, 0.8699, 0.8636, 0.7986, 0.5824, 0.6214, 0.5280, 0.2121
+0.8110 & 0.8576 & 0.8699 & 0.8636 & 0.7986 & 0.5824 & 0.6214 & 0.5280 & 0.2121
 [bertspn_bccwj]
 All: 0.8129822478821562, Dep: 0.8595235761199882, Zero: 0.5926040538449636 / tp: [6890 4494 1768 1578  300   37], fp: [983 674 375 780 165  43], fn: [1038  754  475 1093  330  222]
 0.872096702740333, 0.8629032258064516, 0.8062015503875969, 0.627560151123484, 0.547945205479452, 0.21828908554572268
