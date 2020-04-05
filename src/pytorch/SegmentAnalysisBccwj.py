@@ -460,5 +460,6 @@ if __name__ == '__main__':
     if model == 'all':
         for item in ['sl', 'spg', 'spl', 'spn', 'bsl', 'bspg', 'bspl', 'bspn']:
             run(item, arguments)
+            arguments.reset_scores = False
     else:
         run(model, arguments)
