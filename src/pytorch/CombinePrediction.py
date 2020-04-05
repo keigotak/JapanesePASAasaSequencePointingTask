@@ -67,7 +67,7 @@ def main(tag):
                 ref = Path("../../results/packed/sentences_bccwj.txt")
             with ref.open("r", encoding="utf-8") as f:
                 sentences = [line.strip().split(',') for line in f.readlines()]
-            log = [[i] + i1[:8] + [i2[7], i3[7], i4[7], i5[7], [i1[7], i2[7], i3[7], i4[7], i5[7]].count(i1[6])] + i1[8:] + [s[-2]] + ['False'] for i, (i1, i2, i3, i4, i5, s) in
+            log = [[i] + i1[:8] + [i2[7], i3[7], i4[7], i5[7], [i1[7], i2[7], i3[7], i4[7], i5[7]].count(i1[6])] + i1[8:] + [s[-2]] for i, (i1, i2, i3, i4, i5, s) in
                    enumerate(zip(data1, data2, data3, data4, data5, sentences))]
         else:
             log = [[i] + i1[:8] + [i2[7], i3[7], i4[7], i5[7], [i1[7], i2[7], i3[7], i4[7], i5[7]].count(i1[6])] + i1[8:] for
@@ -213,10 +213,16 @@ def main(tag):
         with log5.open("r", encoding="utf-8") as f:
             data5 = [line.strip().split(',') for line in f.readlines()]
 
-        log = [[i] + i1[:8] + [i2[7], i3[7], i4[7], i5[7], [i1[7], i2[7], i3[7], i4[7], i5[7]].count(i1[6])] + i1[8:]
-               for
-               i, (i1, i2, i3, i4, i5) in
-               enumerate(zip(data1, data2, data3, data4, data5))]
+        if tag in {'acmspgntcglove', 'acmsplntcglove', 'acmspgbccwjglove', 'acmsplbccwjglove'}:
+            log = [[i] + i1[:8] + [i2[7], i3[7], i4[7], i5[7], [i1[7], i2[7], i3[7], i4[7], i5[7]].count(i1[6])] + i1[8:-2]
+                   for
+                   i, (i1, i2, i3, i4, i5) in
+                   enumerate(zip(data1, data2, data3, data4, data5))]
+        else:
+            log = [[i] + i1[:8] + [i2[7], i3[7], i4[7], i5[7], [i1[7], i2[7], i3[7], i4[7], i5[7]].count(i1[6])] + i1[8:]
+                   for
+                   i, (i1, i2, i3, i4, i5) in
+                   enumerate(zip(data1, data2, data3, data4, data5))]
         log = pd.DataFrame(log, columns=["index", "arg", "pred", "prop", "word_distance", "ku_distance", "pred_or_not", "label", "sp1", "sp2", "sp3", "sp4", "sp5", "counts", "sentence", "conflict"])
 
         item1 = log.sp1.values
@@ -298,10 +304,16 @@ def main(tag):
                     break
             summary_conflict.append(ans)
 
-        log = [[i] + i1[:8] + [i2[7], i3[7], i4[7], i5[7], [i1[7], i2[7], i3[7], i4[7], i5[7]].count(i1[6])] + i1[8:]
-               for
-               i, (i1, i2, i3, i4, i5) in
-               enumerate(zip(data1, data2, data3, data4, data5))]
+        if tag in {'acmspnntcglove', 'acmspnbccwjglove'}:
+            log = [[i] + i1[:8] + [i2[7], i3[7], i4[7], i5[7], [i1[7], i2[7], i3[7], i4[7], i5[7]].count(i1[6])] + i1[8:-2]
+                   for
+                   i, (i1, i2, i3, i4, i5) in
+                   enumerate(zip(data1, data2, data3, data4, data5))]
+        else:
+            log = [[i] + i1[:8] + [i2[7], i3[7], i4[7], i5[7], [i1[7], i2[7], i3[7], i4[7], i5[7]].count(i1[6])] + i1[8:]
+                   for
+                   i, (i1, i2, i3, i4, i5) in
+                   enumerate(zip(data1, data2, data3, data4, data5))]
         log = pd.DataFrame(log, columns=["index", "arg", "pred", "prop", "word_distance", "ku_distance", "pred_or_not", "label", "sp1", "sp2", "sp3", "sp4", "sp5", "counts", "sentence", "conflict"])
 
         item1 = log.sp1.values
