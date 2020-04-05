@@ -338,7 +338,7 @@ def main(tag):
         log.assign(conflict=summary_conflict)
         print(log.query('conflict == True').shape[0])
 
-    ret_path = str(Path('../../results/packed/detaillog_{}.txt'.format(tag)).resolve())
+    ret_path = str(Path('../../results/detaillog_{}.txt'.format(tag)).resolve())
     log.to_csv(ret_path, header=True, index=False, mode='w')
 
 
