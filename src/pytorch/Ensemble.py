@@ -16,15 +16,15 @@ import torch.nn.functional as F
 
 
 def get_sl_ntc():
-    with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-lstm-20200329-172255-856357/sl_20200329-172255_model-0_epoch17-f0.8438.h5.pkl").open('rb') as f:
+    with Path("../../results/pasa-lstm-20200329-172255-856357/sl_20200329-172255_model-0_epoch17-f0.8438.h5.pkl").open('rb') as f:
         items0 = pickle.load(f)
-    with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-lstm-20200329-172256-779451/sl_20200329-172256_model-0_epoch13-f0.8455.h5.pkl").open('rb') as f:
+    with Path("../../results/pasa-lstm-20200329-172256-779451/sl_20200329-172256_model-0_epoch13-f0.8455.h5.pkl").open('rb') as f:
         items1 = pickle.load(f)
-    with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-lstm-20200329-172259-504777/sl_20200329-172259_model-0_epoch16-f0.8465.h5.pkl").open('rb') as f:
+    with Path("../../results/pasa-lstm-20200329-172259-504777/sl_20200329-172259_model-0_epoch16-f0.8465.h5.pkl").open('rb') as f:
         items2 = pickle.load(f)
-    with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-lstm-20200329-172333-352525/sl_20200329-172333_model-0_epoch16-f0.8438.h5.pkl").open('rb') as f:
+    with Path("../../results/pasa-lstm-20200329-172333-352525/sl_20200329-172333_model-0_epoch16-f0.8438.h5.pkl").open('rb') as f:
         items3 = pickle.load(f)
-    with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-lstm-20200329-172320-621931/sl_20200329-172320_model-0_epoch13-f0.8473.h5.pkl").open('rb') as f:
+    with Path("../../results/pasa-lstm-20200329-172320-621931/sl_20200329-172320_model-0_epoch13-f0.8473.h5.pkl").open('rb') as f:
         items4 = pickle.load(f)
     return items0, items1, items2, items3, items4
 
@@ -32,56 +32,56 @@ def get_sl_ntc():
 def get_sp_ntc(mode="global"):
     items0, items1, items2, items3, items4 = [], [], [], [], []
     if mode == "none":
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-pointer-20200328-224527-671480/sp_20200328-224527_model-0_epoch10-f0.8453.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-pointer-20200328-224527-671480/sp_20200328-224527_model-0_epoch10-f0.8453.h5.pkl").open('rb') as f:
             items0 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-pointer-20200328-224523-646336/sp_20200328-224523_model-0_epoch10-f0.8450.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-pointer-20200328-224523-646336/sp_20200328-224523_model-0_epoch10-f0.8450.h5.pkl").open('rb') as f:
             items1 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-pointer-20200328-224545-172444/sp_20200328-224545_model-0_epoch14-f0.8459.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-pointer-20200328-224545-172444/sp_20200328-224545_model-0_epoch14-f0.8459.h5.pkl").open('rb') as f:
             items2 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-pointer-20200328-224538-434833/sp_20200328-224538_model-0_epoch11-f0.8450.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-pointer-20200328-224538-434833/sp_20200328-224538_model-0_epoch11-f0.8450.h5.pkl").open('rb') as f:
             items3 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-pointer-20200328-224530-441394/sp_20200328-224530_model-0_epoch10-f0.8446.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-pointer-20200328-224530-441394/sp_20200328-224530_model-0_epoch10-f0.8446.h5.pkl").open('rb') as f:
             items4 = pickle.load(f)
     elif mode == "global":
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-pointer-20200328-220620-026555/sp_20200328-220620_model-0_epoch13-f0.8462.h5.pkl").open(
+        with Path("../../results/pasa-pointer-20200328-220620-026555/sp_20200328-220620_model-0_epoch13-f0.8462.h5.pkl").open(
             'rb') as f:
             items0 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-pointer-20200328-220701-953235/sp_20200328-220701_model-0_epoch10-f0.8466.h5.pkl").open(
+        with Path("../../results/pasa-pointer-20200328-220701-953235/sp_20200328-220701_model-0_epoch10-f0.8466.h5.pkl").open(
             'rb') as f:
             items1 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-pointer-20200328-220650-498845/sp_20200328-220650_model-0_epoch10-f0.8469.h5.pkl").open(
+        with Path("../../results/pasa-pointer-20200328-220650-498845/sp_20200328-220650_model-0_epoch10-f0.8469.h5.pkl").open(
             'rb') as f:
             items2 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-pointer-20200328-220618-338695/sp_20200328-220618_model-0_epoch9-f0.8466.h5.pkl").open(
+        with Path("../../results/pasa-pointer-20200328-220618-338695/sp_20200328-220618_model-0_epoch9-f0.8466.h5.pkl").open(
             'rb') as f:
             items3 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-pointer-20200328-220642-006275/sp_20200328-220642_model-0_epoch11-f0.8461.h5.pkl").open(
+        with Path("../../results/pasa-pointer-20200328-220642-006275/sp_20200328-220642_model-0_epoch11-f0.8461.h5.pkl").open(
             'rb') as f:
             items4 = pickle.load(f)
     elif mode == "local":
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-pointer-20200329-181219-050793/sp_20200329-181219_model-0_epoch10-f0.8455.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-pointer-20200329-181219-050793/sp_20200329-181219_model-0_epoch10-f0.8455.h5.pkl").open('rb') as f:
             items0 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-pointer-20200329-181242-757471/sp_20200329-181242_model-0_epoch11-f0.8455.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-pointer-20200329-181242-757471/sp_20200329-181242_model-0_epoch11-f0.8455.h5.pkl").open('rb') as f:
             items1 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-pointer-20200329-181255-253679/sp_20200329-181255_model-0_epoch12-f0.8440.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-pointer-20200329-181255-253679/sp_20200329-181255_model-0_epoch12-f0.8440.h5.pkl").open('rb') as f:
             items2 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-pointer-20200329-181329-741718/sp_20200329-181329_model-0_epoch9-f0.8476.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-pointer-20200329-181329-741718/sp_20200329-181329_model-0_epoch9-f0.8476.h5.pkl").open('rb') as f:
             items3 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-pointer-20200329-181405-914906/sp_20200329-181405_model-0_epoch12-f0.8456.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-pointer-20200329-181405-914906/sp_20200329-181405_model-0_epoch12-f0.8456.h5.pkl").open('rb') as f:
             items4 = pickle.load(f)
     return items0, items1, items2, items3, items4
 
 
 def get_bertsl_ntc():
-    with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertsl-20200402-123819-415751/bsl_20200402-123819_model-0_epoch7-f0.8631.h5.pkl").open('rb') as f:
+    with Path("../../results/pasa-bertsl-20200402-123819-415751/bsl_20200402-123819_model-0_epoch7-f0.8631.h5.pkl").open('rb') as f:
         items0 = pickle.load(f)
-    with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertsl-20200402-123818-814117/bsl_20200402-123818_model-0_epoch7-f0.8650.h5.pkl").open('rb') as f:
+    with Path("../../results/pasa-bertsl-20200402-123818-814117/bsl_20200402-123818_model-0_epoch7-f0.8650.h5.pkl").open('rb') as f:
         items1 = pickle.load(f)
-    with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertsl-20200402-123820-333582/bsl_20200402-123820_model-0_epoch9-f0.8620.h5.pkl").open('rb') as f:
+    with Path("../../results/pasa-bertsl-20200402-123820-333582/bsl_20200402-123820_model-0_epoch9-f0.8620.h5.pkl").open('rb') as f:
         items2 = pickle.load(f)
-    with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertsl-20200402-123820-545980/bsl_20200402-123820_model-0_epoch5-f0.8611.h5.pkl").open('rb') as f:
+    with Path("../../results/pasa-bertsl-20200402-123820-545980/bsl_20200402-123820_model-0_epoch5-f0.8611.h5.pkl").open('rb') as f:
         items3 = pickle.load(f)
-    with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertsl-20200402-201956-237530/bsl_20200402-201956_model-0_epoch11-f0.8647.h5.pkl").open('rb') as f:
+    with Path("../../results/pasa-bertsl-20200402-201956-237530/bsl_20200402-201956_model-0_epoch11-f0.8647.h5.pkl").open('rb') as f:
         items4 = pickle.load(f)
     return items0, items1, items2, items3, items4
 
@@ -89,56 +89,56 @@ def get_bertsl_ntc():
 def get_bertsp_ntc(mode="global"):
     items0, items1, items2, items3, items4 = [], [], [], [], []
     if mode == "none":
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertptr-20200402-165144-157728/bsp_20200402-165144_model-0_epoch6-f0.8702.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200402-165144-157728/bsp_20200402-165144_model-0_epoch6-f0.8702.h5.pkl").open('rb') as f:
             items0 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertptr-20200402-165338-628976/bsp_20200402-165338_model-0_epoch10-f0.8703.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200402-165338-628976/bsp_20200402-165338_model-0_epoch10-f0.8703.h5.pkl").open('rb') as f:
             items1 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertptr-20200402-165557-747882/bsp_20200402-165557_model-0_epoch17-f0.8718.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200402-165557-747882/bsp_20200402-165557_model-0_epoch17-f0.8718.h5.pkl").open('rb') as f:
             items2 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertptr-20200402-170544-734496/bsp_20200402-170544_model-0_epoch8-f0.8698.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200402-170544-734496/bsp_20200402-170544_model-0_epoch8-f0.8698.h5.pkl").open('rb') as f:
             items3 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertptr-20200402-170813-804379/bsp_20200402-170813_model-0_epoch10-f0.8706.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200402-170813-804379/bsp_20200402-170813_model-0_epoch10-f0.8706.h5.pkl").open('rb') as f:
             items4 = pickle.load(f)
     elif mode == "global":
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertptr-20200402-134057-799938/bsp_20200402-134057_model-0_epoch11-f0.8703.h5.pkl").open(
+        with Path("../../results/pasa-bertptr-20200402-134057-799938/bsp_20200402-134057_model-0_epoch11-f0.8703.h5.pkl").open(
             'rb') as f:
             items0 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertptr-20200402-134057-825245/bsp_20200402-134057_model-0_epoch6-f0.8709.h5.pkl").open(
+        with Path("../../results/pasa-bertptr-20200402-134057-825245/bsp_20200402-134057_model-0_epoch6-f0.8709.h5.pkl").open(
             'rb') as f:
             items1 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertptr-20200402-134057-738238/bsp_20200402-134057_model-0_epoch10-f0.8719.h5.pkl").open(
+        with Path("../../results/pasa-bertptr-20200402-134057-738238/bsp_20200402-134057_model-0_epoch10-f0.8719.h5.pkl").open(
             'rb') as f:
             items2 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertptr-20200402-134057-896365/bsp_20200402-134057_model-0_epoch10-f0.8709.h5.pkl").open(
+        with Path("../../results/pasa-bertptr-20200402-134057-896365/bsp_20200402-134057_model-0_epoch10-f0.8709.h5.pkl").open(
             'rb') as f:
             items3 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertptr-20200402-134106-778681/bsp_20200402-134106_model-0_epoch10-f0.8707.h5.pkl").open(
+        with Path("../../results/pasa-bertptr-20200402-134106-778681/bsp_20200402-134106_model-0_epoch10-f0.8707.h5.pkl").open(
             'rb') as f:
             items4 = pickle.load(f)
     elif mode == "local":
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertptr-20200402-195131-152329/bsp_20200402-195131_model-0_epoch6-f0.8710.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200402-195131-152329/bsp_20200402-195131_model-0_epoch6-f0.8710.h5.pkl").open('rb') as f:
             items0 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertptr-20200402-195230-748475/bsp_20200402-195230_model-0_epoch10-f0.8705.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200402-195230-748475/bsp_20200402-195230_model-0_epoch10-f0.8705.h5.pkl").open('rb') as f:
             items1 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertptr-20200402-195441-889702/bsp_20200402-195441_model-0_epoch10-f0.8718.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200402-195441-889702/bsp_20200402-195441_model-0_epoch10-f0.8718.h5.pkl").open('rb') as f:
             items2 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertptr-20200402-200529-393340/bsp_20200402-200529_model-0_epoch8-f0.8701.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200402-200529-393340/bsp_20200402-200529_model-0_epoch8-f0.8701.h5.pkl").open('rb') as f:
             items3 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertptr-20200402-200821-141107/bsp_20200402-200821_model-0_epoch10-f0.8707.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200402-200821-141107/bsp_20200402-200821_model-0_epoch10-f0.8707.h5.pkl").open('rb') as f:
             items4 = pickle.load(f)
     return items0, items1, items2, items3, items4
 
 
 def get_sl_bccwj():
-    with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-lstm-20200329-003503-990662/sl_20200329-003503_model-0_epoch12-f0.7641.h5.pkl").open('rb') as f:
+    with Path("../../results/pasa-lstm-20200329-003503-990662/sl_20200329-003503_model-0_epoch12-f0.7641.h5.pkl").open('rb') as f:
         items0 = pickle.load(f)
-    with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-lstm-20200329-003529-533233/sl_20200329-003529_model-0_epoch14-f0.7686.h5.pkl").open('rb') as f:
+    with Path("../../results/pasa-lstm-20200329-003529-533233/sl_20200329-003529_model-0_epoch14-f0.7686.h5.pkl").open('rb') as f:
         items1 = pickle.load(f)
-    with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-lstm-20200329-003625-441811/sl_20200329-003625_model-0_epoch12-f0.7646.h5.pkl").open('rb') as f:
+    with Path("../../results/pasa-lstm-20200329-003625-441811/sl_20200329-003625_model-0_epoch12-f0.7646.h5.pkl").open('rb') as f:
         items2 = pickle.load(f)
-    with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-lstm-20200329-003702-744631/sl_20200329-003702_model-0_epoch14-f0.7649.h5.pkl").open('rb') as f:
+    with Path("../../results/pasa-lstm-20200329-003702-744631/sl_20200329-003702_model-0_epoch14-f0.7649.h5.pkl").open('rb') as f:
         items3 = pickle.load(f)
-    with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-lstm-20200329-003720-611158/sl_20200329-003720_model-0_epoch5-f0.7630.h5.pkl").open('rb') as f:
+    with Path("../../results/pasa-lstm-20200329-003720-611158/sl_20200329-003720_model-0_epoch5-f0.7630.h5.pkl").open('rb') as f:
         items4 = pickle.load(f)
     return items0, items1, items2, items3, items4
 
@@ -147,65 +147,65 @@ def get_sp_bccwj(mode="global"):
     items0, items1, items2, items3, items4 = [], [], [], [], []
     if mode == "none":
         with Path(
-            "/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-pointer-20200329-035820-082435/sp_20200329-035820_model-0_epoch13-f0.7628.h5.pkl").open('rb') as f:
+            "../../results/pasa-pointer-20200329-035820-082435/sp_20200329-035820_model-0_epoch13-f0.7628.h5.pkl").open('rb') as f:
             items0 = pickle.load(f)
         with Path(
-            "/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-pointer-20200329-035828-731188/sp_20200329-035828_model-0_epoch5-f0.7584.h5.pkl").open('rb') as f:
+            "../../results/pasa-pointer-20200329-035828-731188/sp_20200329-035828_model-0_epoch5-f0.7584.h5.pkl").open('rb') as f:
             items1 = pickle.load(f)
         with Path(
-            "/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-pointer-20200329-035921-430627/sp_20200329-035921_model-0_epoch5-f0.7614.h5.pkl").open('rb') as f:
+            "../../results/pasa-pointer-20200329-035921-430627/sp_20200329-035921_model-0_epoch5-f0.7614.h5.pkl").open('rb') as f:
             items2 = pickle.load(f)
         with Path(
-            "/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-pointer-20200329-040037-823312/sp_20200329-040037_model-0_epoch7-f0.7615.h5.pkl").open('rb') as f:
+            "../../results/pasa-pointer-20200329-040037-823312/sp_20200329-040037_model-0_epoch7-f0.7615.h5.pkl").open('rb') as f:
             items3 = pickle.load(f)
         with Path(
-            "/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-pointer-20200329-040155-312838/sp_20200329-040155_model-0_epoch14-f0.7619.h5.pkl").open('rb') as f:
+            "../../results/pasa-pointer-20200329-040155-312838/sp_20200329-040155_model-0_epoch14-f0.7619.h5.pkl").open('rb') as f:
             items4 = pickle.load(f)
     elif mode == "global":
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-pointer-20200329-022106-069150/sp_20200329-022106_model-0_epoch6-f0.7589.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-pointer-20200329-022106-069150/sp_20200329-022106_model-0_epoch6-f0.7589.h5.pkl").open('rb') as f:
             items0 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-pointer-20200329-022109-056568/sp_20200329-022109_model-0_epoch5-f0.7621.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-pointer-20200329-022109-056568/sp_20200329-022109_model-0_epoch5-f0.7621.h5.pkl").open('rb') as f:
             items1 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-pointer-20200329-022128-955906/sp_20200329-022128_model-0_epoch6-f0.7634.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-pointer-20200329-022128-955906/sp_20200329-022128_model-0_epoch6-f0.7634.h5.pkl").open('rb') as f:
             items2 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-pointer-20200329-022222-724719/sp_20200329-022222_model-0_epoch5-f0.7576.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-pointer-20200329-022222-724719/sp_20200329-022222_model-0_epoch5-f0.7576.h5.pkl").open('rb') as f:
             items3 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-pointer-20200329-022313-903459/sp_20200329-022313_model-0_epoch9-f0.7616.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-pointer-20200329-022313-903459/sp_20200329-022313_model-0_epoch9-f0.7616.h5.pkl").open('rb') as f:
             items4 = pickle.load(f)
     elif mode == "local":
         with Path(
-            "/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-pointer-20200329-053317-066569/sp_20200329-053317_model-0_epoch9-f0.7608.h5.pkl").open(
+            "../../results/pasa-pointer-20200329-053317-066569/sp_20200329-053317_model-0_epoch9-f0.7608.h5.pkl").open(
             'rb') as f:
             items0 = pickle.load(f)
         with Path(
-            "/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-pointer-20200329-053420-334813/sp_20200329-053420_model-0_epoch10-f0.7654.h5.pkl").open(
+            "../../results/pasa-pointer-20200329-053420-334813/sp_20200329-053420_model-0_epoch10-f0.7654.h5.pkl").open(
             'rb') as f:
             items1 = pickle.load(f)
         with Path(
-            "/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-pointer-20200329-053658-852976/sp_20200329-053658_model-0_epoch5-f0.7619.h5.pkl").open(
+            "../../results/pasa-pointer-20200329-053658-852976/sp_20200329-053658_model-0_epoch5-f0.7619.h5.pkl").open(
             'rb') as f:
             items2 = pickle.load(f)
         with Path(
-            "/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-pointer-20200329-053744-584854/sp_20200329-053744_model-0_epoch14-f0.7623.h5.pkl").open(
+            "../../results/pasa-pointer-20200329-053744-584854/sp_20200329-053744_model-0_epoch14-f0.7623.h5.pkl").open(
             'rb') as f:
             items3 = pickle.load(f)
         with Path(
-            "/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-pointer-20200329-053954-847594/sp_20200329-053954_model-0_epoch10-f0.7618.h5.pkl").open(
+            "../../results/pasa-pointer-20200329-053954-847594/sp_20200329-053954_model-0_epoch10-f0.7618.h5.pkl").open(
             'rb') as f:
             items4 = pickle.load(f)
     return items0, items1, items2, items3, items4
 
 
 def get_bertsl_bccwj():
-    with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertsl-20200403-112105-536009/bsl_20200403-112105_model-0_epoch6-f0.7916.h5.pkl").open('rb') as f:
+    with Path("../../results/pasa-bertsl-20200403-112105-536009/bsl_20200403-112105_model-0_epoch6-f0.7916.h5.pkl").open('rb') as f:
         items0 = pickle.load(f)
-    with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertsl-20200402-225320-031641/bsl_20200402-225320_model-0_epoch9-f0.7894.h5.pkl").open('rb') as f:
+    with Path("../../results/pasa-bertsl-20200402-225320-031641/bsl_20200402-225320_model-0_epoch9-f0.7894.h5.pkl").open('rb') as f:
         items1 = pickle.load(f)
-    with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertsl-20200402-225138-903629/bsl_20200402-225138_model-0_epoch6-f0.7916.h5.pkl").open('rb') as f:
+    with Path("../../results/pasa-bertsl-20200402-225138-903629/bsl_20200402-225138_model-0_epoch6-f0.7916.h5.pkl").open('rb') as f:
         items2 = pickle.load(f)
-    with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertsl-20200402-230314-149516/bsl_20200402-230314_model-0_epoch8-f0.7916.h5.pkl").open('rb') as f:
+    with Path("../../results/pasa-bertsl-20200402-230314-149516/bsl_20200402-230314_model-0_epoch8-f0.7916.h5.pkl").open('rb') as f:
         items3 = pickle.load(f)
-    with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertsl-20200402-230524-638769/bsl_20200402-230524_model-0_epoch8-f0.7877.h5.pkl").open('rb') as f:
+    with Path("../../results/pasa-bertsl-20200402-230524-638769/bsl_20200402-230524_model-0_epoch8-f0.7877.h5.pkl").open('rb') as f:
         items4 = pickle.load(f)
     return items0, items1, items2, items3, items4
 
@@ -213,42 +213,42 @@ def get_bertsl_bccwj():
 def get_bertsp_bccwj(mode="global"):
     items0, items1, items2, items3, items4 = [], [], [], [], []
     if mode == "none":
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertptr-20200403-010141-686124/bsp_20200403-010141_model-0_epoch11-f0.7924.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200403-010141-686124/bsp_20200403-010141_model-0_epoch11-f0.7924.h5.pkl").open('rb') as f:
             items0 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertptr-20200403-010141-667945/bsp_20200403-010141_model-0_epoch7-f0.7936.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200403-010141-667945/bsp_20200403-010141_model-0_epoch7-f0.7936.h5.pkl").open('rb') as f:
             items1 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertptr-20200403-010141-341382/bsp_20200403-010141_model-0_epoch12-f0.7922.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200403-010141-341382/bsp_20200403-010141_model-0_epoch12-f0.7922.h5.pkl").open('rb') as f:
             items2 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertptr-20200403-011035-863656/bsp_20200403-011035_model-0_epoch11-f0.7945.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200403-011035-863656/bsp_20200403-011035_model-0_epoch11-f0.7945.h5.pkl").open('rb') as f:
             items3 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertptr-20200403-011130-170880/bsp_20200403-011130_model-0_epoch9-f0.7937.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200403-011130-170880/bsp_20200403-011130_model-0_epoch9-f0.7937.h5.pkl").open('rb') as f:
             items4 = pickle.load(f)
     elif mode == "global":
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertptr-20200403-025538-564688/bsp_20200403-025538_model-0_epoch11-f0.7939.h5.pkl").open(
+        with Path("../../results/pasa-bertptr-20200403-025538-564688/bsp_20200403-025538_model-0_epoch11-f0.7939.h5.pkl").open(
             'rb') as f:
             items0 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertptr-20200403-025740-192547/bsp_20200403-025740_model-0_epoch9-f0.7943.h5.pkl").open(
+        with Path("../../results/pasa-bertptr-20200403-025740-192547/bsp_20200403-025740_model-0_epoch9-f0.7943.h5.pkl").open(
             'rb') as f:
             items1 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertptr-20200403-025725-718275/bsp_20200403-025725_model-0_epoch11-f0.7955.h5.pkl").open(
+        with Path("../../results/pasa-bertptr-20200403-025725-718275/bsp_20200403-025725_model-0_epoch11-f0.7955.h5.pkl").open(
             'rb') as f:
             items2 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertptr-20200403-030515-753190/bsp_20200403-030515_model-0_epoch9-f0.7950.h5.pkl").open(
+        with Path("../../results/pasa-bertptr-20200403-030515-753190/bsp_20200403-030515_model-0_epoch9-f0.7950.h5.pkl").open(
             'rb') as f:
             items3 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertptr-20200403-030648-760108/bsp_20200403-030648_model-0_epoch8-f0.7943.h5.pkl").open(
+        with Path("../../results/pasa-bertptr-20200403-030648-760108/bsp_20200403-030648_model-0_epoch8-f0.7943.h5.pkl").open(
             'rb') as f:
             items4 = pickle.load(f)
     elif mode == "local":
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertptr-20200403-045040-398629/bsp_20200403-045040_model-0_epoch9-f0.7955.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200403-045040-398629/bsp_20200403-045040_model-0_epoch9-f0.7955.h5.pkl").open('rb') as f:
             items0 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertptr-20200403-045320-503212/bsp_20200403-045320_model-0_epoch12-f0.7940.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200403-045320-503212/bsp_20200403-045320_model-0_epoch12-f0.7940.h5.pkl").open('rb') as f:
             items1 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertptr-20200403-045346-565331/bsp_20200403-045346_model-0_epoch9-f0.7944.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200403-045346-565331/bsp_20200403-045346_model-0_epoch9-f0.7944.h5.pkl").open('rb') as f:
             items2 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertptr-20200403-050141-426441/bsp_20200403-050141_model-0_epoch8-f0.7963.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200403-050141-426441/bsp_20200403-050141_model-0_epoch8-f0.7963.h5.pkl").open('rb') as f:
             items3 = pickle.load(f)
-        with Path("/clwork/keigo/JapanesePASAasaSequencePointingTask/results/pasa-bertptr-20200403-050204-373548/bsp_20200403-050204_model-0_epoch8-f0.7924.h5.pkl").open('rb') as f:
+        with Path("../../results/pasa-bertptr-20200403-050204-373548/bsp_20200403-050204_model-0_epoch8-f0.7924.h5.pkl").open('rb') as f:
             items4 = pickle.load(f)
     return items0, items1, items2, items3, items4
 
@@ -469,6 +469,73 @@ if __name__ == "__main__":
 
 
 '''
+[sl_ntc]
+All: 0.8560959146282665, Dep: 0.9138582526134075, Zero: 0.5575493209080995 / tp: [12913  9019  1890  2485   313    14], fp: [ 973  322  450 1270  215   32], fn: [1387  570  789 2279  470  197]
+0.9162704888951962, 0.9528790279978869, 0.7531380753138075, 0.5834018077239113, 0.47749809305873386, 0.10894941634241245
+0.8561, 0.9139, 0.9163, 0.9529, 0.7531, 0.5575, 0.5834, 0.4775, 0.1089
+[spn_ntc]
+All: 0.857993224202894, Dep: 0.9175306944683126, Zero: 0.5691523853635942 / tp: [13033  9055  1938  2735   321    16], fp: [ 987  295  461 1648  274   43], fn: [1282  549  745 2029  462  195]
+0.9199223575083818, 0.9554711406563258, 0.7626918536009445, 0.5980102765934185, 0.4658925979680697, 0.11851851851851852
+0.8580 & 0.9175 & 0.9199 & 0.9555 & 0.7627 & 0.5692 & 0.5980 & 0.4659 & 0.1185
+[spg_ntc]
+All: 0.8555865214086648, Dep: 0.9158892797063772, Zero: 0.5645756457564576 / tp: [13023  9045  1888  2727   322    11], fp: [1030  307  420 1691  299   32], fn: [1291  555  797 2037  461  200]
+0.9181795748581097, 0.9545166737019839, 0.756258762267174, 0.5939882378566761, 0.45868945868945876, 0.08661417322834646
+0.8556 & 0.9159 & 0.9182 & 0.9545 & 0.7563 & 0.5646 & 0.5940 & 0.4587 & 0.0866
+[spl_ntc]
+All: 0.8570072911888907, Dep: 0.9162772065696354, Zero: 0.5694187338022955 / tp: [13054  9044  1919  2730   331    15], fp: [1077  291  441 1671  264   35], fn: [1258  557  765 2034  452  196]
+0.9179059874134233, 0.9552175749894382, 0.760904044409199, 0.5957446808510637, 0.48040638606676345, 0.11494252873563217
+0.8570 & 0.9163 & 0.9179 & 0.9552 & 0.7609 & 0.5694 & 0.5957 & 0.4804 & 0.1149
+[bertsl_ntc]
+All: 0.8751924103917318, Dep: 0.92562358276644, Zero: 0.6268378931695514 / tp: [13362  9164  1966  2962   383    23], fp: [ 940  248  672 1372  197   51], fn: [ 938  425  713 1802  400  188]
+0.9343402559261591, 0.9645808115362349, 0.7395147639646417, 0.6511321169487799, 0.561995597945708, 0.1614035087719298
+0.8752, 0.9256, 0.9343, 0.9646, 0.7395, 0.6268, 0.6511, 0.5620, 0.1614
+[bertspn_ntc]
+All: 0.8782098427353101, Dep: 0.9274137247872603, Zero: 0.6390977443609023 / tp: [13376  9151  2049  3040   422    23], fp: [ 950  263  612 1383  237   39], fn: [ 930  456  636 1725  363  189]
+0.9343392008941046, 0.9621996740444771, 0.7665544332211, 0.6617326948193296, 0.5844875346260386, 0.1678832116788321
+0.8782 & 0.9274 & 0.9343 & 0.9622 & 0.7666 & 0.6391 & 0.6617 & 0.5845 & 0.1679
+[bertspg_ntc]
+All: 0.8777360506591662, Dep: 0.927307852570173, Zero: 0.636355252236466 / tp: [13348  9132  2000  3018   410    22], fp: [ 906  240  580 1365  230   38], fn: [ 958  469  685 1747  374  189]
+0.934733893557423, 0.962631107363095, 0.7597340930674265, 0.6598163533012681, 0.5758426966292134, 0.16236162361623616
+0.8777 & 0.9273 & 0.9347 & 0.9626 & 0.7597 & 0.6364 & 0.6598 & 0.5758 & 0.1624
+[bertspl_ntc]
+All: 0.8780778707176599, Dep: 0.9270238590388324, Zero: 0.6389581601551676 / tp: [13356  9149  2012  3017   421    21], fp: [ 906  255  610 1341  228   38], fn: [ 956  458  675 1748  364  190]
+0.9348358647721704, 0.9624953974015044, 0.7579581842154831, 0.661405239504549, 0.5871687587168759, 0.15555555555555559
+0.8781 & 0.9270 & 0.9348 & 0.9625 & 0.7580 & 0.6390 & 0.6614 & 0.5872 & 0.1556
+[sl_bccwj]
+All: 0.7872246208347171, Dep: 0.8405507882658153, Zero: 0.5229146060006594 / tp: [6629 4315 1692 1337  219   30], fp: [983 608 406 682 167  51], fn: [1308  936  553 1352  413  229]
+0.8526593350054666, 0.8482406133280912, 0.7791848952337095, 0.5679694137638062, 0.4302554027504911, 0.17647058823529413
+0.7872, 0.8406, 0.8527, 0.8482, 0.7792, 0.5229, 0.5680, 0.4303, 0.1765
+[spn_bccwj]
+All: 0.7850462280584215, Dep: 0.842580771874693, Zero: 0.5252734259532958 / tp: [6716 4451 1703 1489  260   28], fp: [1067  747  404 1026  314   64], fn: [1233  809  549 1204  372  232]
+0.8538011695906433, 0.8512143813348633, 0.7813718742830924, 0.5718125960061444, 0.4311774461028193, 0.15909090909090912
+0.7850 & 0.8426 & 0.8538 & 0.8512 & 0.7814 & 0.5253 & 0.5718 & 0.4312 & 0.1591
+[spg_bccwj]
+All: 0.783164223975949, Dep: 0.8411679979049366, Zero: 0.5189382642409782 / tp: [6729 4407 1712 1476  233   31], fp: [1092  723  419 1100  224   57], fn: [1226  855  537 1214  403  228]
+0.8530679513184584, 0.8481524249422632, 0.7817351598173515, 0.5605772882643373, 0.4263494967978042, 0.1786743515850144
+0.7832 & 0.8412 & 0.8531 & 0.8482 & 0.7817 & 0.5189 & 0.5606 & 0.4263 & 0.1787
+[spl_bccwj]
+All: 0.7824644930055902, Dep: 0.8390947038872946, Zero: 0.524170757102484 / tp: [6737 4422 1706 1487  244   31], fp: [1133  755  431 1041  287   51], fn: [1218  845  552 1204  388  228]
+0.851437598736177, 0.8468019915741094, 0.7763367463026166, 0.5698409657022417, 0.4196044711951849, 0.18181818181818182
+0.7825 & 0.8391 & 0.8514 & 0.8468 & 0.7763 & 0.5242 & 0.5698 & 0.4196 & 0.1818
+[bertsl_bccwj]
+All: 0.8109907500886792, Dep: 0.8575557526193057, Zero: 0.582392776523702 / tp: [6789 4531 1735 1469  302   35], fp: [896 720 371 588 212  36], fn: [1135  711  504 1202  328  224]
+0.8698827599461848, 0.863623367959592, 0.7986191024165706, 0.621404399323181, 0.527972027972028, 0.21212121212121215
+0.8110, 0.8576, 0.8699, 0.8636, 0.7986, 0.5824, 0.6214, 0.5280, 0.2121
+[bertspn_bccwj]
+All: 0.8129822478821562, Dep: 0.8595235761199882, Zero: 0.5926040538449636 / tp: [6890 4494 1768 1578  300   37], fp: [983 674 375 780 165  43], fn: [1038  754  475 1093  330  222]
+0.872096702740333, 0.8629032258064516, 0.8062015503875969, 0.627560151123484, 0.547945205479452, 0.21828908554572268
+0.8130 & 0.8595 & 0.8721 & 0.8629 & 0.8062 & 0.5926 & 0.6276 & 0.5479 & 0.2183
+[bertspg_bccwj]
+All: 0.8106239279588335, Dep: 0.858984375, Zero: 0.5852548543689321 / tp: [6871 4539 1784 1591  303   35], fp: [1032  688  375  842  212   44], fn: [1060  715  462 1081  330  225]
+0.8678792471895921, 0.866138727220685, 0.8099886492622019, 0.6233104799216455, 0.5278745644599304, 0.20648967551622416
+0.8106 & 0.8590 & 0.8679 & 0.8661 & 0.8100 & 0.5853 & 0.6233 & 0.5279 & 0.2065
+[bertspl_bccwj]
+All: 0.8113116855372784, Dep: 0.8578663723134862, Zero: 0.5955461931989168 / tp: [6852 4544 1816 1613  325   41], fp: [998 730 406 807 236  55], fn: [1095  719  430 1063  308  219]
+0.8675064885737799, 0.8624845781531745, 0.8128916741271263, 0.6330455259026687, 0.5443886097152428, 0.23033707865168537
+0.8113 & 0.8579 & 0.8675 & 0.8625 & 0.8129 & 0.5955 & 0.6330 & 0.5444 & 0.2303
+
+---------------
+
 [sl_ntc]
 All: 0.8560046977415925, Dep: 0.9159347073119389, Zero: 0.5647321428571428 / tp: [13039  9043  1850  2693   330    13], fp: [1012  329  416 1671  254   33], fn: [1261  546  829 2071  453  198]
 0.919826461147755, 0.9538526449026951, 0.7482305358948432, 0.5900525854513584, 0.48280907095830283, 0.10116731517509725
