@@ -214,7 +214,7 @@ def main(tag):
             data5 = [line.strip().split(',') for line in f.readlines()]
 
         if tag in {'acmspgntcglove', 'acmsplntcglove', 'acmspgbccwjglove', 'acmsplbccwjglove'}:
-            log = [[i] + i1[:8] + [i2[7], i3[7], i4[7], i5[7], [i1[7], i2[7], i3[7], i4[7], i5[7]].count(i1[6])] + i1[8:-2]
+            log = [[i] + i1[:8] + [i2[7], i3[7], i4[7], i5[7], [i1[7], i2[7], i3[7], i4[7], i5[7]].count(i1[6])] + i1[8:-1]
                    for
                    i, (i1, i2, i3, i4, i5) in
                    enumerate(zip(data1, data2, data3, data4, data5))]
@@ -305,7 +305,7 @@ def main(tag):
             summary_conflict.append(ans)
 
         if tag in {'acmspnntcglove', 'acmspnbccwjglove'}:
-            log = [[i] + i1[:8] + [i2[7], i3[7], i4[7], i5[7], [i1[7], i2[7], i3[7], i4[7], i5[7]].count(i1[6])] + i1[8:-2]
+            log = [[i] + i1[:8] + [i2[7], i3[7], i4[7], i5[7], [i1[7], i2[7], i3[7], i4[7], i5[7]].count(i1[6])] + i1[8:-1]
                    for
                    i, (i1, i2, i3, i4, i5) in
                    enumerate(zip(data1, data2, data3, data4, data5))]
