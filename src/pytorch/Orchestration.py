@@ -488,26 +488,12 @@ processes = [
     #     "--init_checkpoint", "../../results/pasa-bertptr-20200127-152713/model-0/epoch8-f0.7924.h5"]
 
     # combine results
-    ['python', 'CombinePrediction.py', '--event', 'acm', '--with_all']
-    # ["python", "CombinePrediction.py", "--event", "acm", "--model", "sl", "--corpus", "ntc", "--emb", "glove"],
-    # ["python", "CombinePrediction.py", "--event", "acm", "--model", "spg", "--corpus", "ntc", "--emb", "glove"],
-    # ["python", "CombinePrediction.py", "--event", "acm", "--model", "spl", "--corpus", "ntc", "--emb", "glove"],
-    # ["python", "CombinePrediction.py", "--event", "acm", "--model", "spn", "--corpus", "ntc", "--emb", "glove"],
-    # ["python", "CombinePrediction.py", "--event", "acm", "--model", "sl", "--corpus", "ntc", "--emb", "bert"],
-    # ["python", "CombinePrediction.py", "--event", "acm", "--model", "spg", "--corpus", "ntc", "--emb", "bert"],
-    # ["python", "CombinePrediction.py", "--event", "acm", "--model", "spl", "--corpus", "ntc", "--emb", "bert"],
-    # ["python", "CombinePrediction.py", "--event", "acm", "--model", "spn", "--corpus", "ntc", "--emb", "bert"],
-    # ["python", "CombinePrediction.py", "--event", "acm", "--model", "sl", "--corpus", "bccwj", "--emb", "glove"],
-    # ["python", "CombinePrediction.py", "--event", "acm", "--model", "spg", "--corpus", "bccwj", "--emb", "glove"],
-    # ["python", "CombinePrediction.py", "--event", "acm", "--model", "spl", "--corpus", "bccwj", "--emb", "glove"],
-    # ["python", "CombinePrediction.py", "--event", "acm", "--model", "spn", "--corpus", "bccwj", "--emb", "glove"],
-    # ["python", "CombinePrediction.py", "--event", "acm", "--model", "sl", "--corpus", "bccwj", "--emb", "bert"],
-    # ["python", "CombinePrediction.py", "--event", "acm", "--model", "spg", "--corpus", "bccwj", "--emb", "bert"],
-    # ["python", "CombinePrediction.py", "--event", "acm", "--model", "spl", "--corpus", "bccwj", "--emb", "bert"],
-    # ["python", "CombinePrediction.py", "--event", "acm", "--model", "spn", "--corpus", "bccwj", "--emb", "bert"]
+    # ['python', 'CombinePrediction.py', '--event', 'acm', '--with_all']
 
+    # Ensemble results
     # ['python', 'Ensemble.py', '--mode', 'all', '--corpus', 'all']
 
+    # Segment analysis of Bccwj dataset
     # ['python', 'SegmentAnalysisBccwj.py', '--model', 'all', '--reset_scores', '--bin_size', '10']
 
 ]
