@@ -1,12 +1,21 @@
 import pandas as pd
 from pathlib import Path
 
-# lstm_log_path = Path("../../results/packed/lstm/detaillog_lstm.txt")
-# argmax_log_path = Path("../../results/packed/global_argmax/detaillog_global_argmax.txt")
-lstm_log_path = Path("../../results/testresult_acl2019/detaillog_lstm.txt")
-argmax_log_path = Path("../../results/testresult_acl2019/detaillog_global_argmax.txt")
-ordered_log_path = Path("../../results/packed/ordered/detaillog_ordered.txt")
-no_decode_log_path = Path("../../results/packed/no_decode/detaillog_no_decode.txt")
+mode = 'acmntcglove'
+if mode == 'acl' or mode == 'pacling':
+    lstm_log_path = Path("../../results/testresult_acl2019/detaillog_lstm.txt")
+    argmax_log_path = Path("../../results/testresult_acl2019/detaillog_global_argmax.txt")
+    ordered_log_path = Path("../../results/packed/ordered/detaillog_ordered.txt")
+    no_decode_log_path = Path("../../results/packed/no_decode/detaillog_no_decode.txt")
+    tag_sl = 'lstm'
+else:
+    lstm_log_path = Path("../../results/detaillog_acmslntcglove.txt")
+    argmax_log_path = Path("../../results/detaillog_acmspgntcglove.txt")
+    ordered_log_path = Path("../../results/detaillog_acmsplntcglove.txt")
+    no_decode_log_path = Path("../../results/detaillog_acmspnntcglove.txt")
+    tag_sl = 'sl'
+
+
 
 with lstm_log_path.open("r", encoding="utf-8") as f:
     lstm_log = pd.read_csv(f)
@@ -18,70 +27,71 @@ with no_decode_log_path.open("r", encoding="utf-8") as f:
     no_decode_log = pd.read_csv(f)
 
 sentence_data = lstm_log['sentence']
-log = lstm_log.drop(["lstm1", "lstm2", "lstm3", "lstm4", "lstm5", "sentence"], axis=1).rename(columns={'combined': 'lstm'})
+log = lstm_log.drop([tag_sl + "1", tag_sl + "2", tag_sl + "3", tag_sl + "4", tag_sl + "5", "sentence"], axis=1).rename(columns={'combined': tag_sl})
 log = log.join([argmax_log.rename(columns={'combined': 'global_argmax'})["global_argmax"]])
 log = log.join([ordered_log.rename(columns={'combined': 'ordered'})["ordered"]])
 log = log.join([no_decode_log.rename(columns={'combined': 'no_decode'})["no_decode"]])
 log = log.join([no_decode_log.rename(columns={'conflict': 'no_decode_conflicted'})["no_decode_conflicted"]])
 log = log.join(sentence_data)
 
+print('[{}]'.format(mode))
 print("conflicted: {}".format(log.query('no_decode_conflicted == True').shape[0]))
 print("----------")
-print("all correct: {}".format(log.query('label == lstm and label == global_argmax and label == ordered and label == no_decode').shape[0]))
-print("all incorrect: {}".format(log.query('label != lstm and label != global_argmax and label != ordered and label != no_decode').shape[0]))
+print("all correct: {}".format(log.query('label == {} and label == global_argmax and label == ordered and label == no_decode'.format(tag_sl)).shape[0]))
+print("all incorrect: {}".format(log.query('label != {} and label != global_argmax and label != ordered and label != no_decode'.format(tag_sl)).shape[0]))
 print("----------")
-print("num of 4: {} / {} / {} / {}".format(log.query('lstm == 4').shape[0], log.query('global_argmax == 4').shape[0], log.query('ordered == 4').shape[0], log.query('no_decode == 4').shape[0]))
-print("all are 4: {}".format(log.query('lstm == 4 and global_argmax == 4 and ordered == 4 and no_decode == 4').shape[0]))
-print("only one is 4: {} / {} / {} / {}".format(log.query('lstm == 4 and global_argmax != 4 and ordered != 4 and no_decode != 4').shape[0],
-                                                log.query('lstm != 4 and global_argmax == 4 and ordered != 4 and no_decode != 4').shape[0],
-                                                log.query('lstm != 4 and global_argmax != 4 and ordered == 4 and no_decode != 4').shape[0],
-                                                log.query('lstm != 4 and global_argmax != 4 and ordered != 4 and no_decode == 4').shape[0]))
-print('two models are 4: {} / {} / {} / {}'.format(log.query('lstm == 4 and global_argmax == 4 and ordered == 4 and no_decode != 4').shape[0],
-                                                   log.query('lstm == 4 and global_argmax == 4 and ordered != 4 and no_decode == 4').shape[0],
-                                                   log.query('lstm == 4 and global_argmax != 4 and ordered == 4 and no_decode == 4').shape[0],
-                                                   log.query('lstm != 4 and global_argmax == 4 and ordered == 4 and no_decode == 4').shape[0]))
+print("num of 4: {} / {} / {} / {}".format(log.query('{} == 4'.format(tag_sl)).shape[0], log.query('global_argmax == 4').shape[0], log.query('ordered == 4').shape[0], log.query('no_decode == 4').shape[0]))
+print("all are 4: {}".format(log.query('{} == 4 and global_argmax == 4 and ordered == 4 and no_decode == 4'.format(tag_sl)).shape[0]))
+print("only one is 4: {} / {} / {} / {}".format(log.query('{} == 4 and global_argmax != 4 and ordered != 4 and no_decode != 4'.format(tag_sl)).shape[0],
+                                                log.query('{} != 4 and global_argmax == 4 and ordered != 4 and no_decode != 4'.format(tag_sl)).shape[0],
+                                                log.query('{} != 4 and global_argmax != 4 and ordered == 4 and no_decode != 4'.format(tag_sl)).shape[0],
+                                                log.query('{} != 4 and global_argmax != 4 and ordered != 4 and no_decode == 4'.format(tag_sl)).shape[0]))
+print('two models are 4: {} / {} / {} / {}'.format(log.query('{} == 4 and global_argmax == 4 and ordered == 4 and no_decode != 4'.format(tag_sl)).shape[0],
+                                                   log.query('{} == 4 and global_argmax == 4 and ordered != 4 and no_decode == 4'.format(tag_sl)).shape[0],
+                                                   log.query('{} == 4 and global_argmax != 4 and ordered == 4 and no_decode == 4'.format(tag_sl)).shape[0],
+                                                   log.query('{} != 4 and global_argmax == 4 and ordered == 4 and no_decode == 4'.format(tag_sl)).shape[0]))
 print("----------")
-print("only correct in lstm w/ all: {}".format(log.query('label == lstm and label != global_argmax and label != ordered and label != no_decode').shape[0]))
-print("only correct in global_argmax w/ all: {}".format(log.query('label != lstm and label == global_argmax and label != ordered and label != no_decode').shape[0]))
-print("only correct in ordered w/ all: {}".format(log.query('label != lstm and label != global_argmax and label == ordered and label != no_decode').shape[0]))
-print("only correct in no_decode w/ all: {}".format(log.query('label != lstm and label != global_argmax and label != ordered and label == no_decode').shape[0]))
+print("only correct in sl w/ all: {}".format(log.query('label == {} and label != global_argmax and label != ordered and label != no_decode'.format(tag_sl)).shape[0]))
+print("only correct in global_argmax w/ all: {}".format(log.query('label != {} and label == global_argmax and label != ordered and label != no_decode'.format(tag_sl)).shape[0]))
+print("only correct in ordered w/ all: {}".format(log.query('label != {} and label != global_argmax and label == ordered and label != no_decode'.format(tag_sl)).shape[0]))
+print("only correct in no_decode w/ all: {}".format(log.query('label != {} and label != global_argmax and label != ordered and label == no_decode'.format(tag_sl)).shape[0]))
 print("----------")
-print("only incorrect in lstm: {}".format(log.query('label != lstm and label == global_argmax and label == ordered and label == no_decode').shape[0]))
-print("only incorrect in global_argmax: {}".format(log.query('label == lstm and label != global_argmax and label == ordered and label == no_decode').shape[0]))
-print("only incorrect in ordered: {}".format(log.query('label == lstm and label == global_argmax and label != ordered and label == no_decode').shape[0]))
-print("only incorrect in no_decode: {}".format(log.query('label == lstm and label == global_argmax and label == ordered and label != no_decode').shape[0]))
+print("only incorrect in sl: {}".format(log.query('label != {} and label == global_argmax and label == ordered and label == no_decode'.format(tag_sl)).shape[0]))
+print("only incorrect in global_argmax: {}".format(log.query('label == {} and label != global_argmax and label == ordered and label == no_decode'.format(tag_sl)).shape[0]))
+print("only incorrect in ordered: {}".format(log.query('label == {} and label == global_argmax and label != ordered and label == no_decode'.format(tag_sl)).shape[0]))
+print("only incorrect in no_decode: {}".format(log.query('label == {} and label == global_argmax and label == ordered and label != no_decode'.format(tag_sl)).shape[0]))
 print("----------")
-print("only correct in global_argmax w/ lstm only: {}".format(log.query('label != lstm and label == global_argmax').shape[0]))
-print("only correct in ordered w/ lstm only: {}".format(log.query('label != lstm and label == ordered').shape[0]))
-print("only correct in no_decode w/ no_decode only: {}".format(log.query('label != lstm and label == no_decode').shape[0]))
-print("only incorrect in global_argmax w/ lstm only: {}".format(log.query('label == lstm and label != global_argmax').shape[0]))
-print("only incorrect in ordered w/ lstm only: {}".format(log.query('label == lstm and label != ordered').shape[0]))
-print("only incorrect in no_decode w/ no_decode only: {}".format(log.query('label == lstm and label != no_decode').shape[0]))
+print("only correct in global_argmax w/ lstm only: {}".format(log.query('label != {} and label == global_argmax'.format(tag_sl)).shape[0]))
+print("only correct in ordered w/ lstm only: {}".format(log.query('label != {} and label == ordered'.format(tag_sl)).shape[0]))
+print("only correct in no_decode w/ no_decode only: {}".format(log.query('label != {} and label == no_decode'.format(tag_sl)).shape[0]))
+print("only incorrect in global_argmax w/ lstm only: {}".format(log.query('label == {} and label != global_argmax'.format(tag_sl)).shape[0]))
+print("only incorrect in ordered w/ lstm only: {}".format(log.query('label == {} and label != ordered'.format(tag_sl)).shape[0]))
+print("only incorrect in no_decode w/ no_decode only: {}".format(log.query('label == {} and label != no_decode'.format(tag_sl)).shape[0]))
 print("----------")
-print("only correct in lstm w/ global_argmax only: {}".format(log.query('label != global_argmax and label == lstm').shape[0]))
+print("only correct in lstm w/ global_argmax only: {}".format(log.query('label != global_argmax and label == {}'.format(tag_sl)).shape[0]))
 print("only correct in ordered w/ global_argmax only: {}".format(log.query('label != global_argmax and label == ordered').shape[0]))
-print("only correct in no_decode w/ global_argmax only: {}".format(log.query('label != global_argmax and label == no_decode').shape[0]))
-print("only incorrect in lstm w/ global_argmax only: {}".format(log.query('label == global_argmax and label != lstm').shape[0]))
+print("only correct in no_decode w/ global_argmax only: {}".format(log.query('label != global_argmax and label == no_decode'.format(tag_sl)).shape[0]))
+print("only incorrect in lstm w/ global_argmax only: {}".format(log.query('label == global_argmax and label != {}'.format(tag_sl)).shape[0]))
 print("only incorrect in ordered w/ global_argmax only: {}".format(log.query('label == global_argmax and label != ordered').shape[0]))
 print("only incorrect in no_decode w/ global_argmax only: {}".format(log.query('label == global_argmax and label != no_decode').shape[0]))
-# print("----------")
-# print("only correct in lstm w/ ordered only: {}".format(log.query('label != ordered and label == lstm').shape[0]))
-# print("only correct in global_argmax w/ ordered only: {}".format(log.query('label != ordered and label == global_argmax').shape[0]))
-# print("only correct in no_decode w/ ordered only: {}".format(log.query('label != ordered and label == no_decode').shape[0]))
-# print("only incorrect in lstm w/ ordered only: {}".format(log.query('label == ordered and label != lstm').shape[0]))
-# print("only incorrect in global_argmax w/ ordered only: {}".format(log.query('label == ordered and label != global_argmax').shape[0]))
-# print("only incorrect in no_decode w/ ordered only: {}".format(log.query('label == ordered and label != no_decode').shape[0]))
-# print("----------")
-# print("only correct in lstm w/ no_decode only: {}".format(log.query('label != no_decode and label == lstm').shape[0]))
-# print("only correct in global_argmax w/ no_decode only: {}".format(log.query('label != no_decode and label == global_argmax').shape[0]))
-# print("only correct in ordered w/ no_decode only: {}".format(log.query('label != no_decode and label == ordered').shape[0]))
-# print("only incorrect in lstm w/ no_decode only: {}".format(log.query('label == no_decode and label != lstm').shape[0]))
-# print("only incorrect in global_argmax w/ no_decode only: {}".format(log.query('label == no_decode and label != global_argmax').shape[0]))
-# print("only incorrect in ordered w/ no_decode only: {}".format(log.query('label == no_decode and label != ordered').shape[0]))
+print("----------")
+print("only correct in lstm w/ ordered only: {}".format(log.query('label != ordered and label == {}'.format(tag_sl)).shape[0]))
+print("only correct in global_argmax w/ ordered only: {}".format(log.query('label != ordered and label == global_argmax').shape[0]))
+print("only correct in no_decode w/ ordered only: {}".format(log.query('label != ordered and label == no_decode').shape[0]))
+print("only incorrect in lstm w/ ordered only: {}".format(log.query('label == ordered and label != {}'.format(tag_sl)).shape[0]))
+print("only incorrect in global_argmax w/ ordered only: {}".format(log.query('label == ordered and label != global_argmax').shape[0]))
+print("only incorrect in no_decode w/ ordered only: {}".format(log.query('label == ordered and label != no_decode').shape[0]))
+print("----------")
+print("only correct in lstm w/ no_decode only: {}".format(log.query('label != no_decode and label == {}'.format(tag_sl)).shape[0]))
+print("only correct in global_argmax w/ no_decode only: {}".format(log.query('label != no_decode and label == global_argmax').shape[0]))
+print("only correct in ordered w/ no_decode only: {}".format(log.query('label != no_decode and label == ordered').shape[0]))
+print("only incorrect in lstm w/ no_decode only: {}".format(log.query('label == no_decode and label != {}'.format(tag_sl)).shape[0]))
+print("only incorrect in global_argmax w/ no_decode only: {}".format(log.query('label == no_decode and label != global_argmax').shape[0]))
+print("only incorrect in ordered w/ no_decode only: {}".format(log.query('label == no_decode and label != ordered').shape[0]))
 
 np_index = log.index.values
 np_label = log['label'].values
-np_lstm = log['lstm'].values
+np_lstm = log[tag_sl].values
 np_argmax = log['global_argmax'].values
 np_ordered = log['ordered'].values
 np_no_decode = log['no_decode'].values
@@ -154,65 +164,43 @@ def get_counts(index, labels, lstms, pointers):
                       str(pointer_wrong_word), str(pointer_wrong_same_kaku), str(pointer_wrong_other_kaku), str(pointer_missed), str(pointer_ignored),
                       str(index)] + ret_labels + ret_lstms + ret_pointers)
 
-start_i = 0
-bef_pred = np_pred[0]
-bef_sentence = np_sentence[0]
-rets = []
-for i, (pred, sentence) in enumerate(zip(np_pred, np_sentence)):
-    if bef_pred != pred or bef_sentence != sentence:
-        ret = bef_sentence +', ' + bef_pred +', ' + get_counts(start_i, np_label[start_i:i], np_lstm[start_i:i], np_argmax[start_i:i])
-        rets.append(ret)
-        bef_pred = pred
-        bef_sentence = sentence
-        start_i = i
-else:
+
+for decode in ['global', 'local', 'none']:
+    start_i = 0
+    bef_pred = np_pred[0]
+    bef_sentence = np_sentence[0]
+    rets = []
+    for i, (pred, sentence) in enumerate(zip(np_pred, np_sentence)):
+        if bef_pred != pred or bef_sentence != sentence:
+            ret = bef_sentence +', ' + bef_pred +', ' + get_counts(start_i, np_label[start_i:i], np_lstm[start_i:i], np_argmax[start_i:i])
+            rets.append(ret)
+            bef_pred = pred
+            bef_sentence = sentence
+            start_i = i
     ret = bef_sentence +', ' + bef_pred +', ' + get_counts(start_i, np_label[start_i:], np_lstm[start_i:], np_argmax[start_i:])
     rets.append(ret)
 
-path = Path('./analized_result_argmax.csv')
-with path.open('w', encoding='utf-8') as f:
-    f.writelines('\n'.join(rets))
+    path = Path('../../results/analized_result_{}_{}.csv'.format(mode, decode))
+    with path.open('w', encoding='utf-8') as f:
+        f.writelines('\n'.join(rets))
 
-# start_i = 0
-# bef_pred = np_pred[0]
-# bef_sentence = np_sentence[0]
-# rets = []
-# for i, (pred, sentence) in enumerate(zip(np_pred, np_sentence)):
-#     if bef_pred != pred or bef_sentence != sentence:
-#         ret = bef_sentence +', ' + bef_pred +', ' + get_counts(start_i, np_label[start_i:i], np_lstm[start_i:i], np_ordered[start_i:i])
-#         rets.append(ret)
-#         bef_pred = pred
-#         bef_sentence = sentence
-#         start_i = i
-# else:
-#     ret = bef_sentence +', ' + bef_pred +', ' + get_counts(start_i, np_label[start_i:], np_lstm[start_i:], np_ordered[start_i:])
-#     rets.append(ret)
-#
-# path = Path('./analized_result_ordered.csv')
-# with path.open('w', encoding='utf-8') as f:
-#     f.writelines('\n'.join(rets))
-
-# start_i = 0
-# bef_pred = np_pred[0]
-# bef_sentence = np_sentence[0]
-# rets = []
-# for i, (pred, sentence) in enumerate(zip(np_pred, np_sentence)):
-#     if bef_pred != pred or bef_sentence != sentence:
-#         ret = bef_sentence +', ' + bef_pred +', ' + get_counts(start_i, np_label[start_i:i], np_lstm[start_i:i], np_ordered[start_i:i])
-#         rets.append(ret)
-#         bef_pred = pred
-#         bef_sentence = sentence
-#         start_i = i
-# else:
-#     ret = bef_sentence +', ' + bef_pred +', ' + get_counts(start_i, np_label[start_i:], np_lstm[start_i:], np_ordered[start_i:])
-#     rets.append(ret)
-#
-# path = Path('./analized_result_no_decode.csv')
-# with path.open('w', encoding='utf-8') as f:
-#     f.writelines('\n'.join(rets))
 
 
 '''
+
+
+
+
+
+
+
+
+
+
+
+
+---------------------------------
+
 https://docs.google.com/spreadsheets/d/1N6fS5SnKMw34vwp3t90XJ-em_GjrCh_UR4OiBeBqLtI/edit
 
 conflicted: 0
