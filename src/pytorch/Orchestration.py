@@ -432,7 +432,7 @@ processes = [
     #     "--init_checkpoint", "../../results/pasa-bertptr-20200127-152713/model-0/epoch8-f0.7924.h5"]
 
     # combine results
-    ['python', 'CombinePrediction', '--event', 'acm', '--with_all']
+    ['python', 'CombinePrediction.py', '--event', 'acm', '--with_all']
     # ["python", "CombinePrediction.py", "--event", "acm", "--model", "sl", "--corpus", "ntc", "--emb", "glove"],
     # ["python", "CombinePrediction.py", "--event", "acm", "--model", "spg", "--corpus", "ntc", "--emb", "glove"],
     # ["python", "CombinePrediction.py", "--event", "acm", "--model", "spl", "--corpus", "ntc", "--emb", "glove"],
