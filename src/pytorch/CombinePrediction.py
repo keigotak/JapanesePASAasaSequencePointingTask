@@ -345,11 +345,20 @@ def main(tag):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PASA results combination')
     parser.add_argument('--event', default=None, type=str, choices=['jsai', 'pacling', 'acm'])
+    parser.add_argument('--with_all', action='store_true')
     parser.add_argument('--model', default=None, type=str, choices=['sl', 'spg', 'spl', 'spn'])
     parser.add_argument('--corpus', default=None, type=str, choices=['ntc', 'bccwj'])
     parser.add_argument('--emb', default=None, type=str, choices=['glove', 'bert'])
     arguments = parser.parse_args()
 
-    tag = arguments.event + arguments.model + arguments.corpus + arguments.emb
-    print(tag)
-    main(tag)
+    if arguments.with_all and arguments.event == 'acm':
+        for model in ['sl', 'spg', 'spl', 'spn']:
+            for corpus in ['ntc', 'bccwj']:
+                for emb in ['glove', 'bert']:
+                    tag = arguments.event + model + corpus + emb
+                    print(tag)
+                    main(tag)
+    else:
+        tag = arguments.event + arguments.model + arguments.corpus + arguments.emb
+        print(tag)
+        main(tag)
