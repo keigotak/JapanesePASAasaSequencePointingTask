@@ -100,10 +100,10 @@ class BertSequenceLabelingModel(Model):
         # output shape: Batch, Sentence_length, word_embed_size
         arg_rets = self.word_embeddings.get_word_embedding(arg)
         arg_embeds = self.vocab_zero_padding_bert(arg_rets["id"], arg_rets["embedding"])
-        arg_embeds = self.append_zero_tensors(modified_size=len(arg[1]), current_tensor=arg_embeds)
+        arg_embeds = self.append_zero_tensors(modified_size=len(arg[0]), current_tensor=arg_embeds)
         pred_rets = self.word_embeddings.get_pred_embedding(arg_embeds, arg_rets["token"], word_pos, self.word_pos_pred_idx)
         pred_embeds = pred_rets["embedding"]
-        pred_embeds = self.append_zero_tensors(modified_size=len(pred[1]), current_tensor=pred_embeds)
+        pred_embeds = self.append_zero_tensors(modified_size=len(pred[0]), current_tensor=pred_embeds)
 
         # output shape: Batch, Sentence_length, pos_embed_size
         word_pos_embeds = self.word_pos_embedding(word_pos)
