@@ -100,8 +100,10 @@ class BertSequenceLabelingModel(Model):
         # output shape: Batch, Sentence_length, word_embed_size
         arg_rets = self.word_embeddings.get_word_embedding(arg)
         arg_embeds = self.vocab_zero_padding_bert(arg_rets["id"], arg_rets["embedding"])
+        arg_embeds = self.append_zero_tensors(modified_size=len(arg[1]), current_tensor=arg_embeds)
         pred_rets = self.word_embeddings.get_pred_embedding(arg_embeds, arg_rets["token"], word_pos, self.word_pos_pred_idx)
         pred_embeds = pred_rets["embedding"]
+        pred_embeds = self.append_zero_tensors(modified_size=len(pred[1]), current_tensor=pred_embeds)
 
         # output shape: Batch, Sentence_length, pos_embed_size
         word_pos_embeds = self.word_pos_embedding(word_pos)
@@ -161,9 +163,30 @@ class BertSequenceLabelingModel(Model):
         #     modified_state_dict_bert['word_embeddings.model.' + k] = v
         self.load_state_dict(state_dict)
 
+    def append_zero_tensors(self, modified_size, current_tensor):
+        batch_size = current_tensor.shape[0]
+        current_size = current_tensor.shape[1]
+        dim = current_tensor.shape[2]
+        if current_size < modified_size:
+            tensor = torch.zeros((batch_size, (modified_size - current_size), dim), dtype=current_tensor.dtype, device=current_tensor.device, requires_grad=False)
+            modified_tensor = torch.cat([current_tensor, tensor], dim=1)
+            return modified_tensor
+        else:
+            return current_tensor
+
 
 if __name__ == "__main__":
     model = BertSequenceLabelingModel(trainbert=False)
     for k, v in model.named_parameters():
         print("{}, {}, {}".format(v.requires_grad, v.size(), k))
     # model.load_weights('../../results/pasa-bertsl-20191207-150951/model-0/epoch14-f0.8620.h5')
+
+    tensor = torch.FloatTensor(1, 187, 768)
+    tensor.to(device='cpu')
+    new_tensor = model.append_zero_tensors(264, tensor)
+    print(new_tensor.shape)
+
+    tensor = torch.FloatTensor(1, 264, 768)
+    tensor.to(device='cpu')
+    new_tensor = model.append_zero_tensors(264, tensor)
+    print(sum((tensor == new_tensor).numpy().flatten().tolist()) == 264*768)
