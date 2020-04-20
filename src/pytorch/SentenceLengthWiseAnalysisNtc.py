@@ -176,7 +176,7 @@ def get_files(model_name):
              '../../results/pasa-bertsl-20200419-151543-725292/detaillog_bertsl_20200419-151543.txt',
              '../../results/pasa-bertsl-20200419-151542-553196/detaillog_bertsl_20200419-151542.txt',
              '../../results/pasa-bertsl-20200419-151542-129443/detaillog_bertsl_20200419-151542.txt',
-             '../../results/pasa-bertsl-20200420-101530-395702/detaillog_bertsl_20200420-395702.txt']),
+             '../../results/pasa-bertsl-20200420-101530-395702/detaillog_bertsl_20200420-101530.txt']),
         'bspn': (
             ['../../results/pasa-bertptr-20200419-151541-252443/bsp_20200419-151541_model-0_epoch7-f0.7936.h5.pkl',
              '../../results/pasa-bertptr-20200419-151541-522425/bsp_20200419-151541_model-0_epoch9-f0.7937.h5.pkl',
