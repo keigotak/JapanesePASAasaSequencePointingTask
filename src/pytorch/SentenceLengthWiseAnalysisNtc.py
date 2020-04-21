@@ -228,14 +228,14 @@ def main(model, arguments):
     counts = None
     lengthwise_all_scores, lengthwise_dep_scores, lengthwise_zero_scores = {}, {}, {}
     bin_size = arguments.bin_size
+    with_initial_print = arguments.with_initial_print
 
-    with_initial_print = True
     for path_pkl, path_detail in zip(files[0], files[1]):
         all_scores[path_detail], dep_scores[path_detail], zero_scores[path_detail],\
         lengthwise_all_scores[path_detail], lengthwise_dep_scores[path_detail], lengthwise_zero_scores[path_detail],\
         lengthwise_itr,\
         tp[path_detail], fp[path_detail], fn[path_detail],\
-        counts = run(path_pkl, path_detail, bin_size, with_initial_print)
+        counts = run(path_pkl, path_detail, bin_size=bin_size, with_initial_print=with_initial_print)
         with_initial_print = False
 
     file_extention = ''
@@ -295,6 +295,7 @@ if __name__ == '__main__':
     parser.add_argument('--model', default=None, type=str)
     parser.add_argument('--reset_sentences', action='store_true')
     parser.add_argument('--reset_scores', action='store_true')
+    parser.add_argument('--with_initial_print', action='store_true')
     parser.add_argument('--bin_size', default=1, type=int)
     arguments = parser.parse_args()
 
@@ -303,5 +304,6 @@ if __name__ == '__main__':
         for item in ['sl', 'spg', 'spl', 'spn', 'bsl', 'bspg', 'bspl', 'bspn']:
             main(item, arguments)
             arguments.reset_scores = False
+            arguments.with_initial_print = False
     else:
         main(model, arguments)

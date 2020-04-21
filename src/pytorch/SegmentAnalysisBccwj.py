@@ -318,12 +318,12 @@ def run(model, arguments):
     categories = ['ブログ', '知恵袋', '出版', '新聞', '雑誌', '白書']
     tags = {'出版': 'PB', '雑誌': 'PM', '新聞': 'PN', '白書': 'OW', '知恵袋': 'OC', 'ブログ': 'OY'}
     bin_size = arguments.bin_size
+    with_initial_print = arguments.with_initial_print
 
-    with_initial_print = True
     for path_pkl, path_detail in zip(files[0], files[1]):
         all_scores[path_detail], dep_scores[path_detail], zero_scores[path_detail], lengthwise_all_scores[
             path_detail], lengthwise_dep_scores[path_detail], lengthwise_zero_scores[
-            path_detail], lengthwise_itr, tp[path_detail], fp[path_detail], fn[path_detail], counts = main(path_pkl, path_detail, bin_size, with_initial_print)
+            path_detail], lengthwise_itr, tp[path_detail], fp[path_detail], fn[path_detail], counts = main(path_pkl, path_detail, bin_size=bin_size, with_initial_print=with_initial_print)
         with_initial_print = False
 
     if arguments.reset_scores:
@@ -453,6 +453,7 @@ if __name__ == '__main__':
     parser.add_argument('--model', default=None, type=str)
     parser.add_argument('--reset_sentences', action='store_true')
     parser.add_argument('--reset_scores', action='store_true')
+    parser.add_argument('--with_initial_print', action='store_true')
     parser.add_argument('--bin_size', default=1, type=int)
     arguments = parser.parse_args()
 
@@ -461,5 +462,6 @@ if __name__ == '__main__':
         for item in ['sl', 'spg', 'spl', 'spn', 'bsl', 'bspg', 'bspl', 'bspn']:
             run(item, arguments)
             arguments.reset_scores = False
+            arguments.with_initial_print = False
     else:
         run(model, arguments)
