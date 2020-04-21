@@ -36,10 +36,8 @@ def main(path_pkl, path_detail, bin_size=1, with_initial_print=True):
                 else:
                     ref_texts[key] = [category, items[1]]
                 mode = 'key'
-    with_bert = False
-    if 'bert' in path_pkl:
-        with_bert = True
-    test_label, test_args, test_preds, _, _, _, _, _, _, _, _ = get_datasets_in_sentences('test', with_bccwj=True, with_bert=with_bert)
+
+    test_label, test_args, test_preds, _, _, _, _, _, _, _, _ = get_datasets_in_sentences('test', with_bccwj=True, with_bert=False)
     np.random.seed(71)
     random.seed(71)
     sequence_index = list(range(len(test_args)))
