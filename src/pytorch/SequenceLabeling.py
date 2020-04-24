@@ -531,6 +531,7 @@ def train(batch_size, learning_rate=1e-3, optim="adam",  dropout_ratio=0.4, null
                       + [arguments.with_linear]\
                       + [num_params]\
                       + [arguments.num_data]\
+                      + ['']\
                       + [arguments.with_bccwj]
         write_spreadsheet(_spreadline)
 
