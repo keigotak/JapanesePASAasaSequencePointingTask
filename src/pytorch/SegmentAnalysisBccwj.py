@@ -9,10 +9,11 @@ import os
 sys.path.append(os.pardir)
 from utils.Datasets import get_datasets_in_sentences
 from Validation import get_pr_numbers, get_f_score
+from utils.Scores import get_pr
 from BertWithJumanModel import BertWithJumanModel
 
 
-def main(path_pkl, path_detail, bin_size=1, with_initial_print=True):
+def run(path_pkl, path_detail, lengthwise_bin_size=1, positionwise_bin_size=1, with_initial_print=True):
     tags = {'PB': '出版', 'PM': '雑誌', 'PN': '新聞', 'LB': '図書館', 'OW': '白書', 'OT': '教科書', 'OP': '広報紙',
                  'OB': 'ベストセラー', 'OC': '知恵袋', 'OY': 'ブログ', 'OV': '韻文', 'OL': '法律', 'OM': '国会議事録'}
     ref_texts = {}
@@ -37,7 +38,7 @@ def main(path_pkl, path_detail, bin_size=1, with_initial_print=True):
                     ref_texts[key] = [category, items[1]]
                 mode = 'key'
 
-    test_label, test_args, test_preds, _, _, _, _, _, _, _, _ = get_datasets_in_sentences('test', with_bccwj=True, with_bert=False)
+    test_label, test_args, test_preds, _, _, test_word_pos, _, _, _, _, _ = get_datasets_in_sentences('test', with_bccwj=True, with_bert=False)
     np.random.seed(71)
     random.seed(71)
     sequence_index = list(range(len(test_args)))
@@ -46,10 +47,13 @@ def main(path_pkl, path_detail, bin_size=1, with_initial_print=True):
     sentences = []
     labels = []
     categories = []
+    word_pos = []
     for i in sequence_index:
         sentences.extend([''.join(test_args[i])])
         labels.extend([test_label[i].tolist()])
         categories.extend([ref_texts[''.join(test_args[i])][0]])
+        index = test_word_pos[i].tolist().index(0)
+        word_pos.extend([[i for i in range(index, -len(test_word_pos[i]) + index, -1)]])
 
     if with_initial_print:
         count_categories = {'ブログ': 0, '知恵袋': 0, '出版': 0, '新聞': 0, '雑誌': 0, '白書': 0}
@@ -108,9 +112,67 @@ def main(path_pkl, path_detail, bin_size=1, with_initial_print=True):
     for key in keys:
         print('{}: {}, {}, {}'.format(key, all_scores[key], ','.join(map(str, dep_scores[key])), ','.join(map(str, zero_scores[key]))))
 
-    lengthwise_all_scores, lengthwise_dep_scores, lengthwise_zero_scores, lengthwise_itr, tp, fp, fn, counts = get_f1_with_sentence_length(predictions, labels, properties, categories, bin_size)
+    positionwise_all_scores, positionwise_dep_scores, positionwise_zero_scores, positionwise_itr, p_tp, p_fp, p_fn, p_counts = get_f1_with_position_wise(predictions, labels, properties, categories, word_pos, positionwise_bin_size)
+    lengthwise_all_scores, lengthwise_dep_scores, lengthwise_zero_scores, lengthwise_itr, l_tp, l_fp, l_fn, l_counts = get_f1_with_sentence_length(predictions, labels, properties, categories, lengthwise_bin_size)
 
-    return all_scores, dep_scores, zero_scores, lengthwise_all_scores, lengthwise_dep_scores, lengthwise_zero_scores, lengthwise_itr, tp, fp, fn, counts
+    ret = {
+        'category': {'all': all_scores, 'dep': dep_scores, 'zero': zero_scores},
+        'position': {'all': positionwise_all_scores, 'dep': positionwise_dep_scores, 'zero': positionwise_zero_scores,
+                     'itr': positionwise_itr, 'tp': p_tp, 'fp': p_fp, 'fn': p_fn, 'counts': p_counts},
+        'length': {'all': lengthwise_all_scores, 'dep': lengthwise_dep_scores, 'zero': lengthwise_zero_scores,
+                     'itr': lengthwise_itr, 'tp': l_tp, 'fp': l_fp, 'fn': l_fn, 'counts': l_counts}
+           }
+
+    return ret
+
+
+def get_f1_with_position_wise(outputs, labels, properties, categories, word_pos, bin_size=1):
+    keys = set(categories)
+
+    max_word_pos = max(list(map(max, word_pos)))
+    min_word_pos = min(list(map(min, word_pos)))
+
+    itr = range(min_word_pos // bin_size, max_word_pos // bin_size + 1)
+    tp_histories, fp_histories, fn_histories = {key: {i: np.array([0]*6) for i in itr} for key in keys}, {key: {i: np.array([0]*6) for i in itr} for key in keys}, {key: {i: np.array([0]*6) for i in itr} for key in keys}
+    counts = {key: {i: 0 for i in itr} for key in keys}
+    for output, label, property, category, pos in zip(outputs, labels, properties, categories, word_pos):
+        for io, il, ip, iw in zip(output, label, property, pos):
+            tp_history, fp_history, fn_history = get_pr(io, il, ip)
+            tp_histories[category][iw // bin_size] += tp_history
+            fp_histories[category][iw // bin_size] += fp_history
+            fn_histories[category][iw // bin_size] += fn_history
+            counts[category][iw // bin_size] += 1
+
+    all_scores, dep_scores, zero_scores = {key: {i: 0 for i in itr} for key in keys}, {key: {i: [] for i in itr} for key in keys}, {key: {i: [] for i in itr} for key in keys}
+    for key in keys:
+        for i in itr:
+            num_tp = tp_histories[key][i].tolist()
+            num_fp = fp_histories[key][i].tolist()
+            num_fn = fn_histories[key][i].tolist()
+            all_scores[key][i], dep_score, zero_score = get_f_score(num_tp, num_fp, num_fn)
+            dep_scores[key][i].append(dep_score)
+            zero_scores[key][i].append(zero_score)
+            precisions, recalls, f1s = [], [], []
+            num_tn = np.array([0] * len(num_tp))
+            for _tp, _fp, _fn, _tn in zip(num_tp, num_fp, num_fn, num_tn):
+                precision = 0.0
+                if _tp + _fp != 0:
+                    precision = _tp / (_tp + _fp)
+                precisions.append(precision)
+
+                recall = 0.0
+                if _tp + _fn != 0:
+                    recall = _tp / (_tp + _fn)
+                recalls.append(recall)
+
+                f1 = 0.0
+                if precision + recall != 0:
+                    f1 = 2 * precision * recall / (precision + recall)
+                f1s.append(f1)
+            dep_scores[key][i].extend(f1s[0:3])
+            zero_scores[key][i].extend(f1s[3:6])
+
+    return all_scores, dep_scores, zero_scores, itr, tp_histories, fp_histories, fn_histories, counts
 
 
 def get_f1_with_categories(outputs, labels, properties, categories):
@@ -307,7 +369,7 @@ def remove_file(_path):
         pass
 
 
-def run(model, arguments):
+def main(model, arguments):
     files = get_files(model)
     all_scores, dep_scores, zero_scores = {}, {}, {}
     tp, fp, fn = {}, {}, {}
@@ -315,13 +377,16 @@ def run(model, arguments):
     lengthwise_all_scores, lengthwise_dep_scores, lengthwise_zero_scores = {}, {}, {}
     categories = ['ブログ', '知恵袋', '出版', '新聞', '雑誌', '白書']
     tags = {'出版': 'PB', '雑誌': 'PM', '新聞': 'PN', '白書': 'OW', '知恵袋': 'OC', 'ブログ': 'OY'}
-    bin_size = arguments.bin_size
+    modes = ['length', 'position']
+    bin_size = {'length': arguments.length_bin_size, 'position': arguments.position_bin_size}
     with_initial_print = arguments.with_initial_print
 
+    results = {}
     for path_pkl, path_detail in zip(files[0], files[1]):
-        all_scores[path_detail], dep_scores[path_detail], zero_scores[path_detail], lengthwise_all_scores[
-            path_detail], lengthwise_dep_scores[path_detail], lengthwise_zero_scores[
-            path_detail], lengthwise_itr, tp[path_detail], fp[path_detail], fn[path_detail], counts = main(path_pkl, path_detail, bin_size=bin_size, with_initial_print=with_initial_print)
+        results[path_detail] = run(path_pkl, path_detail, lengthwise_bin_size=bin_size['length'], positionwise_bin_size=bin_size['position'], with_initial_print=with_initial_print)
+        # all_scores[path_detail], dep_scores[path_detail], zero_scores[path_detail], lengthwise_all_scores[
+        #     path_detail], lengthwise_dep_scores[path_detail], lengthwise_zero_scores[
+        #     path_detail], lengthwise_itr, tp[path_detail], fp[path_detail], fn[path_detail], counts = run(path_pkl, path_detail, lengthwise_bin_size=bin_size, with_initial_print=with_initial_print)
         with_initial_print = False
 
     if arguments.reset_scores:
@@ -333,30 +398,29 @@ def run(model, arguments):
                 line = '{}, {}, {}, {}, {}, {}'.format(model,
                                                        path_detail,
                                                        category,
-                                                       all_scores[path_detail][category],
-                                                       ','.join(map(str, dep_scores[path_detail][category])),
-                                                       ','.join(map(str, zero_scores[path_detail][category])))
+                                                       results[path_detail]['category']['all'][category],
+                                                       ','.join(map(str, results[path_detail]['category']['dep'][category])),
+                                                       ','.join(map(str, results[path_detail]['category']['zero'][category])))
                 print(line)
                 f.write(line + '\n')
 
+    for mode in modes:
+        iterator = results[files[1][0]][mode]['itr']
         for category in categories:
             file_extention = tags[category]
             if bin_size != 1:
-                file_extention = file_extention + '-{}'.format(bin_size)
+                file_extention = file_extention + '-{}'.format(bin_size[mode])
             if arguments.reset_scores:
-                remove_file(Path('../../results/labelwise-fscores-{}.txt'.format(file_extention)))
-            with Path('../../results/labelwise-fscores-{}.txt'.format(file_extention)).open('a', encoding='utf-8') as f:
-                for i in lengthwise_itr:
+                remove_file(Path('../../results/bccwj-{}wise-fscores-{}.txt'.format(mode, file_extention)))
+            with Path('../../results/bccwj-{}wise-fscores-{}.txt'.format(mode, file_extention)).open('a', encoding='utf-8') as f:
+                for i in iterator:
                     for path_detail in files[1]:
                         line = '{}, {}, {}, {}, {}, {}, {}'.format(model,
                                                                    category,
                                                                    i,
-                                                                   lengthwise_all_scores[path_detail][category][i],
-                                                                   ','.join(map(str, lengthwise_dep_scores[path_detail][
-                                                                       category][i])),
-                                                                   ','.join(map(str,
-                                                                                lengthwise_zero_scores[path_detail][
-                                                                                    category][i])),
+                                                                   results[path_detail][mode]['all'][category][i],
+                                                                   ','.join(map(str, results[path_detail][mode]['dep'][category][i])),
+                                                                   ','.join(map(str, results[path_detail][mode]['zero'][category][i])),
                                                                    path_detail)
 
                         print(line)
@@ -365,21 +429,20 @@ def run(model, arguments):
         for category in categories:
             file_extention = tags[category]
             if bin_size != 1:
-                file_extention = file_extention + '-{}'.format(bin_size)
+                file_extention = file_extention + '-{}'.format(bin_size[mode])
             if arguments.reset_scores:
-                remove_file(Path('../../results/labelwise-fscores-{}-avg.txt'.format(file_extention)))
-            with Path('../../results/labelwise-fscores-{}-avg.txt'.format(file_extention)).open('a', encoding='utf-8') as f:
-                for i in lengthwise_itr:
+                remove_file(Path('../../results/bccwj-category-{}-wise-fscores-{}-avg.txt'.format(mode, file_extention)))
+            with Path('../../results/bccwj-category-{}-wise-fscores-{}-avg.txt'.format(mode, file_extention)).open('a', encoding='utf-8') as f:
+                for i in iterator:
                     sum_tp, sum_fp, sum_fn = np.array([0] * 6), np.array([0] * 6), np.array([0] * 6)
                     count = 0
                     tmp_scores = []
                     for path_detail in files[1]:
-                        tmp_scores.append([lengthwise_all_scores[path_detail][category][i]] + lengthwise_dep_scores[path_detail][category][i] + lengthwise_zero_scores[path_detail][category][i])
-                        sum_tp += tp[path_detail][category][i]
-                        sum_fp += fp[path_detail][category][i]
-                        sum_fn += fn[path_detail][category][i]
-                    count += counts[category][i]
-                    avg_tmp_scores = np.mean(np.array(tmp_scores), axis=0)
+                        tmp_scores.append([results[path_detail][mode]['all'][category][i]] + results[path_detail][mode]['dep'][category][i] + results[path_detail][mode]['zero'][category][i])
+                        sum_tp += results[path_detail][mode]['tp'][category][i]
+                        sum_fp += results[path_detail][mode]['tp'][category][i]
+                        sum_fn += results[path_detail][mode]['tp'][category][i]
+                    count += results[path_detail][mode]['counts'][category][i]
                     all_score, dep_score, zero_score = get_f_score(sum_tp, sum_fp, sum_fn)
                     line = '{}, {}, {}, {}, {}, {}, {}'.format(model,
                                                                category,
@@ -391,24 +454,48 @@ def run(model, arguments):
                     print(line)
                     f.write(line + '\n')
 
-    file_extention = ''
-    if bin_size != 1:
-        file_extention = '-{}'.format(bin_size)
-    if arguments.reset_scores:
-        remove_file(Path('../../results/fscores-avg{}.txt'.format(file_extention)))
-    with Path('../../results/fscores-avg{}.txt'.format(file_extention)).open('a', encoding='utf-8') as f:
-        for i in lengthwise_itr:
+        file_extention = ''
+        if bin_size != 1:
+            file_extention = '-{}'.format(bin_size[mode])
+        if arguments.reset_scores:
+            remove_file(Path('../../results/bccwj-{}-fscores-avg{}.txt'.format(mode, file_extention)))
+        with Path('../../results/bccwj-fscores-{}-avg{}.txt'.format(mode, file_extention)).open('a', encoding='utf-8') as f:
+            for i in iterator:
+                sum_tp, sum_fp, sum_fn = np.array([0] * 6), np.array([0] * 6), np.array([0] * 6)
+                count = 0
+                tmp_scores = []
+                for category in categories:
+                    for path_detail in files[1]:
+                        tmp_scores.append([results[path_detail][mode]['all'][category][i]] + results[path_detail][mode]['dep'][category][i] + results[path_detail][mode]['zero'][category][i])
+                        sum_tp += results[path_detail][mode]['tp'][category][i]
+                        sum_fp += results[path_detail][mode]['fp'][category][i]
+                        sum_fn += results[path_detail][mode]['fn'][category][i]
+                    count += results[path_detail][mode]['counts'][category][i]
+                all_score, dep_score, zero_score = get_f_score(sum_tp, sum_fp, sum_fn)
+                line = '{}, {}, {}, {}, {}, {}'.format(model,
+                                                       i,
+                                                       all_score,
+                                                       dep_score,
+                                                       zero_score,
+                                                       count)
+                print(line)
+                f.write(line + '\n')
+
+        if arguments.reset_scores:
+            remove_file(Path('../../results/bccwj-{}wise-final-results.txt'.format(mode, file_extention)))
+        with Path('../../results/bccwj-final-results.txt'.format(file_extention)).open('a', encoding='utf-8') as f:
             sum_tp, sum_fp, sum_fn = np.array([0] * 6), np.array([0] * 6), np.array([0] * 6)
             count = 0
             tmp_scores = []
-            for category in categories:
-                for path_detail in files[1]:
-                    tmp_scores.append([lengthwise_all_scores[path_detail][category][i]] + lengthwise_dep_scores[path_detail][category][i] + lengthwise_zero_scores[path_detail][category][i])
-                    sum_tp += tp[path_detail][category][i]
-                    sum_fp += fp[path_detail][category][i]
-                    sum_fn += fn[path_detail][category][i]
-                count += counts[category][i]
-            avg_tmp_scores = np.mean(np.array(tmp_scores), axis=0)
+            for i in iterator:
+                for category in categories:
+                    for path_detail in files[1]:
+                        tmp_scores.append([results[path_detail][mode]['all'][category][i]] + results[path_detail][mode]['dep'][category][i] + results[path_detail][mode]['zero'][category][i])
+                        sum_tp += results[path_detail][mode]['tp'][category][i]
+                        sum_fp += results[path_detail][mode]['fp'][category][i]
+                        sum_fn += results[path_detail][mode]['fn'][category][i]
+                    count += results[path_detail][mode]['counts'][category][i]
+
             all_score, dep_score, zero_score = get_f_score(sum_tp, sum_fp, sum_fn)
             line = '{}, {}, {}, {}, {}, {}'.format(model,
                                                    i,
@@ -419,31 +506,6 @@ def run(model, arguments):
             print(line)
             f.write(line + '\n')
 
-    if arguments.reset_scores:
-        remove_file(Path('../../results/final-results.txt'.format(file_extention)))
-    with Path('../../results/final-results.txt'.format(file_extention)).open('a', encoding='utf-8') as f:
-        sum_tp, sum_fp, sum_fn = np.array([0] * 6), np.array([0] * 6), np.array([0] * 6)
-        count = 0
-        tmp_scores = []
-        for i in lengthwise_itr:
-            for category in categories:
-                for path_detail in files[1]:
-                    tmp_scores.append([lengthwise_all_scores[path_detail][category][i]] + lengthwise_dep_scores[path_detail][category][i] + lengthwise_zero_scores[path_detail][category][i])
-                    sum_tp += tp[path_detail][category][i]
-                    sum_fp += fp[path_detail][category][i]
-                    sum_fn += fn[path_detail][category][i]
-                count += counts[category][i]
-        avg_tmp_scores = np.mean(np.array(tmp_scores), axis=0)
-        all_score, dep_score, zero_score = get_f_score(sum_tp, sum_fp, sum_fn)
-        line = '{}, {}, {}, {}, {}, {}'.format(model,
-                                               i,
-                                               all_score,
-                                               dep_score,
-                                               zero_score,
-                                               count)
-        print(line)
-        f.write(line + '\n')
-
 
 if __name__ == '__main__':
     import argparse
@@ -452,14 +514,15 @@ if __name__ == '__main__':
     parser.add_argument('--reset_sentences', action='store_true')
     parser.add_argument('--reset_scores', action='store_true')
     parser.add_argument('--with_initial_print', action='store_true')
-    parser.add_argument('--bin_size', default=1, type=int)
+    parser.add_argument('--length_bin_size', default=10, type=int)
+    parser.add_argument('--position_bin_size', default=4, type=int)
     arguments = parser.parse_args()
 
     model = arguments.model
     if model == 'all':
         for item in ['sl', 'spg', 'spl', 'spn', 'bsl', 'bspg', 'bspl', 'bspn']:
-            run(item, arguments)
+            main(item, arguments)
             arguments.reset_scores = False
             arguments.with_initial_print = False
     else:
-        run(model, arguments)
+        main(model, arguments)
