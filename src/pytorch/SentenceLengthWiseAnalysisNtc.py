@@ -14,7 +14,7 @@ from BertWithJumanModel import BertWithJumanModel
 
 
 def run(path_pkl, path_detail, lengthwise_bin_size=1, positionwise_bin_size=1, with_initial_print=True):
-    test_label, test_args, test_preds, _, _, test_word_pos, test_ku_pos, _, _, _, _ = get_datasets_in_sentences('test', with_bccwj=False, with_bert=False)
+    test_label, test_args, test_preds, _, _, test_word_pos, _, _, _, _, _ = get_datasets_in_sentences('test', with_bccwj=False, with_bert=False)
     np.random.seed(71)
     random.seed(71)
     sequence_index = list(range(len(test_args)))
@@ -68,7 +68,6 @@ def run(path_pkl, path_detail, lengthwise_bin_size=1, positionwise_bin_size=1, w
             i += 1
 
     positionwise_all_scores, positionwise_dep_scores, positionwise_zero_scores, positionwise_itr, p_tp, p_fp, p_fn, p_counts = get_f1_with_position_wise(predictions, labels, properties, word_pos, positionwise_bin_size)
-
     lengthwise_all_scores, lengthwise_dep_scores, lengthwise_zero_scores, lengthwise_itr, l_tp, l_fp, l_fn, l_counts = get_f1_with_sentence_length(predictions, labels, properties, lengthwise_bin_size)
 
     ret = {
@@ -283,23 +282,18 @@ def remove_file(_path):
 def main(model, arguments):
     files = get_files(model)
     results = {}
-    all_scores, dep_scores, zero_scores = {}, {}, {}
-    tp, fp, fn = {}, {}, {}
-    counts = None
-    lengthwise_all_scores, lengthwise_dep_scores, lengthwise_zero_scores = {}, {}, {}
-    positionwise_all_scores, positionwise_dep_scores, positionwise_zero_scores,= {}, {}, {}
-    length_bin_size = arguments.length_bin_size
-    position_bin_size = arguments.position_bin_size
+    modes = ['length', 'position']
+    bin_size = {'length': arguments.length_bin_size, 'position': arguments.position_bin_size}
     with_initial_print = arguments.with_initial_print
 
     for path_pkl, path_detail in zip(files[0], files[1]):
-        results[path_detail] = run(path_pkl, path_detail, lengthwise_bin_size=length_bin_size, positionwise_bin_size=position_bin_size, with_initial_print=with_initial_print)
+        results[path_detail] = run(path_pkl, path_detail, lengthwise_bin_size=bin_size['length'], positionwise_bin_size=bin_size['position'], with_initial_print=with_initial_print)
         with_initial_print = False
 
-    for mode in ['length', 'position']:
+    for mode in modes:
         file_extention = ''
-        if length_bin_size != 1:
-            file_extention = '-{}'.format(length_bin_size)
+        if bin_size[mode] != 1:
+            file_extention = '-{}'.format(bin_size[mode])
         if arguments.reset_scores:
             remove_file(Path('../../results/ntc-{}wise-fscores-avg{}.txt'.format(mode, file_extention)))
         with Path('../../results/ntc-{}wise-fscores-avg{}.txt'.format(mode, file_extention)).open('a', encoding='utf-8') as f:
@@ -355,7 +349,7 @@ if __name__ == '__main__':
     parser.add_argument('--reset_scores', action='store_true')
     parser.add_argument('--with_initial_print', action='store_true')
     parser.add_argument('--length_bin_size', default=10, type=int)
-    parser.add_argument('--position_bin_size', default=3, type=int)
+    parser.add_argument('--position_bin_size', default=4, type=int)
     arguments = parser.parse_args()
 
     model = arguments.model
