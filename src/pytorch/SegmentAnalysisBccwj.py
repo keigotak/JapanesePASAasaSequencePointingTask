@@ -126,6 +126,23 @@ def run(path_pkl, path_detail, lengthwise_bin_size=1, positionwise_bin_size=1, w
     return ret
 
 
+def get_step_binid(num):
+    if num // 4 <= -10:
+        return -5
+    elif -10 < num // 4 <= -5:
+        return -4
+    elif -5 < num // 4 < -3:
+        return -3
+    elif 3 < num // 4 <= 5:
+        return 3
+    elif 5 < num // 4 <= 10:
+        return 4
+    elif 10 < num // 4:
+        return 5
+    else:
+        return num // 4
+
+
 def get_f1_with_position_wise(outputs, labels, properties, categories, word_pos, bin_size=1):
     keys = set(categories)
 
@@ -138,10 +155,11 @@ def get_f1_with_position_wise(outputs, labels, properties, categories, word_pos,
     for output, label, property, category, pos in zip(outputs, labels, properties, categories, word_pos):
         for io, il, ip, iw in zip(output, label, property, pos):
             tp_history, fp_history, fn_history = get_pr(io, il, ip)
-            tp_histories[category][iw // bin_size] += tp_history
-            fp_histories[category][iw // bin_size] += fp_history
-            fn_histories[category][iw // bin_size] += fn_history
-            counts[category][iw // bin_size] += 1
+            bin_num = get_step_binid(iw)
+            tp_histories[category][bin_num] += tp_history
+            fp_histories[category][bin_num] += fp_history
+            fn_histories[category][bin_num] += fn_history
+            counts[category][bin_num] += 1
 
     all_scores, dep_scores, zero_scores = {key: {i: 0 for i in itr} for key in keys}, {key: {i: [] for i in itr} for key in keys}, {key: {i: [] for i in itr} for key in keys}
     for key in keys:
