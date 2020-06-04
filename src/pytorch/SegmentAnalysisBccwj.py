@@ -126,30 +126,36 @@ def run(path_pkl, path_detail, lengthwise_bin_size=1, positionwise_bin_size=1, w
     return ret
 
 
-def get_step_binid(num):
-    if num // 4 <= -10:
-        return -5
-    elif -10 < num // 4 <= -5:
-        return -4
-    elif -5 < num // 4 < -3:
+def get_step_binid(num, bin_size=1):
+    if num // bin_size <= -20:
         return -3
-    elif 3 < num // 4 <= 5:
+    elif -20 < num // bin_size <= -8:
+        return -2
+    elif -8 < num // bin_size <= 0:
+        return -1
+    elif 0 < num // bin_size <= 8:
+        return 0
+    elif 8 < num // bin_size <= 20:
+        return 1
+    elif 20 < num // bin_size <= 35:
+        return 2
+    elif 35 < num // bin_size:
         return 3
-    elif 5 < num // 4 <= 10:
-        return 4
-    elif 10 < num // 4:
-        return 5
     else:
-        return num // 4
+        return None
+
+
+def get_itr():
+    return range(-3, 4, 1)
+    # max_word_pos = max(list(map(max, word_pos)))
+    # min_word_pos = min(list(map(min, word_pos)))
+    # return range(min_word_pos // bin_size, max_word_pos // bin_size + 1)
 
 
 def get_f1_with_position_wise(outputs, labels, properties, categories, word_pos, bin_size=1):
     keys = set(categories)
 
-    max_word_pos = max(list(map(max, word_pos)))
-    min_word_pos = min(list(map(min, word_pos)))
-
-    itr = range(min_word_pos // bin_size, max_word_pos // bin_size + 1)
+    itr = get_itr()
     tp_histories, fp_histories, fn_histories = {key: {i: np.array([0]*6) for i in itr} for key in keys}, {key: {i: np.array([0]*6) for i in itr} for key in keys}, {key: {i: np.array([0]*6) for i in itr} for key in keys}
     counts = {key: {i: 0 for i in itr} for key in keys}
     for output, label, property, category, pos in zip(outputs, labels, properties, categories, word_pos):
@@ -533,7 +539,7 @@ if __name__ == '__main__':
     parser.add_argument('--reset_scores', action='store_true')
     parser.add_argument('--with_initial_print', action='store_true')
     parser.add_argument('--length_bin_size', default=10, type=int)
-    parser.add_argument('--position_bin_size', default=4, type=int)
+    parser.add_argument('--position_bin_size', default=1, type=int)
     arguments = parser.parse_args()
 
     model = arguments.model
