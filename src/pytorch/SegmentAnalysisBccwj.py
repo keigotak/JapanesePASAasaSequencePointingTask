@@ -464,8 +464,8 @@ def main(model, arguments):
                     for path_detail in files[1]:
                         tmp_scores.append([results[path_detail][mode]['all'][category][i]] + results[path_detail][mode]['dep'][category][i] + results[path_detail][mode]['zero'][category][i])
                         sum_tp += results[path_detail][mode]['tp'][category][i]
-                        sum_fp += results[path_detail][mode]['tp'][category][i]
-                        sum_fn += results[path_detail][mode]['tp'][category][i]
+                        sum_fp += results[path_detail][mode]['fp'][category][i]
+                        sum_fn += results[path_detail][mode]['fn'][category][i]
                     count += results[path_detail][mode]['counts'][category][i]
                     all_score, dep_score, zero_score = get_f_score(sum_tp, sum_fp, sum_fn)
                     line = '{}, {}, {}, {}, {}, {}, {}'.format(model,
