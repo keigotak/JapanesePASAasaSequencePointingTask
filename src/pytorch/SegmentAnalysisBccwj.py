@@ -127,26 +127,22 @@ def run(path_pkl, path_detail, lengthwise_bin_size=1, positionwise_bin_size=1, w
 
 
 def get_step_binid(num, bin_size=1):
-    if num // bin_size <= -20:
-        return -3
-    elif -20 < num // bin_size <= -8:
+    if num // bin_size <= -128:
         return -2
-    elif -8 < num // bin_size <= 0:
+    elif -128 < num // bin_size <= -8:
         return -1
-    elif 0 < num // bin_size <= 8:
+    elif -8 < num // bin_size <= 8:
         return 0
-    elif 8 < num // bin_size <= 20:
+    elif 8 < num // bin_size <= 128:
         return 1
-    elif 20 < num // bin_size <= 35:
+    elif 128 < num // bin_size:
         return 2
-    elif 35 < num // bin_size:
-        return 3
     else:
         return None
 
 
 def get_itr():
-    return range(-3, 4, 1)
+    return range(-2, 3, 1)
     # max_word_pos = max(list(map(max, word_pos)))
     # min_word_pos = min(list(map(min, word_pos)))
     # return range(min_word_pos // bin_size, max_word_pos // bin_size + 1)
