@@ -133,9 +133,9 @@ def get_step_binid(num, bin_size=1):
         return -1
     elif -8 < num // bin_size <= 7:
         return 0
-    elif 7 < num // bin_size <= 128:
+    elif 7 < num // bin_size <= 127:
         return 1
-    elif 128 < num // bin_size:
+    elif 127 < num // bin_size:
         return 2
     else:
         return None
