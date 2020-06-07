@@ -126,7 +126,7 @@ def run(path_pkl, path_detail, lengthwise_bin_size=1, positionwise_bin_size=1, w
     return ret
 
 
-def get_step_binid(num, bin_size=1):
+def get_step_binid_for_position_wise_analysis(num, bin_size=1):
     if num // bin_size <= -128:
         return -2
     elif -128 < num // bin_size <= -8:
@@ -141,7 +141,7 @@ def get_step_binid(num, bin_size=1):
         return None
 
 
-def get_itr():
+def get_itr_for_position_wise_analysis():
     return range(-2, 3, 1)
     # max_word_pos = max(list(map(max, word_pos)))
     # min_word_pos = min(list(map(min, word_pos)))
@@ -151,13 +151,13 @@ def get_itr():
 def get_f1_with_position_wise(outputs, labels, properties, categories, word_pos, bin_size=1):
     keys = set(categories)
 
-    itr = get_itr()
+    itr = get_itr_for_position_wise_analysis()
     tp_histories, fp_histories, fn_histories = {key: {i: np.array([0]*6) for i in itr} for key in keys}, {key: {i: np.array([0]*6) for i in itr} for key in keys}, {key: {i: np.array([0]*6) for i in itr} for key in keys}
     counts = {key: {i: 0 for i in itr} for key in keys}
     for output, label, property, category, pos in zip(outputs, labels, properties, categories, word_pos):
         for io, il, ip, iw in zip(output, label, property, pos):
             tp_history, fp_history, fn_history = get_pr(io, il, ip)
-            bin_num = get_step_binid(iw)
+            bin_num = get_step_binid_for_position_wise_analysis(iw)
             tp_histories[category][bin_num] += tp_history
             fp_histories[category][bin_num] += fp_history
             fn_histories[category][bin_num] += fn_history
@@ -235,18 +235,45 @@ def get_f1_with_categories(outputs, labels, properties, categories):
     return all_scores, dep_scores, zero_scores
 
 
+def get_step_binid_for_sentence_length_analysis(num, bin_size=1):
+    if 0 <= num // bin_size < 20:
+        return 0
+    elif 20 <= num // bin_size < 30:
+        return 1
+    elif 30 <= num // bin_size < 40:
+        return 2
+    elif 40 <= num // bin_size < 50:
+        return 3
+    elif 50 <= num // bin_size < 60:
+        return 4
+    elif 60 <= num // bin_size < 80:
+        return 5
+    elif 80 <= num // bin_size < 130:
+        return 6
+    elif 130 <= num // bin_size:
+        return 7
+    else:
+        return None
+
+
+def get_itr_for_sentence_length_analysis():
+    return range(0, 8, 1)
+    # max_sentence_length = max(list(map(len, labels))) + 1
+    # itr = range(0, max_sentence_length // bin_size + 1)
+
+
 def get_f1_with_sentence_length(outputs, labels, properties, categories, bin_size=1):
     keys = set(categories)
-    max_sentence_length = max(list(map(len, labels))) + 1
-    itr = range(0, max_sentence_length // bin_size + 1)
+    itr = get_itr_for_sentence_length_analysis()
     tp_histories, fp_histories, fn_histories = {key: {i: np.array([0]*6) for i in itr} for key in keys}, {key: {i: np.array([0]*6) for i in itr} for key in keys}, {key: {i: np.array([0]*6) for i in itr} for key in keys}
     counts = {key: {i: 0 for i in itr} for key in keys}
     for output, label, property, category in zip(outputs, labels, properties, categories):
         tp_history, fp_history, fn_history = get_f1(output, label, property)
-        tp_histories[category][len(label) // bin_size] += tp_history[0]
-        fp_histories[category][len(label) // bin_size] += fp_history[0]
-        fn_histories[category][len(label) // bin_size] += fn_history[0]
-        counts[category][len(label) // bin_size] += 1
+        bin_num = get_step_binid_for_sentence_length_analysis(len(label))
+        tp_histories[category][bin_num] += tp_history[0]
+        fp_histories[category][bin_num] += fp_history[0]
+        fn_histories[category][bin_num] += fn_history[0]
+        counts[category][bin_num] += 1
 
     all_scores, dep_scores, zero_scores = {key: {i: 0 for i in itr}for key in keys}, {key: {i: [] for i in itr} for key in keys}, {key: {i: [] for i in itr} for key in keys}
     for key in keys:
