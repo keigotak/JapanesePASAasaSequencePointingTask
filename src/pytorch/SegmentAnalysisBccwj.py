@@ -248,10 +248,8 @@ def get_step_binid_for_sentence_length_analysis(num, bin_size=1):
         return 4
     elif 60 <= num // bin_size < 80:
         return 5
-    elif 80 <= num // bin_size < 130:
+    elif 80 <= num // bin_size:
         return 6
-    elif 130 <= num // bin_size:
-        return 7
     else:
         return None
 
