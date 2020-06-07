@@ -236,20 +236,18 @@ def get_f1_with_categories(outputs, labels, properties, categories):
 
 
 def get_step_binid_for_sentence_length_analysis(num, bin_size=1):
-    if 0 <= num // bin_size < 20:
+    if 0 <= num // bin_size < 15:
         return 0
-    elif 20 <= num // bin_size < 30:
+    elif 15 <= num // bin_size < 25:
         return 1
-    elif 30 <= num // bin_size < 40:
+    elif 25 <= num // bin_size < 35:
         return 2
-    elif 40 <= num // bin_size < 50:
+    elif 35 <= num // bin_size < 50:
         return 3
-    elif 50 <= num // bin_size < 60:
+    elif 50 <= num // bin_size < 70:
         return 4
-    elif 60 <= num // bin_size < 80:
+    elif 70 <= num // bin_size:
         return 5
-    elif 80 <= num // bin_size:
-        return 6
     else:
         return None
 
