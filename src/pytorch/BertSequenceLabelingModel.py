@@ -53,7 +53,12 @@ class BertSequenceLabelingModel(Model):
 
         self.word_pos_pred_idx = word_pos_pred_idx
 
-        self.hidden_size = 2 * self.embedding_dim + 2 * self.pos_embedding_dim + self.mode_embedding_dim
+        self.with_pos_embedding = False
+        if self.with_pos_embedding:
+            self.hidden_size = 2 * self.embedding_dim + 2 * self.pos_embedding_dim + self.mode_embedding_dim
+        else:
+            self.hidden_size = 2 * self.embedding_dim + self.mode_embedding_dim
+
         self.num_layers = num_layers
         self.dropout_ratio = dropout_ratio
         self.bidirectional = bidirectional
@@ -112,15 +117,12 @@ class BertSequenceLabelingModel(Model):
         # output shape: Batch, Sentence_length, mode_embed_size
         mode_embeds = self.mode_embedding(mode)
 
-        # output shape: Batch, Sentence_length, 2 * word_embed_size + 2 * pos_embed_size
-        concatten_embeds = torch.cat((arg_embeds, pred_embeds, word_pos_embeds, ku_pos_embeds, mode_embeds), dim=2)
-        # concatten_embeds = torch.empty(len(arg_embeds), len(arg_embeds[0]), self.hidden_size).to(self.device)
-        # for bi, (args, preds, words, kus, modes) in enumerate(zip(arg_embeds, pred_embeds, word_pos_embeds, ku_pos_embeds, mode_embeds)):
-        #     for ii, (arg, pred, word, ku, mode) in enumerate(zip(args, preds, words, kus, modes)):
-        #         if str(self.device) != "cpu":
-        #             arg = arg.to(self.device)
-        #             pred = pred.to(self.device)
-        #         concatten_embeds[bi][ii] = torch.cat((arg, pred, word, ku, mode), dim=0).to(self.device)
+        if self.with_pos_embedding:
+            # output shape: Batch, Sentence_length, 2 * word_embed_size + 2 * pos_embed_size
+            concatten_embeds = torch.cat((arg_embeds, pred_embeds, word_pos_embeds, ku_pos_embeds, mode_embeds), dim=2)
+        else:
+            # output shape: Batch, Sentence_length, 2 * word_embed_size
+            concatten_embeds = torch.cat((arg_embeds, pred_embeds, mode_embeds), dim=2)
 
         # output shape: Batch, Sentence_length, hidden_size
         f_lstm1_out, _ = self.f_lstm1(concatten_embeds)

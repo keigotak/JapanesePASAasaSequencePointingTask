@@ -47,7 +47,12 @@ class PointerNetworksModel(Model):
         self.mode_embedding_dim = mode_embedding_dim
         self.mode_embedding = nn.Embedding(mode_size, self.mode_embedding_dim, padding_idx=mode_padding_idx)
 
-        self.hidden_size = 2 * self.embedding_dim + 2 * self.pos_embedding_dim + self.mode_embedding_dim
+        self.with_pos_embedding = False
+        if self.with_pos_embedding:
+            self.hidden_size = 2 * self.embedding_dim + 2 * self.pos_embedding_dim + self.mode_embedding_dim
+        else:
+            self.hidden_size = 2 * self.embedding_dim + self.mode_embedding_dim
+
         self.num_layers = num_layers
         self.dropout_ratio = dropout_ratio
         self.device = device
@@ -122,8 +127,12 @@ class PointerNetworksModel(Model):
         # output shape: Batch, Sentence_length, mode_embed_size
         mode_embeds = self.mode_embedding(mode)
 
-        # output shape: Batch, Sentence_length, 2 * word_embed_size + 2 * pos_embed_size
-        concatten_embeds = torch.cat((arg_embeds, pred_embeds, word_pos_embeds, ku_pos_embeds, mode_embeds), 2)
+        if self.with_pos_embedding:
+            # output shape: Batch, Sentence_length, 2 * word_embed_size + 2 * pos_embed_size
+            concatten_embeds = torch.cat((arg_embeds, pred_embeds, word_pos_embeds, ku_pos_embeds, mode_embeds), 2)
+        else:
+            # output shape: Batch, Sentence_length, 2 * pos_embed_size
+            concatten_embeds = torch.cat((arg_embeds, pred_embeds, mode_embeds), 2)
 
         # output shape: Batch, Sentence_length, hidden_size
         f_lstm1_out, _ = self.f_lstm1(concatten_embeds)

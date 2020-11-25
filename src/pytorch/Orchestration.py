@@ -60,11 +60,11 @@ processes = [
     # ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "no_decoder", "--embed", "glove-retrofitting"] + train_base_list_bccwj + ["--device", device, "--seed", "4"],
 
     # train sl ntc
-    # ["python", "SequenceLabeling.py", "--model", "lstm"] + train_base_list_ntc + ["--device", device, "--seed", "0"],
-    # ["python", "SequenceLabeling.py", "--model", "lstm"] + train_base_list_ntc + ["--device", device, "--seed", "1"],
-    # ["python", "SequenceLabeling.py", "--model", "lstm"] + train_base_list_ntc + ["--device", device, "--seed", "2"],
-    # ["python", "SequenceLabeling.py", "--model", "lstm"] + train_base_list_ntc + ["--device", device, "--seed", "3"],
-    # ["python", "SequenceLabeling.py", "--model", "lstm"] + train_base_list_ntc + ["--device", device, "--seed", "4"]
+    ["python", "SequenceLabeling.py", "--model", "lstm"] + train_base_list_ntc + ["--device", device, "--seed", "0"],
+    ["python", "SequenceLabeling.py", "--model", "lstm"] + train_base_list_ntc + ["--device", device, "--seed", "1"],
+    ["python", "SequenceLabeling.py", "--model", "lstm"] + train_base_list_ntc + ["--device", device, "--seed", "2"],
+    ["python", "SequenceLabeling.py", "--model", "lstm"] + train_base_list_ntc + ["--device", device, "--seed", "3"],
+    ["python", "SequenceLabeling.py", "--model", "lstm"] + train_base_list_ntc + ["--device", device, "--seed", "4"]
 
     # train spg ntc
     # ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting"] + train_base_list_ntc + ["--device", device, "--seed", "0"],
@@ -170,60 +170,60 @@ processes = [
     # ["python", "SequencePointingBert.py", "--model", "nictbspn", "--decode", "no_decoder"] + train_base_list_bccwj + ["--device", device, "--seed", "4"]
 
     # train sl ntc 5000 train data
-    ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "5000"] + train_base_list_ntc + ["--device", device, "--seed", "0"],
-    ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "5000"] + train_base_list_ntc + ["--device", device, "--seed", "1"],
-    ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "5000"] + train_base_list_ntc + ["--device", device, "--seed", "2"],
-    ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "5000"] + train_base_list_ntc + ["--device", device, "--seed", "3"],
-    ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "5000"] + train_base_list_ntc + ["--device", device, "--seed", "4"],
+    # ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "5000"] + train_base_list_ntc + ["--device", device, "--seed", "0"],
+    # ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "5000"] + train_base_list_ntc + ["--device", device, "--seed", "1"],
+    # ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "5000"] + train_base_list_ntc + ["--device", device, "--seed", "2"],
+    # ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "5000"] + train_base_list_ntc + ["--device", device, "--seed", "3"],
+    # ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "5000"] + train_base_list_ntc + ["--device", device, "--seed", "4"],
 
     # train sl ntc 10000 train data
-    ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "10000"] + train_base_list_ntc + ["--device", device, "--seed", "0"],
-    ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "10000"] + train_base_list_ntc + ["--device", device, "--seed", "1"],
-    ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "10000"] + train_base_list_ntc + ["--device", device, "--seed", "2"],
-    ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "10000"] + train_base_list_ntc + ["--device", device, "--seed", "3"],
-    ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "10000"] + train_base_list_ntc + ["--device", device, "--seed", "4"],
+    # ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "10000"] + train_base_list_ntc + ["--device", device, "--seed", "0"],
+    # ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "10000"] + train_base_list_ntc + ["--device", device, "--seed", "1"],
+    # ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "10000"] + train_base_list_ntc + ["--device", device, "--seed", "2"],
+    # ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "10000"] + train_base_list_ntc + ["--device", device, "--seed", "3"],
+    # ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "10000"] + train_base_list_ntc + ["--device", device, "--seed", "4"],
 
     # train sl ntc 20000 train data
-    ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "20000"] + train_base_list_ntc + ["--device", device, "--seed", "0"],
-    ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "20000"] + train_base_list_ntc + ["--device", device, "--seed", "1"],
-    ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "20000"] + train_base_list_ntc + ["--device", device, "--seed", "2"],
-    ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "20000"] + train_base_list_ntc + ["--device", device, "--seed", "3"],
-    ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "20000"] + train_base_list_ntc + ["--device", device, "--seed", "4"],
+    # ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "20000"] + train_base_list_ntc + ["--device", device, "--seed", "0"],
+    # ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "20000"] + train_base_list_ntc + ["--device", device, "--seed", "1"],
+    # ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "20000"] + train_base_list_ntc + ["--device", device, "--seed", "2"],
+    # ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "20000"] + train_base_list_ntc + ["--device", device, "--seed", "3"],
+    # ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "20000"] + train_base_list_ntc + ["--device", device, "--seed", "4"],
 
     # train sl ntc 40000 train data
-    ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "40000"] + train_base_list_ntc + ["--device", device, "--seed", "0"],
-    ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "40000"] + train_base_list_ntc + ["--device", device, "--seed", "1"],
-    ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "40000"] + train_base_list_ntc + ["--device", device, "--seed", "2"],
-    ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "40000"] + train_base_list_ntc + ["--device", device, "--seed", "3"],
-    ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "40000"] + train_base_list_ntc + ["--device", device, "--seed", "4"],
+    # ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "40000"] + train_base_list_ntc + ["--device", device, "--seed", "0"],
+    # ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "40000"] + train_base_list_ntc + ["--device", device, "--seed", "1"],
+    # ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "40000"] + train_base_list_ntc + ["--device", device, "--seed", "2"],
+    # ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "40000"] + train_base_list_ntc + ["--device", device, "--seed", "3"],
+    # ["python", "SequenceLabeling.py", "--model", "lstm", "--num_data", "40000"] + train_base_list_ntc + ["--device", device, "--seed", "4"]
 
     # train spg ntc 5000 train data
-    ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "5000"] + train_base_list_ntc + ["--device", device, "--seed", "0"],
-    ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "5000"] + train_base_list_ntc + ["--device", device, "--seed", "1"],
-    ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "5000"] + train_base_list_ntc + ["--device", device, "--seed", "2"],
-    ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "5000"] + train_base_list_ntc + ["--device", device, "--seed", "3"],
-    ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "5000"] + train_base_list_ntc + ["--device", device, "--seed", "4"],
+    # ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "5000"] + train_base_list_ntc + ["--device", device, "--seed", "0"],
+    # ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "5000"] + train_base_list_ntc + ["--device", device, "--seed", "1"],
+    # ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "5000"] + train_base_list_ntc + ["--device", device, "--seed", "2"],
+    # ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "5000"] + train_base_list_ntc + ["--device", device, "--seed", "3"],
+    # ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "5000"] + train_base_list_ntc + ["--device", device, "--seed", "4"],
 
     # train spg ntc 10000 train data
-    ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "10000"] + train_base_list_ntc + ["--device", device, "--seed", "0"],
-    ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "10000"] + train_base_list_ntc + ["--device", device, "--seed", "1"],
-    ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "10000"] + train_base_list_ntc + ["--device", device, "--seed", "2"],
-    ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "10000"] + train_base_list_ntc + ["--device", device, "--seed", "3"],
-    ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "10000"] + train_base_list_ntc + ["--device", device, "--seed", "4"],
+    # ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "10000"] + train_base_list_ntc + ["--device", device, "--seed", "0"],
+    # ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "10000"] + train_base_list_ntc + ["--device", device, "--seed", "1"],
+    # ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "10000"] + train_base_list_ntc + ["--device", device, "--seed", "2"],
+    # ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "10000"] + train_base_list_ntc + ["--device", device, "--seed", "3"],
+    # ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "10000"] + train_base_list_ntc + ["--device", device, "--seed", "4"],
 
     # train spg ntc 20000 train data
-    ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "20000"] + train_base_list_ntc + ["--device", device, "--seed", "0"],
-    ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "20000"] + train_base_list_ntc + ["--device", device, "--seed", "1"],
-    ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "20000"] + train_base_list_ntc + ["--device", device, "--seed", "2"],
-    ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "20000"] + train_base_list_ntc + ["--device", device, "--seed", "3"],
-    ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "20000"] + train_base_list_ntc + ["--device", device, "--seed", "4"],
+    # ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "20000"] + train_base_list_ntc + ["--device", device, "--seed", "0"],
+    # ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "20000"] + train_base_list_ntc + ["--device", device, "--seed", "1"],
+    # ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "20000"] + train_base_list_ntc + ["--device", device, "--seed", "2"],
+    # ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "20000"] + train_base_list_ntc + ["--device", device, "--seed", "3"],
+    # ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "20000"] + train_base_list_ntc + ["--device", device, "--seed", "4"],
 
     # train spg ntc 40000 train data
-    ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "40000"] + train_base_list_ntc + ["--device", device, "--seed", "0"],
-    ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "40000"] + train_base_list_ntc + ["--device", device, "--seed", "1"],
-    ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "40000"] + train_base_list_ntc + ["--device", device, "--seed", "2"],
-    ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "40000"] + train_base_list_ntc + ["--device", device, "--seed", "3"],
-    ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "40000"] + train_base_list_ntc + ["--device", device, "--seed", "4"]
+    # ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "40000"] + train_base_list_ntc + ["--device", device, "--seed", "0"],
+    # ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "40000"] + train_base_list_ntc + ["--device", device, "--seed", "1"],
+    # ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "40000"] + train_base_list_ntc + ["--device", device, "--seed", "2"],
+    # ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "40000"] + train_base_list_ntc + ["--device", device, "--seed", "3"],
+    # ["python", "SequenceLabelingPointer.py", "--model", "pointer", "--decode", "global_argmax", "--embed", "glove-retrofitting", "--num_data", "40000"] + train_base_list_ntc + ["--device", device, "--seed", "4"]
 
     # test sl ntc
     # ["python", "EvalSequenceLabeling.py", "--device", device, "--model", "lstm",
@@ -488,16 +488,16 @@ processes = [
     #     "--init_checkpoint", "../../results/pasa-bertptr-20200127-152713/model-0/epoch8-f0.7924.h5"]
 
     # combine results
-    # ['python', 'CombinePrediction.py', '--event', 'acm', '--with_all']?
+    # ['python', 'CombinePrediction.py', '--event', 'acm', '--with_all']
 
     # Ensemble results
     # ['python', 'Ensemble.py', '--mode', 'all', '--corpus', 'all']
 
     # Segment analysis of Bccwj dataset
-    # ['python', 'SegmentAnalysisBccwj.py', '--model', 'all', '--reset_scores', '--with_initial_print', '--bin_size', '10'],
+    # ['python', 'SegmentAnalysisBccwj.py', '--model', 'all', '--reset_scores', '--with_initial_print', '--length_bin_size', '10', '--position_bin_size', '4'],
 
     # Sentence-length wise analysis of NTC dataset
-    # ['python', 'SentenceLengthWiseAnalysisNtc.py', '--model', 'all', '--reset_scores', '--with_initial_print', '--bin_size', '10']
+    # ['python', 'SentenceLengthWiseAnalysisNtc.py', '--model', 'all', '--reset_scores', '--with_initial_print', '--length_bin_size', '10', '--position_bin_size', '4']
 ]
 
 
