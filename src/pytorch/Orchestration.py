@@ -93,11 +93,11 @@ processes = [
     #  "glove-retrofitting"] + train_base_list_ntc + ["--device", device, "--seed", "4"]
 
     # train bsl ntc
-    ["python", "SequenceLabelingBert.py", "--model", "bsl"] + train_base_list_ntc + ["--device", device, "--seed", "0"],
-    ["python", "SequenceLabelingBert.py", "--model", "bsl"] + train_base_list_ntc + ["--device", device, "--seed", "1"],
-    ["python", "SequenceLabelingBert.py", "--model", "bsl"] + train_base_list_ntc + ["--device", device, "--seed", "2"],
-    ["python", "SequenceLabelingBert.py", "--model", "bsl"] + train_base_list_ntc + ["--device", device, "--seed", "3"],
-    ["python", "SequenceLabelingBert.py", "--model", "bsl"] + train_base_list_ntc + ["--device", device, "--seed", "4"]
+    ["python", "SequenceLabelingBert.py", "--model", "bertsl"] + train_base_list_ntc + ["--device", device, "--seed", "0"],
+    ["python", "SequenceLabelingBert.py", "--model", "bertsl"] + train_base_list_ntc + ["--device", device, "--seed", "1"],
+    ["python", "SequenceLabelingBert.py", "--model", "bertsl"] + train_base_list_ntc + ["--device", device, "--seed", "2"],
+    ["python", "SequenceLabelingBert.py", "--model", "bertsl"] + train_base_list_ntc + ["--device", device, "--seed", "3"],
+    ["python", "SequenceLabelingBert.py", "--model", "bertsl"] + train_base_list_ntc + ["--device", device, "--seed", "4"]
 
     # train esl
     # ["python", "SequenceLabelingElmo.py", "--model", "elmosl"] + train_base_list_bccwj + ["--device", device, "--seed", "0"],
