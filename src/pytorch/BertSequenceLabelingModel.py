@@ -7,7 +7,7 @@ from BertWithJumanModel import BertWithJumanModel
 import sys
 import os
 sys.path.append(os.pardir)
-from utils.GetNextSentences import GetNextSentences
+from utils.GetCollocatedSentences import GetNextSentences, GetPreviousSentences
 
 
 class BertSequenceLabelingModel(Model):
@@ -97,8 +97,8 @@ class BertSequenceLabelingModel(Model):
         if self.dropout_ratio > 0:
             self.dropout = nn.Dropout(self.dropout_ratio)
 
-        self.with_next_sentence = True
-        if self.with_next_sentence:
+        self.with_collocated_sentence = 'next'
+        if self.with_collocated_sentence == 'next':
             ns = GetNextSentences(with_bccwj=with_bccwj)
             self.next_sentences = {key: ns.get_next_sentences(key) for key in ['train', 'dev', 'test']}
 
