@@ -37,9 +37,14 @@ arguments = get_argparser()
 device = torch.device("cpu")
 gpu = False
 if arguments.device != "cpu":
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    if device != "cpu":
-        gpu = True
+    if torch.cuda.is_available():
+        # device = list(map(int, arguments.device.split(',')))
+        if ',' in arguments.device:
+            device = [i for i, _ in enumerate(arguments.device.split(','))]
+        else:
+            device = torch.device(f'cuda:0')
+        if device != "cpu":
+            gpu = True
 
 TRAIN = "train"
 DEV = "dev"
@@ -140,10 +145,10 @@ def eval(batch_size=1, null_weight=None, loss_weight=None):
         num_params += len(parameter)
     print(num_params)
 
-    if arguments.device != "cpu":
-        if torch.cuda.device_count() > 1:
-            print("Let's use", torch.cuda.device_count(), "GPUs!")
-            model = nn.DataParallel(model, device_ids=get_cuda_id(arguments.device))
+    # if arguments.device != "cpu":
+    #     if torch.cuda.device_count() > 1:
+    #         print("Let's use", torch.cuda.device_count(), "GPUs!")
+    #         model = nn.DataParallel(model, device_ids=get_cuda_id(arguments.device))
     model.to(device)
 
     test_batcher = SequenceBatcherBert(batch_size,
@@ -157,7 +162,7 @@ def eval(batch_size=1, null_weight=None, loss_weight=None):
                                         vocab_pad_id=model.vocab_padding_idx,
                                         word_pos_pad_id=word_pos_indexer.get_pad_id(),
                                         ku_pos_pad_id=ku_pos_indexer.get_pad_id(),
-                                        mode_pad_id=mode_indexer.get_pad_id(), shuffle=True)
+                                        mode_pad_id=mode_indexer.get_pad_id(), shuffle=True, usage='test')
 
     criterion = nn.CrossEntropyLoss(ignore_index=-1)
 
@@ -199,7 +204,7 @@ def eval(batch_size=1, null_weight=None, loss_weight=None):
             t_mode = torch.from_numpy(t_mode).long().to(device)
 
             # output shape: 3, Batch, Sentence_length+1
-            prediction = model(t_args, t_preds, t_word_pos, t_ku_pos, t_mode)
+            prediction = model(t_args, t_preds, t_word_pos, t_ku_pos, t_mode, tag='test')
 
             # output shape: Batch, Sentence_length+1
             t_size = prediction.shape[2]

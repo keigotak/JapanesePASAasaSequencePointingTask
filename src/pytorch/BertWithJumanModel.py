@@ -42,11 +42,15 @@ class BertWithJumanModel():
         self.vocab_size = self.model.embeddings.word_embeddings.num_embeddings
         self.max_seq_length = 224
 
-        if self.device != "cpu":
-            if torch.cuda.device_count() > 1:
-                print("Let's use", torch.cuda.device_count(), "GPUs!")
-                self.model = nn.DataParallel(self.model, device_ids=get_cuda_id(self.device))
+        # if str(self.device) != "cpu":
+        #     if torch.cuda.device_count() > 1:
+        #         print("Let's use", torch.cuda.device_count(), "GPUs!")
+        #         if type(self.device) == list:
+        #             self.model = nn.DataParallel(self.model, device_ids=self.device)
+        #         else:
+        #             self.model = nn.DataParallel(self.model, device_ids=self.device)
 
+        self.device = torch.device(self.device)
         self.model.to(self.device)
 
     def _preprocess_text(self, text):
@@ -92,8 +96,11 @@ class BertWithJumanModel():
                     seq_ids.extend([seq_id])
                     seq_id += 1
                 else:
-                    token = self.juman_tokenizer.tokenize(word)
-                    bert_tokens = self.bert_tokenizer.tokenize(" ".join(token))
+                    if word == "[SEP]":
+                        bert_tokens = [word]
+                    else:
+                        token = self.juman_tokenizer.tokenize(word)
+                        bert_tokens = self.bert_tokenizer.tokenize(" ".join(token))
                     if len(bert_tokens) == 0:
                         bert_tokens = [" "]
                     tokenized_bert_words.extend(bert_tokens)
@@ -111,11 +118,11 @@ class BertWithJumanModel():
 
         dup_ids = []
         dup_tokens = []
-        dup_embs = None
+        dup_embs = []
         for seq_ids, ids, tokens, embs in zip(batched_bert_seq_ids, batched_bert_ids, batched_bert_words, batched_bert_embs):
             dup_id = []
             dup_token = []
-            dup_emb = None
+            dup_emb = []
 
             def get_duplicated_index(l, x):
                 return [i for i, _x in enumerate(l) if _x == x]
@@ -126,45 +133,52 @@ class BertWithJumanModel():
                 if len(indexes) == 1:
                     dup_id.append(int(ids[indexes[0]]))
                     dup_token.append(tokens[indexes[0]])
-                    if dup_emb is None:
-                        dup_emb = embs[indexes[0]].unsqueeze(0)
-                    else:
-                        dup_emb = torch.cat((dup_emb, embs[indexes[0]].unsqueeze(0)), dim=0)
+                    dup_emb.append(embs[indexes[0]])
+                    # if dup_emb is None:
+                    #     dup_emb = embs[indexes[0]].unsqueeze(0)
+                    # else:
+                    #     dup_emb = torch.cat((dup_emb, embs[indexes[0]].unsqueeze(0)), dim=0)
                 else:
                     if len(indexes) == 0:
                         pass
                     else:
                         dup_id.append([int(ids[ii]) for ii in indexes])
                         dup_token.append([tokens[ii] for ii in indexes])
-                        if dup_emb is None:
-                            dup_emb = torch.mean(itemgetter(indexes)(embs), dim=0).unsqueeze(0)
-                        else:
-                            if dup_mode == 'lead':
-                                dup_emb = torch.cat(
-                                    (dup_emb, embs[0].unsqueeze(0)), dim=0)
-                            else:
-                                dup_emb = torch.cat((dup_emb, torch.mean(itemgetter(indexes)(embs), dim=0).unsqueeze(0)), dim=0)
+                        dup_emb.append([embs[ii] for ii in indexes])
+                        dup_emb[-1] = torch.mean(torch.stack(dup_emb[-1]), dim=0)
+                        # if dup_emb is None:
+                        #     dup_emb = torch.mean(itemgetter(indexes)(embs), dim=0).unsqueeze(0)
+                        # else:
+                        #     if dup_mode == 'lead':
+                        #         dup_emb = torch.cat(
+                        #             (dup_emb, embs[0].unsqueeze(0)), dim=0)
+                        #     else:
+                        #         dup_emb = torch.cat((dup_emb, torch.mean(itemgetter(indexes)(embs), dim=0).unsqueeze(0)), dim=0)
                 if tokens[current_pos] == "[SEP]":
                     break
                 current_pos += len(indexes)
 
             dup_ids.append(dup_id)
             dup_tokens.append(dup_token)
-            if dup_embs is None:
-                dup_embs = dup_emb.unsqueeze(0)
-            else:
-                dup_embs = torch.cat((dup_embs, dup_emb.unsqueeze(0)), dim=0)
+            dup_embs.append(dup_emb)
 
+            # if dup_emb.shape[0] < max_sentence_length - 1:
+            #     dup_emb = torch.cat((dup_emb, torch.zeros(max_sentence_length - dup_emb.shape[0] - 1, dup_emb.shape[1])))
+            #
+            # if dup_embs is None:
+            #     dup_embs = dup_emb.unsqueeze(0)
+            # else:
+            #     dup_embs = torch.cat((dup_embs, dup_emb.unsqueeze(0)), dim=0)
+
+        max_sentence_length = max([len(dup_token) - 2 for dup_token in dup_tokens])
         shlinked_id = []
         shlinked_token = []
-        shlinked_embedding = None
+        shlinked_embedding = []
         for id, token, emb in zip(dup_ids, dup_tokens, dup_embs):
-            shlinked_id.append(id[1:-1])
-            shlinked_token.append(token[1:-1])
-            if shlinked_embedding is None:
-                shlinked_embedding = emb[1:-1].unsqueeze(0)
-            else:
-                shlinked_embedding = torch.cat((shlinked_embedding, emb[1:-1].unsqueeze(0)), dim=0)
+            shlinked_id.append(id[1:-1] + [0] * (max_sentence_length - len(emb[1:-1])))
+            shlinked_token.append(token[1:-1] + ['[PAD]'] * (max_sentence_length - len(emb[1:-1])))
+            shlinked_embedding.append(torch.stack(emb[1:-1] + [torch.zeros((emb[0].shape[0]), device=self.device)] * (max_sentence_length - len(emb[1:-1]))))
+        shlinked_embedding = torch.stack(shlinked_embedding)
 
         return {"embedding": shlinked_embedding, "token": shlinked_token, "id": shlinked_id}
 

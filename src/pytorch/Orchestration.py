@@ -93,7 +93,7 @@ processes = [
     #  "glove-retrofitting"] + train_base_list_ntc + ["--device", device, "--seed", "4"]
 
     # train bsl ntc
-    # ["python", "SequenceLabelingBert.py", "--model", "bertsl"] + train_base_list_ntc + ["--device", device, "--seed", "0"],
+    # ["python", "SequenceLabelingBert.py", "--model", "bertsl"] + train_base_list_ntc + ["--device", device, "--seed", "0"]
     # ["python", "SequenceLabelingBert.py", "--model", "bertsl"] + train_base_list_ntc + ["--device", device, "--seed", "1"],
     # ["python", "SequenceLabelingBert.py", "--model", "bertsl"] + train_base_list_ntc + ["--device", device, "--seed", "2"],
     # ["python", "SequenceLabelingBert.py", "--model", "bertsl"] + train_base_list_ntc + ["--device", device, "--seed", "3"],
@@ -114,11 +114,14 @@ processes = [
     # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "ordered"] + train_base_list_bccwj + ["--device", device, "--seed", "4"]
 
     # train bspg
-    ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "global_argmax"] + train_base_list_bccwj + ["--device", device, "--seed", "0"],
-    ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "global_argmax"] + train_base_list_bccwj + ["--device", device, "--seed", "1"],
-    ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "global_argmax"] + train_base_list_bccwj + ["--device", device, "--seed", "2"],
-    ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "global_argmax"] + train_base_list_bccwj + ["--device", device, "--seed", "3"],
-    ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "global_argmax"] + train_base_list_bccwj + ["--device", device, "--seed", "4"]
+    # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "global_argmax"] + train_base_list_bccwj + ["--device", device, "--seed", "0"],
+    # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "global_argmax"] + train_base_list_bccwj + ["--device", device, "--seed", "1"],
+    # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "global_argmax"] + train_base_list_bccwj + ["--device", device, "--seed", "2"],
+    # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "global_argmax"] + train_base_list_bccwj + ["--device", device, "--seed", "3"],
+    # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "global_argmax"] + train_base_list_bccwj + ["--device", device, "--seed", "4"]
+
+    # train bsl bccwj
+    # ["python", "SequenceLabelingBert.py", "--model", "bertsl"] + train_base_list_bccwj + ["--device", device, "--seed", "0"]
 
     # train nictbsl ntc
     # ["python", "SequenceLabelingBert.py", "--model", "nictbsl", "--with_db"] + train_base_list_ntc + ["--device", device, "--seed", "0"],
@@ -311,7 +314,11 @@ processes = [
     #     "--init_checkpoint", "../../results/pasa-bertsl-20191207-151112/model-0/epoch11-f0.8647.h5"],
     # ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl"] + test_base_list + [
     #     "--init_checkpoint", "../../results/pasa-bertsl-20191207-151132/model-0/epoch7-f0.8631.h5"],
-    
+
+    # test bsl ntc sep
+    # ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl"] + test_base_list + [
+    #     "--init_checkpoint", "../../results/pasa-bertsl-20210121-091206-686869/model-0/epoch7-f0.8644.h5"]
+
     # # test bspg ntc
     # ["python", "EvalSequencePointingBert.py", "--device", device, "--decode", "global_argmax", "--model", "bertptr"]
     # + test_base_list + ["--init_checkpoint",
@@ -442,7 +449,11 @@ processes = [
     # + test_base_list + ["--init_checkpoint", "../../results/pasa-bertsl-20191217-070827/model-0/epoch8-f0.7916.h5"],
     # ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl", "--with_bccwj"]
     # + test_base_list + ["--init_checkpoint", "../../results/pasa-bertsl-20191217-070856/model-0/epoch8-f0.7877.h5"],
-    #
+
+    # test bsl bccwj sep
+    # ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl", "--with_bccwj"]
+    # + test_base_list + ["--init_checkpoint", "../../results/pasa-bertsl-20210119-205041-733158/model-0/epoch8-f0.7906.h5"]
+
     # # test bspn bccwj
     # ["python", "EvalSequencePointingBert.py", "--device", device, "--model", "bertptr", "--with_bccwj",
     #  "--decode", "no_decoder"] + test_base_list + [
@@ -501,7 +512,7 @@ processes = [
     # ['python', 'Ensemble.py', '--mode', 'all', '--corpus', 'all']
 
     # Segment analysis of Bccwj dataset
-    # ['python', 'SegmentAnalysisBccwj.py', '--model', 'all', '--reset_scores', '--with_initial_print', '--length_bin_size', '10', '--position_bin_size', '4'],
+    ['python', 'SegmentAnalysisBccwj.py', '--model', 'bsl_sep', '--reset_scores', '--with_initial_print', '--length_bin_size', '10', '--position_bin_size', '4'],
 
     # Sentence-length wise analysis of NTC dataset
     # ['python', 'SentenceLengthWiseAnalysisNtc.py', '--model', 'all', '--reset_scores', '--with_initial_print', '--length_bin_size', '10', '--position_bin_size', '4']

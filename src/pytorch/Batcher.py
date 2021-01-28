@@ -4,6 +4,11 @@ import numpy as np
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 
+import sys
+import os
+sys.path.append(os.pardir)
+from utils.GetNextSentences import GetNextSentences
+
 
 class PairBatcher:
     def __init__(self, batch_size, args, preds, labels, props, shuffle=False):
@@ -163,6 +168,14 @@ class SequenceBatcher:
 
 
 class SequenceBatcherBert(SequenceBatcher):
+    def __init__(self, batch_size, args, preds, labels, props, word_pos=None, ku_pos=None, mode=None, vocab_pad_id=-1, word_pos_pad_id=-1, ku_pos_pad_id=-1, mode_pad_id=-1, shuffle=False, seed=71, usage='train'):
+        super().__init__(batch_size, args, preds, labels, props, word_pos=word_pos, ku_pos=ku_pos, mode=mode, vocab_pad_id=vocab_pad_id, word_pos_pad_id=word_pos_pad_id, ku_pos_pad_id=ku_pos_pad_id, mode_pad_id=mode_pad_id, shuffle=shuffle, seed=seed)
+        self.usage = usage
+        self.with_next_sentence = True
+        if self.with_next_sentence:
+            ns = GetNextSentences()
+            self.next_sentences = ns.get_next_sentences(mode=self.usage)
+
     def get_batch(self, reset=False):
         VOCAB_PADDING_WORD = "[PAD]"
         args = self._batch(self.args)

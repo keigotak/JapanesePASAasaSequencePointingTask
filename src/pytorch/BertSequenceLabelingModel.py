@@ -4,7 +4,10 @@ import torch.nn as nn
 from Model import Model
 from BertWithJumanModel import BertWithJumanModel
 
-from collections import OrderedDict
+import sys
+import os
+sys.path.append(os.pardir)
+from utils.GetNextSentences import GetNextSentences
 
 
 class BertSequenceLabelingModel(Model):
@@ -25,7 +28,8 @@ class BertSequenceLabelingModel(Model):
                  seed=1,
                  bidirectional=True, return_seq=False,
                  batch_first=True, continue_seq=False,
-                 trainbert=False):
+                 trainbert=False,
+                 with_bccwj=False):
         super(BertSequenceLabelingModel, self).__init__()
         torch.manual_seed(seed)
 
@@ -53,7 +57,7 @@ class BertSequenceLabelingModel(Model):
 
         self.word_pos_pred_idx = word_pos_pred_idx
 
-        self.with_pos_embedding = False
+        self.with_pos_embedding = True
         if self.with_pos_embedding:
             self.hidden_size = 2 * self.embedding_dim + 2 * self.pos_embedding_dim + self.mode_embedding_dim
         else:
@@ -93,6 +97,11 @@ class BertSequenceLabelingModel(Model):
         if self.dropout_ratio > 0:
             self.dropout = nn.Dropout(self.dropout_ratio)
 
+        self.with_next_sentence = True
+        if self.with_next_sentence:
+            ns = GetNextSentences(with_bccwj=with_bccwj)
+            self.next_sentences = {key: ns.get_next_sentences(key) for key in ['train', 'dev', 'test']}
+
     def init_hidden(self):
         # Before we've done anything, we dont have any hidden state.
         # Refer to the Pytorch documentation to see exactly
@@ -101,14 +110,28 @@ class BertSequenceLabelingModel(Model):
         return (torch.zeros(1, 1, self.hidden_size),
                 torch.zeros(1, 1, self.hidden_size))
 
-    def forward(self, arg, pred, word_pos, ku_pos, mode):
+    def forward(self, arg, pred, word_pos, ku_pos, mode, tag):
+        sentence_length = len(arg[0])
+        if self.with_next_sentence:
+            appended_args = []
+            for words in arg:
+                words = [word for word in words if word != "[PAD]"]
+                sentence = ''.join(words)
+                if sentence in self.next_sentences[tag].keys():
+                    next_sentence = ["[SEP]"] + self.next_sentences[tag][sentence]
+                else:
+                    next_sentence = ["[SEP]"]
+                words = words + next_sentence
+                appended_args.append(words)
+            arg = appended_args
+
         # output shape: Batch, Sentence_length, word_embed_size
         arg_rets = self.word_embeddings.get_word_embedding(arg)
         arg_embeds = self.vocab_zero_padding_bert(arg_rets["id"], arg_rets["embedding"])
-        arg_embeds = self.append_zero_tensors(modified_size=len(arg[0]), current_tensor=arg_embeds)
+        arg_embeds = self.append_zero_tensors(modified_size=sentence_length, current_tensor=arg_embeds)
         pred_rets = self.word_embeddings.get_pred_embedding(arg_embeds, arg_rets["token"], word_pos, self.word_pos_pred_idx)
         pred_embeds = pred_rets["embedding"]
-        pred_embeds = self.append_zero_tensors(modified_size=len(pred[0]), current_tensor=pred_embeds)
+        pred_embeds = self.append_zero_tensors(modified_size=sentence_length, current_tensor=pred_embeds)
 
         # output shape: Batch, Sentence_length, pos_embed_size
         word_pos_embeds = self.word_pos_embedding(word_pos)

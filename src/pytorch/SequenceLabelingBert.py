@@ -35,6 +35,7 @@ from utils.ServerManager import ServerManager
 from utils.HelperFunctions import get_argparser, get_pasa, get_now, get_save_dir, add_null, get_pointer_label, concat_labels, get_cuda_id, translate_score_and_loss, print_b
 from utils.GoogleSpreadSheet import write_spreadsheet
 from utils.ParallelTrials import ParallelTrials
+from utils.GetNextSentences import GetNextSentences
 from BertSequenceLabelingModel import BertSequenceLabelingModel
 from BertSequenceLabelingModelNoRnn import BertSequenceLabelingModelNoRnn
 from NictBertSequenceLabelingModel import NictBertSequenceLabelingModel
@@ -49,9 +50,14 @@ arguments = get_argparser()
 device = torch.device("cpu")
 gpu = False
 if arguments.device != "cpu":
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    if device != "cpu":
-        gpu = True
+    if torch.cuda.is_available():
+        # device = list(map(int, arguments.device.split(',')))
+        if ',' in arguments.device:
+            device = [i for i, _ in enumerate(arguments.device.split(','))]
+        else:
+            device = torch.device(f'cuda:0')
+        if device != "cpu":
+            gpu = True
 
 TRAIN = "train2"
 DEV = "dev"
@@ -195,7 +201,8 @@ def train(batch_size, learning_rate=0.2, optim="sgd",  dropout_ratio=0.4, null_w
                                           mode_padding_idx=mode_indexer.get_pad_id(),
                                           device=device,
                                           seed=arguments.seed,
-                                          trainbert=arguments.trainbert)
+                                          trainbert=arguments.trainbert,
+                                          with_bccwj=arguments.with_bccwj)
 
     embedding_dim = model.embedding_dim
     hidden_size = model.hidden_size
@@ -215,10 +222,10 @@ def train(batch_size, learning_rate=0.2, optim="sgd",  dropout_ratio=0.4, null_w
     for k, v in model.named_parameters():
         print("{}, {}, {}".format(v.requires_grad, v.size(), k))
 
-    if arguments.device != "cpu":
-        if torch.cuda.device_count() > 1:
-            print("Let's use", torch.cuda.device_count(), "GPUs!")
-            model = nn.DataParallel(model, device_ids=get_cuda_id(arguments.device))
+    # if arguments.device != "cpu":
+    #     if torch.cuda.device_count() > 1:
+    #         print("Let's use", torch.cuda.device_count(), "GPUs!")
+    #         model = nn.DataParallel(model, device_ids=get_cuda_id(arguments.device))
     model.to(device)
 
     weight_decay = norm_type['weight_decay']
@@ -247,7 +254,7 @@ def train(batch_size, learning_rate=0.2, optim="sgd",  dropout_ratio=0.4, null_w
                                         vocab_pad_id=model.vocab_padding_idx,
                                         word_pos_pad_id=word_pos_indexer.get_pad_id(),
                                         ku_pos_pad_id=ku_pos_indexer.get_pad_id(),
-                                        mode_pad_id=mode_indexer.get_pad_id(), shuffle=True)
+                                        mode_pad_id=mode_indexer.get_pad_id(), shuffle=True, usage='train')
     if arguments.overfit:
         dev_batcher = SequenceBatcherBert(arguments.dev_size,
                                           train_args,
@@ -260,7 +267,7 @@ def train(batch_size, learning_rate=0.2, optim="sgd",  dropout_ratio=0.4, null_w
                                           vocab_pad_id=model.vocab_padding_idx,
                                           word_pos_pad_id=word_pos_indexer.get_pad_id(),
                                           ku_pos_pad_id=ku_pos_indexer.get_pad_id(),
-                                          mode_pad_id=mode_indexer.get_pad_id(), shuffle=True)
+                                          mode_pad_id=mode_indexer.get_pad_id(), shuffle=True, usage='train')
     else:
         dev_batcher = SequenceBatcherBert(arguments.dev_size,
                                           dev_args,
@@ -273,7 +280,7 @@ def train(batch_size, learning_rate=0.2, optim="sgd",  dropout_ratio=0.4, null_w
                                           vocab_pad_id=model.vocab_padding_idx,
                                           word_pos_pad_id=word_pos_indexer.get_pad_id(),
                                           ku_pos_pad_id=ku_pos_indexer.get_pad_id(),
-                                          mode_pad_id=mode_indexer.get_pad_id(), shuffle=True)
+                                          mode_pad_id=mode_indexer.get_pad_id(), shuffle=True, usage='dev')
 
     if len(trials) != 1 and not arguments.hyp:
         hyp_max_score.set(translate_score_and_loss(trials.best_trial['result']['loss']))
@@ -335,7 +342,7 @@ def train(batch_size, learning_rate=0.2, optim="sgd",  dropout_ratio=0.4, null_w
             if arguments.with_db:
                 output = model(t_args, t_preds, t_word_pos, t_ku_pos, t_mode, tag='train', epoch=e, index=t_batch)
             else:
-                output = model(t_args, t_preds, t_word_pos, t_ku_pos, t_mode)
+                output = model(t_args, t_preds, t_word_pos, t_ku_pos, t_mode, tag='train')
 
             t_size = output.shape[2]
             t_labels = torch.from_numpy(t_labels).long().to(device)
@@ -371,7 +378,7 @@ def train(batch_size, learning_rate=0.2, optim="sgd",  dropout_ratio=0.4, null_w
                 if arguments.with_db:
                     prediction = model(d_args, d_preds, d_word_pos, d_ku_pos, d_mode, tag='dev', epoch=0, index=d_batch)
                 else:
-                    prediction = model(d_args, d_preds, d_word_pos, d_ku_pos, d_mode)
+                    prediction = model(d_args, d_preds, d_word_pos, d_ku_pos, d_mode, tag='dev')
 
                 # output shape: Batch, Sentence_length+1
                 d_size = prediction.shape[2]
