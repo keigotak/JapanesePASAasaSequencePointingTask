@@ -5,3 +5,4 @@
 /src/bigru
 *.txt
 src/utils/utils.json
+!/data/NTC_dataset/raw_create.py
