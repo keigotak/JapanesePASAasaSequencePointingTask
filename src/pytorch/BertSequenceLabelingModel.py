@@ -8,6 +8,7 @@ import sys
 import os
 sys.path.append(os.pardir)
 from utils.GetCollocatedSentences import GetNextSentences, GetPreviousSentences
+from sentence_transformers import SentenceTransformer
 
 
 class BertSequenceLabelingModel(Model):
@@ -92,15 +93,30 @@ class BertSequenceLabelingModel(Model):
                               bidirectional=False,
                               batch_first=self.batch_first)
 
-        self.hidden2tag = nn.Linear(self.hidden_size, self.target_size)
-
         if self.dropout_ratio > 0:
             self.dropout = nn.Dropout(self.dropout_ratio)
 
-        self.with_collocated_sentence = 'next'
+        self.with_collocated_sentence = 'prev'
         if self.with_collocated_sentence == 'next':
             ns = GetNextSentences(with_bccwj=with_bccwj)
-            self.next_sentences = {key: ns.get_next_sentences(key) for key in ['train', 'dev', 'test']}
+            self.collocated_sentences = {key: ns.get_collocated_sentences(key) for key in ['train', 'dev', 'test']}
+        elif self.with_collocated_sentence == 'prev':
+            ps = GetPreviousSentences(with_bccwj=with_bccwj)
+            self.collocated_sentences = {key: ps.get_collocated_sentences(key) for key in ['train', 'dev', 'test']}
+        self.with_sentence_transformer = True
+        if self.with_sentence_transformer:
+            self.sentence_embedding_dim = 768
+            self.sentence_transformer = SentenceTransformer("/clwork/keigo/sentence-transformers/training_bert_japanese")
+            for param in self.sentence_transformer.parameters():
+                param.requires_grad = False
+            self.sentence_transformer.training = False
+            self.sentence_transformer.show_progress_bar = False
+            self.hidden2tag = nn.Linear(self.hidden_size + self.sentence_embedding_dim, self.target_size)
+        else:
+            self.sentence_embedding_dim = 0
+            self.sentence_transformer = None
+            self.hidden2tag = nn.Linear(self.hidden_size, self.target_size)
+
 
     def init_hidden(self):
         # Before we've done anything, we dont have any hidden state.
@@ -112,15 +128,26 @@ class BertSequenceLabelingModel(Model):
 
     def forward(self, arg, pred, word_pos, ku_pos, mode, tag):
         sentence_length = len(arg[0])
-        if self.with_next_sentence:
+        if self.with_sentence_transformer:
+            collocated_sentence_embeddings = []
+            for words in arg:
+                words = [word for word in words if word != "[PAD]"]
+                sentence = ''.join(words)
+                if sentence in self.collocated_sentences[tag].keys():
+                    collocated_sentence = self.collocated_sentences[tag][sentence]
+                    collocated_embedding = torch.FloatTensor(self.sentence_transformer.encode([''.join(collocated_sentence)])[0])
+                else:
+                    collocated_embedding = torch.zeros(self.embedding_dim)
+                collocated_sentence_embeddings.append(collocated_embedding)
+        else:
             appended_args = []
             for words in arg:
                 words = [word for word in words if word != "[PAD]"]
                 sentence = ''.join(words)
-                if sentence in self.next_sentences[tag].keys():
-                    next_sentence = ["[SEP]"] + self.next_sentences[tag][sentence]
+                if sentence in self.collocated_sentences[tag].keys():
+                    collocated_sentence = ["[SEP]"] + self.collocated_sentences[tag][sentence]
                 else:
-                    next_sentence = ["[SEP]"]
+                    collocated_sentence = ["[SEP]"]
                 words = words + next_sentence
                 appended_args.append(words)
             arg = appended_args
@@ -174,7 +201,11 @@ class BertSequenceLabelingModel(Model):
             lstm_out = self.dropout(lstm_out)
         lstm_out = self._reverse_tensor(lstm_out)
 
-        tag_space = self.hidden2tag(lstm_out)
+        if self.with_sentence_transformer:
+            tag_space = self.hidden2tag(torch.cat((lstm_out, torch.stack(collocated_sentence_embeddings).unsqueeze(1).repeat(1, lstm_out.shape[1], 1).to(lstm_out.device)), dim=2))
+        else:
+            tag_space = self.hidden2tag(lstm_out)
+
         return tag_space
 
     def load_weights(self, path):
