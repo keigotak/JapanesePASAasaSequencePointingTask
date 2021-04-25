@@ -2,7 +2,7 @@
 import torch
 import torch.nn as nn
 from Model import Model
-from BertWithJumanModel import BertWithJumanModel
+from GPT2Model import GPT2Model
 import MeCab
 
 import sys
@@ -12,7 +12,7 @@ from utils.GetCollocatedSentences import GetNextSentences, GetPreviousSentences
 from sentence_transformers import SentenceTransformer
 
 
-class BertSequenceLabelingModel(Model):
+class GPT2SequenceLabelingModel(Model):
     def __init__(self, word_pos_size=20,
                  ku_pos_size=20,
                  mode_size=2,
@@ -32,7 +32,7 @@ class BertSequenceLabelingModel(Model):
                  batch_first=True, continue_seq=False,
                  trainbert=False,
                  with_bccwj=False):
-        super(BertSequenceLabelingModel, self).__init__()
+        super(GPT2SequenceLabelingModel, self).__init__()
         torch.manual_seed(seed)
 
         self.device = device
@@ -47,7 +47,7 @@ class BertSequenceLabelingModel(Model):
         self.vocab_size = None
         self.embedding_dim = None
         self.word_embeddings = None
-        self.word_embeddings = BertWithJumanModel(device=device, trainable=trainbert)
+        self.word_embeddings = GPT2Model(device=device, trainable=trainbert)
         self.embedding_dim = self.word_embeddings.embedding_dim
         self.vocab_padding_idx = self.word_embeddings.get_padding_idx()
 
@@ -101,16 +101,16 @@ class BertSequenceLabelingModel(Model):
         if self.with_collocated_sentence == 'next':
             ns = GetNextSentences(with_bccwj=with_bccwj)
             self.collocated_sentences = {key: ns.get_collocated_sentences(key) for key in ['train', 'dev', 'test']}
-            self.mecab = MeCab.Tagger("-Ochasen")
+            self.tokenizer = self.word_embeddings.tokenizer
         elif self.with_collocated_sentence == 'prev':
             ps = GetPreviousSentences(with_bccwj=with_bccwj)
             self.collocated_sentences = {key: ps.get_collocated_sentences(key) for key in ['train', 'dev', 'test']}
-            self.mecab = MeCab.Tagger("-Ochasen")
+            self.tokenizer = self.word_embeddings.tokenizer
 
 
         self.with_sentence_transformer = False
         if self.with_sentence_transformer:
-            self.sentence_embedding_dim = 768
+            self.sentence_embedding_dim = 1024
             # self.sentence_transformer = SentenceTransformer("/clwork/keigo/sentence-transformers/training_bert_japanese")
             # for param in self.sentence_transformer.parameters():
             #     param.requires_grad = False
@@ -132,32 +132,34 @@ class BertSequenceLabelingModel(Model):
 
     def forward(self, arg, pred, word_pos, ku_pos, mode, tag):
         sentence_length = len(arg[0])
-        if self.with_sentence_transformer:
-            collocated_sentence_embeddings = []
-            for words in arg:
-                words = [word for word in words if word != "[PAD]"]
-                sentence = ''.join(words)
-                if sentence in self.collocated_sentences[tag].keys():
-                    collocated_embedding = self.word_embeddings.get_word_embedding([self.collocated_sentences[tag][sentence]])
-                    collocated_embedding = collocated_embedding['embedding']
-                    collocated_embedding = torch.mean(collocated_embedding, dim=1).squeeze(0).to(self.device)
-                else:
-                    collocated_embedding = torch.zeros(self.embedding_dim).to(self.device)
-                collocated_sentence_embeddings.append(collocated_embedding)
-        else:
-            appended_args = []
-            for i, words in enumerate(arg):
-                words = [word for word in words if word != "[PAD]"]
-                # sentence = ''.join(words)
-                # if sentence in self.collocated_sentences[tag].keys():
-                #     nouns = [line.split()[0] for line in self.mecab.parse(''.join(words)).splitlines() if "名詞" in line.split()[-1]]
-                #     collocated_sentence = ["[SEP]"] + nouns
-                # else:
-                #     collocated_sentence = ["[SEP]"]
-                # words = words + collocated_sentence
-                words = words + ['[SEP]', pred[i][0], '[GA]', '[WO]', '[NI]']
-                appended_args.append(words)
-            arg = appended_args
+        if self.with_collocated_sentence is not None:
+            if self.with_sentence_transformer:
+                collocated_sentence_embeddings = []
+                for words in arg:
+                    words = [word for word in words if word != "[PAD]"]
+                    sentence = ''.join(words)
+                    if sentence in self.collocated_sentences[tag].keys():
+                        collocated_embedding = self.word_embeddings.get_word_embedding([self.collocated_sentences[tag][sentence]])
+                        collocated_embedding = collocated_embedding['embedding']
+                        collocated_embedding = torch.mean(collocated_embedding, dim=1).squeeze(0).to(self.device)
+                    else:
+                        collocated_embedding = torch.zeros(self.embedding_dim).to(self.device)
+                    collocated_sentence_embeddings.append(collocated_embedding)
+            else:
+                appended_args = []
+                for i, words in enumerate(arg):
+                    words = [word for word in words if word != "[PAD]"]
+                    sentence = ''.join(words)
+                    if sentence in self.collocated_sentences[tag].keys():
+                        # nouns = [line.split()[0] for line in self.mecab.parse(''.join(words)).splitlines() if "名詞" in line.split()[-1]]
+                        nouns = self.collocated_sentences[tag][sentence]
+                        collocated_sentence = ["[SEP]"] + nouns
+                    else:
+                        collocated_sentence = ["[SEP]"]
+                    words = words + collocated_sentence
+                    # words = words + ['[SEP]', pred[i][0], '[GA]', '[WO]', '[NI]']
+                    appended_args.append(words)
+                arg = appended_args
 
         # output shape: Batch, Sentence_length, word_embed_size
         arg_rets = self.word_embeddings.get_word_embedding(arg)
@@ -176,6 +178,9 @@ class BertSequenceLabelingModel(Model):
 
         if self.with_pos_embedding:
             # output shape: Batch, Sentence_length, 2 * word_embed_size + 2 * pos_embed_size
+            if arg_embeds.shape[1] != word_pos_embeds.shape[1]:
+                arg_embeds = torch.narrow(arg_embeds, 1, 0, word_pos_embeds.shape[1])
+                pred_embeds = torch.narrow(pred_embeds, 1, 0, word_pos_embeds.shape[1])
             concatten_embeds = torch.cat((arg_embeds, pred_embeds, word_pos_embeds, ku_pos_embeds, mode_embeds), dim=2)
         else:
             # output shape: Batch, Sentence_length, 2 * word_embed_size
@@ -239,7 +244,7 @@ class BertSequenceLabelingModel(Model):
 
 
 if __name__ == "__main__":
-    model = BertSequenceLabelingModel(trainbert=False)
+    model = GPT2SequenceLabelingModel(trainbert=False)
     for k, v in model.named_parameters():
         print("{}, {}, {}".format(v.requires_grad, v.size(), k))
     # model.load_weights('../../results/pasa-bertsl-20191207-150951/model-0/epoch14-f0.8620.h5')

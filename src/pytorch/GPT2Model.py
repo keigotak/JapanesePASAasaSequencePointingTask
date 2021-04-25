@@ -5,8 +5,7 @@ from operator import itemgetter
 import numpy as np
 import torch
 import torch.nn as nn
-from pytorch_transformers import BertTokenizer, BertModel
-from pyknp import Juman
+from transformers import T5Tokenizer, AutoModelForCausalLM
 import os
 import sys
 
@@ -15,46 +14,20 @@ from utils.HelperFunctions import get_cuda_id
 from Model import Model
 
 
-class JumanTokenizer():
-    def __init__(self):
-        if "D:" in os.getcwd():
-            self.juman = Juman(command="juman")
-        else:
-            self.juman = Juman(command="jumanpp")
-
-    def tokenize(self, text):
-        result = self.juman.analysis(text)
-        return [mrph.midasi for mrph in result.mrph_list()]
-
-
-class BertWithJumanModel(Model):
-    def __init__(self, bert_path=Path("../../data/bert-kyoto/Japanese_L-12_H-768_A-12_E-30_BPE").resolve(),
+class GPT2Model(Model):
+    def __init__(self,
                  vocab_file_name="vocab.txt",
                  device='cpu',
                  trainable=False):
         super().__init__()
-        self.juman_tokenizer = JumanTokenizer()
-        self.model = BertModel.from_pretrained(bert_path)
+        self.tokenizer = T5Tokenizer.from_pretrained("rinna/japanese-gpt2-medium")
+        self.model = AutoModelForCausalLM.from_pretrained("rinna/japanese-gpt2-medium")
         for k, v in self.model.named_parameters():
             v.requires_grad = trainable
-        self.bert_tokenizer = BertTokenizer(Path(bert_path) / vocab_file_name,
-                                            do_lower_case=False, do_basic_tokenize=False,
-                                            additional_special_tokens=['[GA]', '[WO]', '[NI]'])
-        special_tokens_dict = {'additional_special_tokens': ['[GA]', '[WO]', '[NI]']}
-        num_added_tokens = self.bert_tokenizer.add_special_tokens(special_tokens_dict)
-        self.model.resize_token_embeddings(len(self.bert_tokenizer))
         self.device = device
-        self.embedding_dim = self.model.embeddings.word_embeddings.embedding_dim
-        self.vocab_size = self.model.embeddings.word_embeddings.num_embeddings
+        self.embedding_dim = self.model.config.hidden_size
+        self.vocab_size = self.model.config.vocab_size
         self.max_seq_length = 224
-
-        # if str(self.device) != "cpu":
-        #     if torch.cuda.device_count() > 1:
-        #         print("Let's use", torch.cuda.device_count(), "GPUs!")
-        #         if type(self.device) == list:
-        #             self.model = nn.DataParallel(self.model, device_ids=self.device)
-        #         else:
-        #             self.model = nn.DataParallel(self.model, device_ids=self.device)
 
         self.device = torch.device(self.device)
         self.model.to(self.device)
@@ -64,10 +37,10 @@ class BertWithJumanModel(Model):
         return text.replace(" ", "")  # for Juman
 
     def get_sentence_embedding(self, text):
-        token = self.juman_tokenizer.tokenize(text)
-        bert_tokens = self.bert_tokenizer.tokenize(" ".join(token))
-        token = ["[CLS]"] + bert_tokens[:self.max_seq_length] + ["[SEP]"]
-        id = self.bert_tokenizer.convert_tokens_to_ids(token) # max_seq_len-2
+        token = self.tokenizer.tokenize(text)
+        tokens = self.tokenizer.tokenize(" ".join(token))
+        token = ["[CLS]"] + tokens[:self.max_seq_length] + ["[SEP]"]
+        id = self.tokenizer.encode(token) # max_seq_len-2
 
         if len(np.array(token).shape) != 2:
             token_tensor = np.array(token).reshape(1, -1)
@@ -89,47 +62,41 @@ class BertWithJumanModel(Model):
         return {"embedding": all_encoder_layers, "token": token_tensor, "id": id_tensor}
 
     def get_word_embedding(self, batched_words, dup_mode='mean'):
-        batched_bert_words = []
-        batched_bert_ids = []
-        batched_bert_embs = []
-        batched_bert_seq_ids = []
+        batched_tokens, batched_ids, batched_embs, batched_seq_ids = [], [], [], []
         for words in batched_words:
-            tokenized_bert_words = []
-            seq_ids = []
+            tokenized_words, seq_ids = [], []
             seq_id = 0
             for word in words:
                 if word == "[PAD]":
-                    tokenized_bert_words.append(word)
+                    tokenized_words.append(word)
                     seq_ids.extend([seq_id])
                     seq_id += 1
                 else:
-                    if word in {"[SEP]", "[GA]", "[WO]", "[NI]"}:
-                        bert_tokens = [word]
-                    else:
-                        token = self.juman_tokenizer.tokenize(word)
-                        bert_tokens = self.bert_tokenizer.tokenize(" ".join(token))
-                    if len(bert_tokens) == 0:
-                        bert_tokens = [" "]
-                    tokenized_bert_words.extend(bert_tokens)
-                    num_id = 1 if len(bert_tokens) == 0 else len(bert_tokens)
+                    token = self.tokenizer.tokenize(word)
+                    # tokens = self.tokenizer.tokenize(" ".join(token))
+                    token = [t for t in token if t != "▁"]
+                    if len(token) == 0:
+                        token = [" "]
+                    tokenized_words.extend(token)
+                    num_id = 1 if len(token) == 0 else len(token)
                     seq_ids.extend([seq_id] * num_id)
                     seq_id += 1
-            token = ["[CLS]"] + tokenized_bert_words[:self.max_seq_length] + ["[SEP]"]
-            id = self.bert_tokenizer.convert_tokens_to_ids(token)
-            batched_bert_words.append(token)
-            batched_bert_ids.append(id)
-            batched_bert_seq_ids.append([-1] + seq_ids[:self.max_seq_length] + [seq_ids[-1] + 1])
+            tokens = ["▁"] + tokenized_words[:self.max_seq_length] + ["<\s>"]
+            ids = [9] + self.tokenizer.convert_tokens_to_ids(tokenized_words[:self.max_seq_length]) + [2]
+            batched_tokens.append(tokens)
+            batched_ids.append(ids)
+            batched_seq_ids.append([-1] + seq_ids[:self.max_seq_length] + [seq_ids[-1] + 1])
 
-            embedding, _ = self.model(torch.tensor(id).reshape(1, -1).to(self.device))
-            batched_bert_embs.extend(embedding)
+            inputs = self.tokenizer(''.join(words), return_tensors='pt')
+            inputs.data['input_ids'] = torch.LongTensor([[9] + ids + [2]]).to(self.device)
+            inputs.data['attention_mask'] = torch.LongTensor([[1] * (len(ids) + 2)]).to(self.device)
 
-        dup_ids = []
-        dup_tokens = []
-        dup_embs = []
-        for seq_ids, ids, tokens, embs in zip(batched_bert_seq_ids, batched_bert_ids, batched_bert_words, batched_bert_embs):
-            dup_id = []
-            dup_token = []
-            dup_emb = []
+            embedding = self.model(**inputs, output_hidden_states=True).hidden_states[-1]
+            batched_embs.extend(embedding)
+
+        dup_ids, dup_tokens, dup_embs = [], [], []
+        for seq_ids, ids, tokens, embs in zip(batched_seq_ids, batched_ids, batched_tokens, batched_embs):
+            dup_id, dup_token, dup_emb = [], [], []
 
             def get_duplicated_index(l, x):
                 return [i for i, _x in enumerate(l) if _x == x]
@@ -210,13 +177,12 @@ class BertWithJumanModel(Model):
         return self.model.state_dict()
 
     def get_padding_idx(self):
-        return self.model.embeddings.word_embeddings.padding_idx
+        return self.tokenizer.pad_token_id
 
 
 if __name__ == "__main__":
-    _path = Path("../../data/bert-kyoto/Japanese_L-12_H-768_A-12_E-30_BPE").resolve()
-    model = BertWithJumanModel(_path, trainable=True)
-    ret = model.get_word_embedding([[u"どういたしまして。"]], dup_mode='lead')
+    model = GPT2Model(trainable=False)
+    ret = model.get_word_embedding([[u"どう", u"いた", u"しま", u"して", u"。"]], dup_mode='lead')
     print(ret)
     for k, v in model.named_parameters():
         print("{}, {}, {}".format(v.requires_grad, v.size(), k))

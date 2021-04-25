@@ -12,7 +12,7 @@ from utils.GetCollocatedSentences import GetNextSentences, GetPreviousSentences
 from sentence_transformers import SentenceTransformer
 
 
-class BertSequenceLabelingModel(Model):
+class BertLukeModel(Model):
     def __init__(self, word_pos_size=20,
                  ku_pos_size=20,
                  mode_size=2,
@@ -30,9 +30,9 @@ class BertSequenceLabelingModel(Model):
                  seed=1,
                  bidirectional=True, return_seq=False,
                  batch_first=True, continue_seq=False,
-                 trainbert=False,
+                 trainbert=True,
                  with_bccwj=False):
-        super(BertSequenceLabelingModel, self).__init__()
+        super(BertLukeModel, self).__init__()
         torch.manual_seed(seed)
 
         self.device = device
@@ -107,113 +107,88 @@ class BertSequenceLabelingModel(Model):
             self.collocated_sentences = {key: ps.get_collocated_sentences(key) for key in ['train', 'dev', 'test']}
             self.mecab = MeCab.Tagger("-Ochasen")
 
+        self.hidden2sentence = nn.Linear(self.embedding_dim, self.word_embeddings.max_seq_length + 1)
 
-        self.with_sentence_transformer = False
-        if self.with_sentence_transformer:
-            self.sentence_embedding_dim = 768
-            # self.sentence_transformer = SentenceTransformer("/clwork/keigo/sentence-transformers/training_bert_japanese")
-            # for param in self.sentence_transformer.parameters():
-            #     param.requires_grad = False
-            # self.sentence_transformer.training = False
-            # self.sentence_transformer.show_progress_bar = False
-            self.hidden2tag = nn.Linear(self.hidden_size + self.sentence_embedding_dim, self.target_size)
-        else:
-            self.sentence_embedding_dim = 0
-            self.sentence_transformer = None
-            self.hidden2tag = nn.Linear(self.hidden_size, self.target_size)
-
-    def init_hidden(self):
-        # Before we've done anything, we dont have any hidden state.
-        # Refer to the Pytorch documentation to see exactly
-        # why they have this dimensionality.
-        # The axes semantics are (num_layers, minibatch_size, hidden_dim)
-        return (torch.zeros(1, 1, self.hidden_size),
-                torch.zeros(1, 1, self.hidden_size))
-
-    def forward(self, arg, pred, word_pos, ku_pos, mode, tag):
+    def forward(self, arg, pred, word_pos, ku_pos, mode):
         sentence_length = len(arg[0])
-        if self.with_sentence_transformer:
-            collocated_sentence_embeddings = []
-            for words in arg:
-                words = [word for word in words if word != "[PAD]"]
-                sentence = ''.join(words)
-                if sentence in self.collocated_sentences[tag].keys():
-                    collocated_embedding = self.word_embeddings.get_word_embedding([self.collocated_sentences[tag][sentence]])
-                    collocated_embedding = collocated_embedding['embedding']
-                    collocated_embedding = torch.mean(collocated_embedding, dim=1).squeeze(0).to(self.device)
-                else:
-                    collocated_embedding = torch.zeros(self.embedding_dim).to(self.device)
-                collocated_sentence_embeddings.append(collocated_embedding)
-        else:
-            appended_args = []
-            for i, words in enumerate(arg):
-                words = [word for word in words if word != "[PAD]"]
-                # sentence = ''.join(words)
-                # if sentence in self.collocated_sentences[tag].keys():
-                #     nouns = [line.split()[0] for line in self.mecab.parse(''.join(words)).splitlines() if "名詞" in line.split()[-1]]
-                #     collocated_sentence = ["[SEP]"] + nouns
-                # else:
-                #     collocated_sentence = ["[SEP]"]
-                # words = words + collocated_sentence
-                words = words + ['[SEP]', pred[i][0], '[GA]', '[WO]', '[NI]']
-                appended_args.append(words)
-            arg = appended_args
+        appended_args = []
+        case_token_positions = []
+
+        for i, words in enumerate(arg):
+            words = [word for word in words if word != "[PAD]"]
+            words = words + ['[SEP]', pred[i][0], '[GA]', '[WO]', '[NI]']
+            appended_args.append(words)
+            case_token_positions.append({'[GA]': words.index('[GA]'), '[WO]': words.index('[WO]'), '[NI]': words.index('[NI]')})
+        arg = appended_args
 
         # output shape: Batch, Sentence_length, word_embed_size
         arg_rets = self.word_embeddings.get_word_embedding(arg)
         arg_embeds = self.vocab_zero_padding_bert(arg_rets["id"], arg_rets["embedding"])
         arg_embeds = self.append_zero_tensors(modified_size=sentence_length, current_tensor=arg_embeds)
-        pred_rets = self.word_embeddings.get_pred_embedding(arg_embeds, arg_rets["token"], word_pos, self.word_pos_pred_idx)
-        pred_embeds = pred_rets["embedding"]
-        pred_embeds = self.append_zero_tensors(modified_size=sentence_length, current_tensor=pred_embeds)
 
-        # output shape: Batch, Sentence_length, pos_embed_size
-        word_pos_embeds = self.word_pos_embedding(word_pos)
-        ku_pos_embeds = self.ku_pos_embedding(ku_pos)
+        batch_case_pointing_logits = []
+        for case_token in ['[GA]', '[WO]', '[NI]']:
+            case_pointing_logits = []
+            for i, pos in enumerate(case_token_positions):
+                case_token_embedding = arg_embeds[i][pos[case_token]]
+                case_pointing_logit = self.hidden2sentence(case_token_embedding)
+                case_pointing_logits.append(case_pointing_logit)
+            batch_case_pointing_logits.append(torch.stack(case_pointing_logits))
+        batch_case_pointing_logits = torch.stack(batch_case_pointing_logits)
 
-        # output shape: Batch, Sentence_length, mode_embed_size
-        mode_embeds = self.mode_embedding(mode)
 
-        if self.with_pos_embedding:
-            # output shape: Batch, Sentence_length, 2 * word_embed_size + 2 * pos_embed_size
-            concatten_embeds = torch.cat((arg_embeds, pred_embeds, word_pos_embeds, ku_pos_embeds, mode_embeds), dim=2)
-        else:
-            # output shape: Batch, Sentence_length, 2 * word_embed_size
-            concatten_embeds = torch.cat((arg_embeds, pred_embeds, mode_embeds), dim=2)
 
-        # output shape: Batch, Sentence_length, hidden_size
-        f_lstm1_out, _ = self.f_lstm1(concatten_embeds)
-        if self.dropout_ratio > 0:
-            f_lstm1_out = self.dropout(f_lstm1_out)
+        # pred_rets = self.word_embeddings.get_pred_embedding(arg_embeds, arg_rets["token"], word_pos, self.word_pos_pred_idx)
+        # pred_embeds = pred_rets["embedding"]
+        # pred_embeds = self.append_zero_tensors(modified_size=sentence_length, current_tensor=pred_embeds)
+        #
+        # # output shape: Batch, Sentence_length, pos_embed_size
+        # word_pos_embeds = self.word_pos_embedding(word_pos)
+        # ku_pos_embeds = self.ku_pos_embedding(ku_pos)
+        #
+        # # output shape: Batch, Sentence_length, mode_embed_size
+        # mode_embeds = self.mode_embedding(mode)
+        #
+        # if self.with_pos_embedding:
+        #     # output shape: Batch, Sentence_length, 2 * word_embed_size + 2 * pos_embed_size
+        #     concatten_embeds = torch.cat((arg_embeds, pred_embeds, word_pos_embeds, ku_pos_embeds, mode_embeds), dim=2)
+        # else:
+        #     # output shape: Batch, Sentence_length, 2 * word_embed_size
+        #     concatten_embeds = torch.cat((arg_embeds, pred_embeds, mode_embeds), dim=2)
+        #
+        # # output shape: Batch, Sentence_length, hidden_size
+        # f_lstm1_out, _ = self.f_lstm1(concatten_embeds)
+        # if self.dropout_ratio > 0:
+        #     f_lstm1_out = self.dropout(f_lstm1_out)
+        #
+        # # output shape: Batch, Sentence_length, hidden_size
+        # residual_input2 = f_lstm1_out + concatten_embeds
+        # residual_input2 = self._reverse_tensor(residual_input2)
+        # b_lstm1_out, _ = self.b_lstm1(residual_input2)
+        # if self.dropout_ratio > 0:
+        #     b_lstm1_out = self.dropout(b_lstm1_out)
+        # b_lstm1_out = self._reverse_tensor(b_lstm1_out)
+        #
+        # # output shape: Batch, Sentence_length, hidden_size
+        # residual_input3 = b_lstm1_out + f_lstm1_out
+        # f_lstm2_out, _ = self.f_lstm2(residual_input3)
+        # if self.dropout_ratio > 0:
+        #     f_lstm2_out = self.dropout(f_lstm2_out)
+        #
+        # # output shape: Batch, Sentence_length, hidden_size
+        # residual_input4 = f_lstm2_out + b_lstm1_out
+        # residual_input4 = self._reverse_tensor(residual_input4)
+        # lstm_out, _ = self.b_lstm2(residual_input4)
+        # if self.dropout_ratio > 0:
+        #     lstm_out = self.dropout(lstm_out)
+        # lstm_out = self._reverse_tensor(lstm_out)
+        #
+        # if self.with_sentence_transformer:
+        #     tag_space = self.hidden2tag(torch.cat((lstm_out, torch.stack(collocated_sentence_embeddings).unsqueeze(1).repeat(1, lstm_out.shape[1], 1).to(lstm_out.device)), dim=2))
+        # else:
+        #     tag_space = self.hidden2tag(lstm_out)
 
-        # output shape: Batch, Sentence_length, hidden_size
-        residual_input2 = f_lstm1_out + concatten_embeds
-        residual_input2 = self._reverse_tensor(residual_input2)
-        b_lstm1_out, _ = self.b_lstm1(residual_input2)
-        if self.dropout_ratio > 0:
-            b_lstm1_out = self.dropout(b_lstm1_out)
-        b_lstm1_out = self._reverse_tensor(b_lstm1_out)
-
-        # output shape: Batch, Sentence_length, hidden_size
-        residual_input3 = b_lstm1_out + f_lstm1_out
-        f_lstm2_out, _ = self.f_lstm2(residual_input3)
-        if self.dropout_ratio > 0:
-            f_lstm2_out = self.dropout(f_lstm2_out)
-
-        # output shape: Batch, Sentence_length, hidden_size
-        residual_input4 = f_lstm2_out + b_lstm1_out
-        residual_input4 = self._reverse_tensor(residual_input4)
-        lstm_out, _ = self.b_lstm2(residual_input4)
-        if self.dropout_ratio > 0:
-            lstm_out = self.dropout(lstm_out)
-        lstm_out = self._reverse_tensor(lstm_out)
-
-        if self.with_sentence_transformer:
-            tag_space = self.hidden2tag(torch.cat((lstm_out, torch.stack(collocated_sentence_embeddings).unsqueeze(1).repeat(1, lstm_out.shape[1], 1).to(lstm_out.device)), dim=2))
-        else:
-            tag_space = self.hidden2tag(lstm_out)
-
-        return tag_space
+        return batch_case_pointing_logits
 
     def load_weights(self, path):
         path = str(path.resolve())
@@ -239,7 +214,7 @@ class BertSequenceLabelingModel(Model):
 
 
 if __name__ == "__main__":
-    model = BertSequenceLabelingModel(trainbert=False)
+    model = BertLukeModel(trainbert=False)
     for k, v in model.named_parameters():
         print("{}, {}, {}".format(v.requires_grad, v.size(), k))
     # model.load_weights('../../results/pasa-bertsl-20191207-150951/model-0/epoch14-f0.8620.h5')

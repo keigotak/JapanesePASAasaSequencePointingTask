@@ -38,7 +38,7 @@ def get_argparser():
     parser.add_argument('--overfit', action='store_true')
     parser.add_argument('--hyp', action='store_false')
     parser.add_argument('--test', action='store_true')
-    parser.add_argument('--model', type=str, default='mlp', choices=['mlp', 'lstm', 'pointer', 'combination', 'lstmnd', 'lstmnz', 'slmhatten', 'bertsl', 'bertptr', 'bertslnr', 'bertptrnr', 'elmosl', 'elmosp', 'nictbsl', 'nictbspg', 'nictbspl', 'nictbspn'])
+    parser.add_argument('--model', type=str, default='mlp', choices=['mlp', 'lstm', 'pointer', 'combination', 'lstmnd', 'lstmnz', 'slmhatten', 'bertsl', 'bertptr', 'bertslnr', 'bertptrnr', 'elmosl', 'elmosp', 'nictbsl', 'nictbspg', 'nictbspl', 'nictbspn', 'luke', 'gpt2sl'])
     parser.add_argument('--optim', type=str, default='adam', choices=['adam', 'adadelta', 'sgd'])
     parser.add_argument('--dev_size', type=int, default=4)
     parser.add_argument('--clip', type=int, default=4)

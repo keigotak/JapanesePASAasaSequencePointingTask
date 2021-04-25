@@ -123,6 +123,14 @@ processes = [
     # train bsl bccwj
     # ["python", "SequenceLabelingBert.py", "--model", "bertsl"] + train_base_list_bccwj + ["--device", device, "--seed", "0"]
 
+    # train luke ntc
+    ["python", "RunLuke.py", "--model", "luke", "--decode", "no_decoder"] + train_base_list_ntc + ["--device", device, "--seed", "0"],
+    # ["python", "SequenceLabelingBert.py", "--model", "bertsl"] + train_base_list_ntc + ["--device", device, "--seed", "0"]
+
+    # train GPT2 ntc, bccwj
+    # ["python", "SequenceLabelingGPT2.py", "--model", "gpt2sl"] + train_base_list_ntc + ["--device", device, "--seed", "0"]
+    # ["python", "SequenceLabelingGPT2.py", "--model", "gpt2sl"] + train_base_list_bccwj + ["--device", device, "--seed", "0"]
+
     # train nictbsl ntc
     # ["python", "SequenceLabelingBert.py", "--model", "nictbsl", "--with_db"] + train_base_list_ntc + ["--device", device, "--seed", "0"],
     # ["python", "SequenceLabelingBert.py", "--model", "nictbsl", "--with_db"] + train_base_list_ntc + ["--device", device, "--seed", "1"],
@@ -318,6 +326,18 @@ processes = [
     # test bsl ntc sep
     # ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl"] + test_base_list + [
     #     "--init_checkpoint", "../../results/pasa-bertsl-20210121-091206-686869/model-0/epoch7-f0.8644.h5"]
+    # ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl"] + test_base_list + [
+    #     "--init_checkpoint", "../../results/pasa-bertsl-20210221-184426-871180/model-0/epoch6-f0.8648.h5"]
+
+    # test bsl ntc with sBert
+    # ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl"] + test_base_list + [
+    #     "--init_checkpoint", "../../results/pasa-bertsl-20210129-101751-974512/model-0/epoch7-f0.8640.h5"]
+    # ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl"] + test_base_list + [
+    #     "--init_checkpoint", "../../results/pasa-bertsl-20210203-141636-488318/model-0/epoch5-f0.8676.h5"]
+
+    # test bsl ntc sep with noun
+    # ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl"] + test_base_list + [
+    #     "--init_checkpoint", "../../results/pasa-bertsl-20210305-084716-183613/model-0/epoch5-f0.8630.h5"]
 
     # # test bspg ntc
     # ["python", "EvalSequencePointingBert.py", "--device", device, "--decode", "global_argmax", "--model", "bertptr"]
@@ -454,6 +474,10 @@ processes = [
     # ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl", "--with_bccwj"]
     # + test_base_list + ["--init_checkpoint", "../../results/pasa-bertsl-20210119-205041-733158/model-0/epoch8-f0.7906.h5"]
 
+    # test bsl bccwj sep with noun
+    # ["python", "EvalSequenceLabelingBert.py", "--device", device, "--model", "bertsl", "--with_bccwj"]
+    # + test_base_list + ["--init_checkpoint", "../../results/pasa-bertsl-20210305-084800-277814/model-0/epoch6-f0.7867.h5"]
+
     # # test bspn bccwj
     # ["python", "EvalSequencePointingBert.py", "--device", device, "--model", "bertptr", "--with_bccwj",
     #  "--decode", "no_decoder"] + test_base_list + [
@@ -512,7 +536,7 @@ processes = [
     # ['python', 'Ensemble.py', '--mode', 'all', '--corpus', 'all']
 
     # Segment analysis of Bccwj dataset
-    ['python', 'SegmentAnalysisBccwj.py', '--model', 'bsl_sep', '--reset_scores', '--with_initial_print', '--length_bin_size', '10', '--position_bin_size', '4'],
+    # ['python', 'SegmentAnalysisBccwj.py', '--model', 'bsl_sep', '--reset_scores', '--with_initial_print', '--length_bin_size', '10', '--position_bin_size', '4'],
 
     # Sentence-length wise analysis of NTC dataset
     # ['python', 'SentenceLengthWiseAnalysisNtc.py', '--model', 'all', '--reset_scores', '--with_initial_print', '--length_bin_size', '10', '--position_bin_size', '4']
