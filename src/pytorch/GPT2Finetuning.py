@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import sys
 sys.path.append('../')
 import os
@@ -16,6 +15,9 @@ import torch
 import torch.nn as nn
 from torch.utils.checkpoint import checkpoint_sequential
 import adabound
+from transformers import AdamW
+from transformers import get_scheduler
+
 
 sys.path.append(os.pardir)
 from utils.Datasets import get_datasets, get_datasets_in_sentences, get_datasets_in_sentences_test
@@ -35,26 +37,31 @@ from utils.ServerManager import ServerManager
 from utils.HelperFunctions import get_argparser, get_pasa, get_now, get_save_dir, add_null, get_pointer_label, concat_labels, get_cuda_id, translate_score_and_loss, print_b
 from utils.GoogleSpreadSheet import write_spreadsheet
 from utils.ParallelTrials import ParallelTrials
+from utils.GetCollocatedSentences import GetNextSentences, GetPreviousSentences
+from GPT2SequenceLabelingModel import GPT2SequenceLabelingModelForFineTuning
 
 from Loss import *
 from Batcher import SequenceBatcherBert
 from Validation import get_pr_numbers, get_f_score
-from Decoders import get_restricted_prediction, get_ordered_prediction, get_no_decode_prediction
 
-from pytorch_transformers import AdamW
-
-from GPT2LukeModel import GPT2LukeModel
 
 arguments = get_argparser()
+arguments.trainbert = True
+
 
 device = torch.device("cpu")
 gpu = False
 if arguments.device != "cpu":
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    if device != "cpu":
-        gpu = True
+    if torch.cuda.is_available():
+        # device = list(map(int, arguments.device.split(',')))
+        if ',' in arguments.device:
+            device = [i for i, _ in enumerate(arguments.device.split(','))]
+        else:
+            device = torch.device(f'cuda:0')
+        if device != "cpu":
+            gpu = True
 
-TRAIN = "train"
+TRAIN = "train2"
 DEV = "dev"
 TEST = "test"
 PADDING_ID = 4
@@ -92,7 +99,6 @@ vocab = Vocab()
 vocab.fit(train_vocab, arguments.vocab_thresh)
 vocab.fit(dev_vocab, arguments.vocab_thresh)
 vocab.fit(test_vocab, arguments.vocab_thresh)
-
 train_arg_id, train_pred_id = vocab.transform_sentences(train_args, train_preds)
 dev_arg_id, dev_pred_id = vocab.transform_sentences(dev_args, dev_preds)
 test_arg_id, test_pred_id = vocab.transform_sentences(test_args, test_preds)
@@ -144,7 +150,7 @@ trials = Trials()
 
 
 # @profile
-def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_ratio=0.4, null_weight=None, loss_weight=None, norm_type=None):
+def train(batch_size, learning_rate=5e-5, optim="adamw",  dropout_ratio=0.4, null_weight=None, loss_weight=None, norm_type=None):
     np.random.seed(arguments.seed)
     random.seed(arguments.seed)
 
@@ -153,10 +159,7 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
     fc2_size = 0
     dropout_ratio = round(dropout_ratio, 2)
 
-    corpus = 'ntc'
-    if arguments.with_bccwj:
-        corpus = 'bccwj'
-    model = GPT2LukeModel(target_size=1,
+    model = GPT2SequenceLabelingModelForFineTuning(target_size=4,
                                       dropout_ratio=dropout_ratio,
                                       word_pos_size=len(word_pos_indexer),
                                       ku_pos_size=len(ku_pos_indexer),
@@ -167,8 +170,9 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                                       ku_pos_padding_idx=ku_pos_indexer.get_pad_id(),
                                       mode_padding_idx=mode_indexer.get_pad_id(),
                                       device=device,
-                                      seed=arguments.seed)
-
+                                      seed=arguments.seed,
+                                      trainbert=True,
+                                      with_bccwj=arguments.with_bccwj)
     embedding_dim = model.embedding_dim
     hidden_size = model.hidden_size
 
@@ -183,6 +187,9 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
     for parameter in model.parameters():
         num_params += len(parameter)
     print_b(num_params)
+
+    for k, v in model.named_parameters():
+        print("{}, {}, {}".format(v.requires_grad, v.size(), k))
 
     # if arguments.device != "cpu":
     #     if torch.cuda.device_count() > 1:
@@ -208,6 +215,10 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
         learning_rate = 5e-5
         optimizer = AdamW(model.parameters(), lr=learning_rate)
 
+    num_epochs = 20
+    num_training_steps = num_epochs * len(train_label)
+    lr_scheduler = get_scheduler("linear", optimizer=optimizer, num_warmup_steps=0, num_training_steps=num_training_steps)
+
     train_batcher = SequenceBatcherBert(batch_size,
                                         train_args,
                                         train_preds,
@@ -216,10 +227,10 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                                         train_word_pos,
                                         train_ku_pos,
                                         train_modes,
-                                        vocab_pad_id=vocab.get_pad_id(),
+                                        vocab_pad_id=model.vocab_padding_idx,
                                         word_pos_pad_id=word_pos_indexer.get_pad_id(),
                                         ku_pos_pad_id=ku_pos_indexer.get_pad_id(),
-                                        mode_pad_id=mode_indexer.get_pad_id(), shuffle=True)
+                                        mode_pad_id=mode_indexer.get_pad_id(), shuffle=True, usage='train')
     if arguments.overfit:
         dev_batcher = SequenceBatcherBert(arguments.dev_size,
                                           train_args,
@@ -229,10 +240,10 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                                           train_word_pos,
                                           train_ku_pos,
                                           train_modes,
-                                          vocab_pad_id=vocab.get_pad_id(),
+                                          vocab_pad_id=model.vocab_padding_idx,
                                           word_pos_pad_id=word_pos_indexer.get_pad_id(),
                                           ku_pos_pad_id=ku_pos_indexer.get_pad_id(),
-                                          mode_pad_id=mode_indexer.get_pad_id(), shuffle=True)
+                                          mode_pad_id=mode_indexer.get_pad_id(), shuffle=True, usage='train')
     else:
         dev_batcher = SequenceBatcherBert(arguments.dev_size,
                                           dev_args,
@@ -242,10 +253,23 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                                           dev_word_pos,
                                           dev_ku_pos,
                                           dev_modes,
-                                          vocab_pad_id=vocab.get_pad_id(),
+                                          vocab_pad_id=model.vocab_padding_idx,
                                           word_pos_pad_id=word_pos_indexer.get_pad_id(),
                                           ku_pos_pad_id=ku_pos_indexer.get_pad_id(),
-                                          mode_pad_id=mode_indexer.get_pad_id(), shuffle=True)
+                                          mode_pad_id=mode_indexer.get_pad_id(), shuffle=True, usage='dev')
+
+    test_batcher = SequenceBatcherBert(1,
+                                        test_args,
+                                        test_preds,
+                                        test_label,
+                                        test_prop,
+                                        test_word_pos,
+                                        test_ku_pos,
+                                        test_modes,
+                                        vocab_pad_id=model.vocab_padding_idx,
+                                        word_pos_pad_id=word_pos_indexer.get_pad_id(),
+                                        ku_pos_pad_id=ku_pos_indexer.get_pad_id(),
+                                        mode_pad_id=mode_indexer.get_pad_id(), shuffle=True, usage='test')
 
     if len(trials) != 1 and not arguments.hyp:
         hyp_max_score.set(translate_score_and_loss(trials.best_trial['result']['loss']))
@@ -259,11 +283,11 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
     best_f1s = [0] * 6
 
     es = EarlyStop(arguments.earlystop, go_minus=False)
+    criterion = nn.CrossEntropyLoss(ignore_index=PADDING_ID)
 
     _params = ['server: {} {}'.format(sm.server_name, sm.device_name),
                'init_checkpoint: {}'.format(arguments.init_checkpoint),
                'embed_type: {}'.format(arguments.embed),
-               'decode: {}'.format(arguments.decode),
                'train_batch_size: {}'.format(batch_size),
                'dev_batch_size: {}'.format(arguments.dev_size),
                'learning_rate: {}'.format(learning_rate),
@@ -305,30 +329,13 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
 
             # output shape: 3, Batch, Sentence_length
             if arguments.with_db:
-                output = model(t_args, t_preds, t_word_pos, t_ku_pos, t_mode, epoch=e, index=t_batch)
+                output = model(t_args, t_preds, t_word_pos, t_ku_pos, t_mode, tag='train', epoch=e, index=t_batch)
             else:
-                output = model(t_args, t_preds, t_word_pos, t_ku_pos, t_mode)
+                output = model(t_args, t_preds, t_word_pos, t_ku_pos, t_mode, tag='train')
 
-            # output shape: 3, Batch
-            t_ga_labels, t_ni_labels, t_wo_labels = get_pointer_label(t_labels)
-
-            # output shape: Batch
-            t_ga_labels = torch.from_numpy(t_ga_labels).long().to(device)
-            t_ni_labels = torch.from_numpy(t_ni_labels).long().to(device)
-            t_wo_labels = torch.from_numpy(t_wo_labels).long().to(device)
-
-            b_size = output[0].shape[0]
-            s_size = output[0].shape[1]
-            criterion_ga = nn.CrossEntropyLoss()
-            criterion_ni = nn.CrossEntropyLoss()
-            criterion_wo = nn.CrossEntropyLoss()
-
-            loss_ga = criterion_ga(output[0].view(b_size, s_size), t_ga_labels)
-            loss_ni = criterion_ni(output[1].view(b_size, s_size), t_ni_labels)
-            loss_wo = criterion_wo(output[2].view(b_size, s_size), t_wo_labels)
-            loss = loss_ga + loss_ni + loss_wo
-            if loss_weight is not None:
-                loss = (loss_weight[0] * loss_ga + loss_weight[1] * loss_ni + loss_weight[2] * loss_wo)
+            t_size = output.shape[2]
+            t_labels = torch.from_numpy(t_labels).long().to(device)
+            loss = criterion(output.view(-1, t_size), t_labels.view(-1))
 
             loss.backward()
 
@@ -336,95 +343,48 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                 torch.nn.utils.clip_grad_norm_(model.parameters(), clip)
 
             optimizer.step()
+            lr_scheduler.step()
 
             vw_train_loss.add(float(loss))
 
-        else:
-            # Make sure network is in eval mode for inference
-            model.eval()
+        # Make sure network is in eval mode for inference
+        model.eval()
 
-            # Turn off gradients for validation, saves memory and computations
-            tp_history = []
-            fp_history = []
-            fn_history = []
-            with torch.no_grad():
-                for d_batch in range(len(dev_batcher)):
-                    # output shape: Batch, Sentence_length
-                    d_args, d_preds, d_labels, d_props, d_word_pos, d_ku_pos, d_mode = dev_batcher.get_batch()
+        # Turn off gradients for validation, saves memory and computations
+        tp_history = []
+        fp_history = []
+        fn_history = []
+        with torch.no_grad():
+            for d_batch in range(len(dev_batcher)):
+                # output shape: Batch, Sentence_length
+                d_args, d_preds, d_labels, d_props, d_word_pos, d_ku_pos, d_mode = dev_batcher.get_batch()
 
-                    # output shape: Batch, Sentence_length
-                    d_word_pos = torch.from_numpy(d_word_pos).long().to(device)
-                    d_ku_pos = torch.from_numpy(d_ku_pos).long().to(device)
-                    d_mode = torch.from_numpy(d_mode).long().to(device)
+                # output shape: Batch, Sentence_length
+                d_word_pos = torch.from_numpy(d_word_pos).long().to(device)
+                d_ku_pos = torch.from_numpy(d_ku_pos).long().to(device)
+                d_mode = torch.from_numpy(d_mode).long().to(device)
 
-                    # output shape: 3, Batch, Sentence_length+1
-                    if arguments.with_db:
-                        ga_prediction, ni_prediction, wo_prediction = model(d_args, d_preds, d_word_pos, d_ku_pos, d_mode, tag='dev', epoch=0, index=d_batch)
-                    else:
-                        ga_prediction, ni_prediction, wo_prediction = model(d_args, d_preds, d_word_pos, d_ku_pos, d_mode)
+                # output shape: 3, Batch, Sentence_length+1
+                if arguments.with_db:
+                    prediction = model(d_args, d_preds, d_word_pos, d_ku_pos, d_mode, tag='dev', epoch=0, index=d_batch)
+                else:
+                    prediction = model(d_args, d_preds, d_word_pos, d_ku_pos, d_mode, tag='dev')
 
-                    # output shape: Batch, Sentence_length+1
-                    b_size = ga_prediction.shape[0]
-                    s_size = ga_prediction.shape[1]
-                    ga_prediction = ga_prediction.view(b_size, s_size)
-                    ni_prediction = ni_prediction.view(b_size, s_size)
-                    wo_prediction = wo_prediction.view(b_size, s_size)
+                # output shape: Batch, Sentence_length+1
+                d_size = prediction.shape[2]
+                d_labels = torch.from_numpy(d_labels).long().to(device)
+                dev_loss = criterion(prediction.view(-1, d_size), d_labels.view(-1))
+                vw_dev_loss.add(float(dev_loss))
 
-                    # output shape: 3, Batch
-                    d_loss_labels = get_pointer_label(d_labels)
+                _, prediction = torch.max(prediction, 2)
+                tp, fp, fn = get_pr_numbers(prediction, d_labels, d_props)
 
-                    # output shape: Batch
-                    d_ga_labels = torch.from_numpy(d_loss_labels[0]).long().to(device)
-                    d_ni_labels = torch.from_numpy(d_loss_labels[1]).long().to(device)
-                    d_wo_labels = torch.from_numpy(d_loss_labels[2]).long().to(device)
-
-                    criterion_ga = nn.CrossEntropyLoss()
-                    criterion_ni = nn.CrossEntropyLoss()
-                    criterion_wo = nn.CrossEntropyLoss()
-
-                    dev_loss_ga = criterion_ga(ga_prediction, d_ga_labels)
-                    dev_loss_ni = criterion_ni(ni_prediction, d_ni_labels)
-                    dev_loss_wo = criterion_wo(wo_prediction, d_wo_labels)
-
-                    dev_loss = dev_loss_ga + dev_loss_ni + dev_loss_wo
-                    vw_dev_loss.add(float(dev_loss))
-
-                    # output shape: Batch
-                    if arguments.decode == 'ordered':
-                        ga_prediction, ni_prediction, wo_prediction = get_ordered_prediction(ga_prediction,
-                                                                                             ni_prediction,
-                                                                                             wo_prediction)
-                    elif arguments.decode == 'global_argmax':
-                        ga_prediction, ni_prediction, wo_prediction = get_restricted_prediction(ga_prediction,
-                                                                                                ni_prediction,
-                                                                                                wo_prediction)
-                    elif arguments.decode == 'no_decoder':
-                        ga_prediction, ni_prediction, wo_prediction = get_no_decode_prediction(ga_prediction,
-                                                                                               ni_prediction,
-                                                                                               wo_prediction)
-
-                    # output shape: Batch, Sentence_length+1
-                    ga_prediction = np.identity(s_size)[ga_prediction].astype(np.int64)
-                    ni_prediction = np.identity(s_size)[ni_prediction].astype(np.int64)
-                    wo_prediction = np.identity(s_size)[wo_prediction].astype(np.int64)
-
-                    if len(ga_prediction.shape) == 1:
-                        ga_prediction = np.expand_dims(ga_prediction, axis=0)
-                    if len(ni_prediction.shape) == 1:
-                        ni_prediction = np.expand_dims(ni_prediction, axis=0)
-                    if len(wo_prediction.shape) == 1:
-                        wo_prediction = np.expand_dims(wo_prediction, axis=0)
-
-                    # output shape: Batch, Sentence_length
-                    d_prediction = concat_labels(ga_prediction, ni_prediction, wo_prediction)
-                    tp, fp, fn = get_pr_numbers(d_prediction, d_labels, d_props)
-
-                    tp_history.append(tp)
-                    fp_history.append(fp)
-                    fn_history.append(fn)
-                    if arguments.overfit:
-                        break
-                dev_batcher.reset()
+                tp_history.append(tp)
+                fp_history.append(fp)
+                fn_history.append(fn)
+                if arguments.overfit:
+                    break
+            dev_batcher.reset()
 
             num_tp = np.sum(tp_history, axis=0)
             num_fp = np.sum(fp_history, axis=0)
@@ -482,8 +442,7 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                           "max F score: {:.4f} ".format(max_all_score),
                           "hyp max F score: {:.4f} ".format(hyp_max_score.value),
                           "f1: {} ".format(f1s),
-                          "TP: {0}/FP: {1}/FN: {2} ".format(num_tp, num_fp, num_fn),
-                          "docode: {}".format(arguments.decode)]
+                          "TP: {0}/FP: {1}/FN: {2} ".format(num_tp, num_fp, num_fn)]
             sw_lap.start()
 
             es.is_maximum_delay(all_score)
@@ -501,13 +460,14 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                 f.write(_line + '\n')
             vw_train_loss.reset()
 
-            if cp.is_maximum(all_score) and arguments.save_model:
+            if arguments.save_model:
                 best_model = model
-            #     model_path = model_dir.joinpath('epoch{0}-f{1:.4f}.h5'.format(e, all_score))
-            #     torch.save(model.state_dict(), model_path)
-            #     model_path = model_dir.joinpath('epoch{0}-f{1:.4f}_bert.h5'.format(e, max_all_score))
-            #     torch.save(model.word_embeddings.state_dict(), model_path)
-            #     best_model_path = model_path
+                # model_path = model_dir.joinpath('epoch{0}-f{1:.4f}.h5'.format(e, all_score))
+                # torch.save(model.state_dict(), model_path)
+                model_path = model_dir.joinpath('epoch{0}-f{1:.4f}_bert.h5'.format(e, all_score))
+                torch.save(model.word_embeddings.state_dict(), model_path)
+                # best_model_path = model_path
+                pass
 
             if es.is_over():
                 break
@@ -521,9 +481,9 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
 
     _log_path = save_dir_base.joinpath('optlog_{0:%Y%m%d-%H%M%S}.txt'.format(now))
     with _log_path.open(mode='a') as f:
-        _line = '{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}, {21}, {22}' \
+        _line = '{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}, {21}, {22}, {23}' \
             .format("{:%Y%m%d-%H%M%S} ".format(get_now()), best_e, max_all_score, best_dep_score, best_zero_score, best_num_tp, best_num_fp, best_num_fn, best_f1s, optim, learning_rate, batch_size, fc1_size, fc2_size,
-                    embedding_dim, hidden_size, clip, weight_decay, dropout_ratio, null_weight, loss_weight, best_model_path, arguments.seed)
+                    embedding_dim, hidden_size, clip, weight_decay, dropout_ratio, null_weight, loss_weight, best_model_path, arguments.seed, arguments.trainbert)
         f.write(_line + '\n')
 
     if arguments.spreadsheet:
@@ -569,7 +529,7 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                       + [arguments.with_linear]\
                       + [num_params]\
                       + [arguments.num_data]\
-                      + [arguments.decode] \
+                      + ["sl"]\
                       + [arguments.model]\
                       + [arguments.with_bccwj]\
                       + [arguments.trainbert]\
@@ -585,7 +545,6 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
     gc.collect()
     if arguments.device != "cpu":
         torch.cuda.empty_cache()
-
 
     ####### Test
     sw = StopWatch()
@@ -611,75 +570,49 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
             t_mode = torch.from_numpy(t_mode).long().to(device)
 
             # output shape: 3, Batch, Sentence_length+1
-            if arguments.with_db:
-                ga_prediction, ni_prediction, wo_prediction = model(t_args, t_preds, t_word_pos, t_ku_pos, t_mode,
-                                                                    tag='dev', epoch=0, index=t_batch)
-            else:
-                ga_prediction, ni_prediction, wo_prediction = model(t_args, t_preds, t_word_pos, t_ku_pos, t_mode)
+            prediction = model(t_args, t_preds, t_word_pos, t_ku_pos, t_mode, tag='test')
 
             # output shape: Batch, Sentence_length+1
-            b_size = ga_prediction.shape[0]
-            s_size = ga_prediction.shape[1]
-            ga_prediction = ga_prediction.view(b_size, s_size)
-            ni_prediction = ni_prediction.view(b_size, s_size)
-            wo_prediction = wo_prediction.view(b_size, s_size)
+            t_size = prediction.shape[2]
+            t_labels = torch.from_numpy(t_labels).long().to(device)
+            test_loss = criterion(prediction.view(-1, t_size), t_labels.view(-1))
+            vw_test_loss.add(float(test_loss))
 
-            # output shape: 3, Batch
-            t_loss_labels = get_pointer_label(t_labels)
+            data_history.append([prediction.tolist()[0], t_props.tolist()[0], t_labels.tolist()[0]])
 
-            # output shape: Batch
-            t_ga_labels = torch.from_numpy(t_loss_labels[0]).long().to(device)
-            t_ni_labels = torch.from_numpy(t_loss_labels[1]).long().to(device)
-            t_wo_labels = torch.from_numpy(t_loss_labels[2]).long().to(device)
+            _, prediction = torch.max(prediction, 2)
+            tp, fp, fn = get_pr_numbers(prediction, t_labels, t_props)
 
-            criterion_ga = nn.CrossEntropyLoss()
-            criterion_ni = nn.CrossEntropyLoss()
-            criterion_wo = nn.CrossEntropyLoss()
-
-            dev_loss_ga = criterion_ga(ga_prediction, t_ga_labels)
-            dev_loss_ni = criterion_ni(ni_prediction, t_ni_labels)
-            dev_loss_wo = criterion_wo(wo_prediction, t_wo_labels)
-
-            dev_loss = dev_loss_ga + dev_loss_ni + dev_loss_wo
-            vw_dev_loss.add(float(dev_loss))
-
-            # output shape: Batch
-            if arguments.decode == 'ordered':
-                ga_prediction, ni_prediction, wo_prediction = get_ordered_prediction(ga_prediction,
-                                                                                     ni_prediction,
-                                                                                     wo_prediction)
-            elif arguments.decode == 'global_argmax':
-                ga_prediction, ni_prediction, wo_prediction = get_restricted_prediction(ga_prediction,
-                                                                                        ni_prediction,
-                                                                                        wo_prediction)
-            elif arguments.decode == 'no_decoder':
-                ga_prediction, ni_prediction, wo_prediction = get_no_decode_prediction(ga_prediction,
-                                                                                       ni_prediction,
-                                                                                       wo_prediction)
-
-            # output shape: Batch, Sentence_length+1
-            ga_prediction = np.identity(s_size)[ga_prediction].astype(np.int64)
-            ni_prediction = np.identity(s_size)[ni_prediction].astype(np.int64)
-            wo_prediction = np.identity(s_size)[wo_prediction].astype(np.int64)
-
-            if len(ga_prediction.shape) == 1:
-                ga_prediction = np.expand_dims(ga_prediction, axis=0)
-            if len(ni_prediction.shape) == 1:
-                ni_prediction = np.expand_dims(ni_prediction, axis=0)
-            if len(wo_prediction.shape) == 1:
-                wo_prediction = np.expand_dims(wo_prediction, axis=0)
-
-            # output shape: Batch, Sentence_length
-            t_prediction = concat_labels(ga_prediction, ni_prediction, wo_prediction)
-            tp, fp, fn = get_pr_numbers(t_prediction, t_labels, t_props)
+            _log_path = save_dir_base.joinpath('detaillog_{0}_{1:%Y%m%d-%H%M%S}.txt'.format(arguments.model, now))
+            with _log_path.open(mode='a', encoding="utf-8") as f:
+                sentence = [item for item in t_args[0]]
+                sentence = ' '.join(sentence)
+                for arg, pred, prop, word_pos, ku_pos, mode, label, predict in zip(t_args[0], t_preds[0], t_props[0], t_word_pos[0], t_ku_pos[0], t_mode[0], t_labels[0], prediction.tolist()[0]):
+                    conflict = False
+                    if type(predict) == list:
+                        ret = ''
+                        for item in predict:
+                            ret += str(item)
+                        predict = ret
+                        conflict = True
+                    _line = '{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}' \
+                        .format(arg,
+                                pred,
+                                prop,
+                                word_pos_indexer.id2word(word_pos),
+                                ku_pos_indexer.id2word(ku_pos),
+                                mode_indexer.id2word(mode),
+                                label,
+                                predict,
+                                sentence,
+                                conflict)
+                    f.write(_line + '\n')
 
             tp_history.append(tp)
             fp_history.append(fp)
             fn_history.append(fn)
             if arguments.overfit:
                 break
-        dev_batcher.reset()
-
 
     num_tp = np.sum(tp_history, axis=0)
     num_fp = np.sum(fp_history, axis=0)
@@ -783,14 +716,13 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
                       + [_log_path]
         write_spreadsheet(_spreadline, type="test")
 
-
     return max_all_score, best_dep_score, best_zero_score
 
 
 if __name__ == "__main__":
     if arguments.hyp:
         train(batch_size=2,
-              learning_rate=0.2, fc1_size=88, optim="sgd", dropout_ratio=0.4,
+              learning_rate=5e-5, optim="adamw", dropout_ratio=0.4,
               norm_type={'clip': 2, 'weight_decay': 0.0})
     else:
         def objective(args):

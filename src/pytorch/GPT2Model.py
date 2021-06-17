@@ -22,12 +22,13 @@ class GPT2Model(Model):
         super().__init__()
         self.tokenizer = T5Tokenizer.from_pretrained("rinna/japanese-gpt2-medium")
         self.model = AutoModelForCausalLM.from_pretrained("rinna/japanese-gpt2-medium")
+        self.tokenizer.max_model_input_sizes = 1024
         for k, v in self.model.named_parameters():
             v.requires_grad = trainable
         self.device = device
         self.embedding_dim = self.model.config.hidden_size
         self.vocab_size = self.model.config.vocab_size
-        self.max_seq_length = 224
+        self.max_seq_length = self.model.config.max_position_embeddings - 4
 
         self.device = torch.device(self.device)
         self.model.to(self.device)
@@ -173,11 +174,31 @@ class GPT2Model(Model):
                 pool_tensors.append(embedding)
         return pool_tensors
 
-    def state_dict(self):
-        return self.model.state_dict()
+    # def state_dict(self):
+    #     return self.model.state_dict()
 
     def get_padding_idx(self):
         return self.tokenizer.pad_token_id
+
+
+class GPT2ModelForPretraining(GPT2Model):
+    def __init__(self,
+                 vocab_file_name="vocab.txt",
+                 device='cpu',
+                 trainable=False):
+        super().__init__(vocab_file_name=vocab_file_name,
+                         device=device,
+                         trainable=trainable)
+
+    def get_word_embedding(self, batched_words, dup_mode='mean', dataset='ntc'):
+        if dataset == 'mainichi':
+            outputs = self.tokenizer(batched_words, padding=True, truncation=True, return_tensors="pt")
+        else:
+            outputs = self.tokenizer([''.join(words) for words in batched_words], padding=True, truncation=True, return_tensors="pt")
+        outputs.data['input_ids'] = outputs.data['input_ids'].to(self.device)
+        return self.model(outputs.data['input_ids'], labels=outputs.data['input_ids']).loss
+
+
 
 
 if __name__ == "__main__":

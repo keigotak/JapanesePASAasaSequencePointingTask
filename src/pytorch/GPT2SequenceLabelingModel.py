@@ -2,8 +2,9 @@
 import torch
 import torch.nn as nn
 from Model import Model
-from GPT2Model import GPT2Model
+from GPT2Model import GPT2Model, GPT2ModelForPretraining
 import MeCab
+from collections import OrderedDict
 
 import sys
 import os
@@ -97,16 +98,16 @@ class GPT2SequenceLabelingModel(Model):
         if self.dropout_ratio > 0:
             self.dropout = nn.Dropout(self.dropout_ratio)
 
-        self.with_collocated_sentence = None
+        self.with_collocated_sentence = 'prev'
+        self.n_collocated_sentence = -2
         if self.with_collocated_sentence == 'next':
-            ns = GetNextSentences(with_bccwj=with_bccwj)
+            ns = GetNextSentences(with_bccwj=with_bccwj, num_sentence=self.n_collocated_sentence)
             self.collocated_sentences = {key: ns.get_collocated_sentences(key) for key in ['train', 'dev', 'test']}
             self.tokenizer = self.word_embeddings.tokenizer
         elif self.with_collocated_sentence == 'prev':
-            ps = GetPreviousSentences(with_bccwj=with_bccwj)
+            ps = GetPreviousSentences(with_bccwj=with_bccwj, num_sentence=self.n_collocated_sentence)
             self.collocated_sentences = {key: ps.get_collocated_sentences(key) for key in ['train', 'dev', 'test']}
             self.tokenizer = self.word_embeddings.tokenizer
-
 
         self.with_sentence_transformer = False
         if self.with_sentence_transformer:
@@ -151,7 +152,6 @@ class GPT2SequenceLabelingModel(Model):
                     words = [word for word in words if word != "[PAD]"]
                     sentence = ''.join(words)
                     if sentence in self.collocated_sentences[tag].keys():
-                        # nouns = [line.split()[0] for line in self.mecab.parse(''.join(words)).splitlines() if "名詞" in line.split()[-1]]
                         nouns = self.collocated_sentences[tag][sentence]
                         collocated_sentence = ["[SEP]"] + nouns
                     else:
@@ -231,6 +231,15 @@ class GPT2SequenceLabelingModel(Model):
         #     modified_state_dict_bert['word_embeddings.model.' + k] = v
         self.load_state_dict(state_dict)
 
+    def load_ft_gpt2(self, path):
+        path = str(path.resolve())
+        if '.h5' in path:
+            path = path.replace('.h5', '')
+        # state_dict = torch.load(path + '.h5', map_location='cpu')
+        state_dict_bert = torch.load(path + '_bert.h5', map_location='cpu')
+        self.word_embeddings.load_state_dict(state_dict_bert)
+
+
     def append_zero_tensors(self, modified_size, current_tensor):
         batch_size = current_tensor.shape[0]
         current_size = current_tensor.shape[1]
@@ -242,6 +251,183 @@ class GPT2SequenceLabelingModel(Model):
         else:
             return current_tensor
 
+
+class GPT2SequenceLabelingModelForFineTuning(GPT2SequenceLabelingModel):
+    def __init__(self, word_pos_size=20,
+                 ku_pos_size=20,
+                 mode_size=2,
+                 target_size=4,
+                 device="cpu",
+                 pos_embedding_dim=10,
+                 mode_embedding_dim=2,
+                 word_pos_pred_idx=0,
+                 vocab_padding_idx=-1,
+                 word_pos_padding_idx=-1,
+                 ku_pos_padding_idx=-1,
+                 mode_padding_idx=-1,
+                 num_layers=1,
+                 dropout_ratio=.1,
+                 seed=1,
+                 bidirectional=True, return_seq=False,
+                 batch_first=True, continue_seq=False,
+                 trainbert=False,
+                 with_bccwj=False):
+        super().__init__(word_pos_size=word_pos_size,
+                 ku_pos_size=ku_pos_size,
+                 mode_size=mode_size,
+                 target_size=target_size,
+                 device=device,
+                 pos_embedding_dim=pos_embedding_dim,
+                 mode_embedding_dim=mode_embedding_dim,
+                 word_pos_pred_idx=word_pos_pred_idx,
+                 vocab_padding_idx=vocab_padding_idx,
+                 word_pos_padding_idx=word_pos_padding_idx,
+                 ku_pos_padding_idx=ku_pos_padding_idx,
+                 mode_padding_idx=mode_padding_idx,
+                 num_layers=num_layers,
+                 dropout_ratio=dropout_ratio,
+                 seed=seed,
+                 bidirectional=bidirectional, return_seq=return_seq,
+                 batch_first=batch_first, continue_seq=continue_seq,
+                 trainbert=trainbert,
+                 with_bccwj=with_bccwj)
+
+    def forward(self, arg, pred, word_pos, ku_pos, mode, tag):
+        sentence_length = len(arg[0])
+        if self.with_collocated_sentence is not None:
+            if self.with_sentence_transformer:
+                collocated_sentence_embeddings = []
+                for words in arg:
+                    words = [word for word in words if word != "[PAD]"]
+                    sentence = ''.join(words)
+                    if sentence in self.collocated_sentences[tag].keys():
+                        collocated_embedding = self.word_embeddings.get_word_embedding([self.collocated_sentences[tag][sentence]])
+                        collocated_embedding = collocated_embedding['embedding']
+                        collocated_embedding = torch.mean(collocated_embedding, dim=1).squeeze(0).to(self.device)
+                    else:
+                        collocated_embedding = torch.zeros(self.embedding_dim).to(self.device)
+                    collocated_sentence_embeddings.append(collocated_embedding)
+            else:
+                appended_args = []
+                for i, words in enumerate(arg):
+                    words = [word for word in words if word != "[PAD]"]
+                    sentence = ''.join(words)
+                    if sentence in self.collocated_sentences[tag].keys():
+                        nouns = self.collocated_sentences[tag][sentence]
+                        collocated_sentence = ["[SEP]"] + nouns
+                    else:
+                        collocated_sentence = ["[SEP]"]
+                    words = words + collocated_sentence
+                    # words = words + ['[SEP]', pred[i][0], '[GA]', '[WO]', '[NI]']
+                    appended_args.append(words)
+                arg = appended_args
+
+        # output shape: Batch, Sentence_length, word_embed_size
+        arg_rets = self.word_embeddings.get_word_embedding(arg)
+        arg_embeds = self.vocab_zero_padding_bert(arg_rets["id"], arg_rets["embedding"])
+        arg_embeds = self.append_zero_tensors(modified_size=sentence_length, current_tensor=arg_embeds)
+        pred_rets = self.word_embeddings.get_pred_embedding(arg_embeds, arg_rets["token"], word_pos, self.word_pos_pred_idx)
+        pred_embeds = pred_rets["embedding"]
+        pred_embeds = self.append_zero_tensors(modified_size=sentence_length, current_tensor=pred_embeds)
+
+        # output shape: Batch, Sentence_length, pos_embed_size
+        word_pos_embeds = self.word_pos_embedding(word_pos)
+        ku_pos_embeds = self.ku_pos_embedding(ku_pos)
+
+        # output shape: Batch, Sentence_length, mode_embed_size
+        mode_embeds = self.mode_embedding(mode)
+
+        if self.with_pos_embedding:
+            # output shape: Batch, Sentence_length, 2 * word_embed_size + 2 * pos_embed_size
+            if arg_embeds.shape[1] != word_pos_embeds.shape[1]:
+                arg_embeds = torch.narrow(arg_embeds, 1, 0, word_pos_embeds.shape[1])
+                pred_embeds = torch.narrow(pred_embeds, 1, 0, word_pos_embeds.shape[1])
+            concatten_embeds = torch.cat((arg_embeds, pred_embeds, word_pos_embeds, ku_pos_embeds, mode_embeds), dim=2)
+        else:
+            # output shape: Batch, Sentence_length, 2 * word_embed_size
+            concatten_embeds = torch.cat((arg_embeds, pred_embeds, mode_embeds), dim=2)
+
+        tag_space = self.hidden2tag(concatten_embeds)
+
+        return tag_space
+
+
+class GPT2SequenceLabelingModelForPretraining(GPT2SequenceLabelingModel):
+    def __init__(self, word_pos_size=20,
+                 ku_pos_size=20,
+                 mode_size=2,
+                 target_size=4,
+                 device="cpu",
+                 pos_embedding_dim=10,
+                 mode_embedding_dim=2,
+                 word_pos_pred_idx=0,
+                 vocab_padding_idx=-1,
+                 word_pos_padding_idx=-1,
+                 ku_pos_padding_idx=-1,
+                 mode_padding_idx=-1,
+                 num_layers=1,
+                 dropout_ratio=.1,
+                 seed=1,
+                 bidirectional=True, return_seq=False,
+                 batch_first=True, continue_seq=False,
+                 trainbert=False,
+                 with_bccwj=False):
+        super().__init__(word_pos_size=word_pos_size,
+                 ku_pos_size=ku_pos_size,
+                 mode_size=mode_size,
+                 target_size=target_size,
+                 device=device,
+                 pos_embedding_dim=pos_embedding_dim,
+                 mode_embedding_dim=mode_embedding_dim,
+                 word_pos_pred_idx=word_pos_pred_idx,
+                 vocab_padding_idx=vocab_padding_idx,
+                 word_pos_padding_idx=word_pos_padding_idx,
+                 ku_pos_padding_idx=ku_pos_padding_idx,
+                 mode_padding_idx=mode_padding_idx,
+                 num_layers=num_layers,
+                 dropout_ratio=dropout_ratio,
+                 seed=seed,
+                 bidirectional=bidirectional, return_seq=return_seq,
+                 batch_first=batch_first, continue_seq=continue_seq,
+                 trainbert=trainbert,
+                 with_bccwj=with_bccwj)
+        self.word_embeddings = GPT2ModelForPretraining(device=device, trainable=trainbert)
+        self.with_collocated_sentence = None
+
+
+    def forward(self, arg, pred=None, word_pos=None, ku_pos=None, mode=None, tag=None):
+        # sentence_length = len(arg[0])
+        if self.with_collocated_sentence is not None:
+            if self.with_sentence_transformer:
+                collocated_sentence_embeddings = []
+                for words in arg:
+                    words = [word for word in words if word != "[PAD]"]
+                    sentence = ''.join(words)
+                    if sentence in self.collocated_sentences[tag].keys():
+                        collocated_embedding = collocated_embedding['embedding']
+                        collocated_embedding = torch.mean(collocated_embedding, dim=1).squeeze(0).to(self.device)
+                    else:
+                        collocated_embedding = torch.zeros(self.embedding_dim).to(self.device)
+                    collocated_sentence_embeddings.append(collocated_embedding)
+            else:
+                appended_args = []
+                for i, words in enumerate(arg):
+                    words = [word for word in words if word != "[PAD]"]
+                    sentence = ''.join(words)
+                    if sentence in self.collocated_sentences[tag].keys():
+                        nouns = self.collocated_sentences[tag][sentence]
+                        collocated_sentence = ["[SEP]"] + nouns
+                    else:
+                        collocated_sentence = ["[SEP]"]
+                    words = words + collocated_sentence
+                    # words = words + ['[SEP]', pred[i][0], '[GA]', '[WO]', '[NI]']
+                    appended_args.append(words)
+                arg = appended_args
+
+        # output shape: Batch, Sentence_length, word_embed_size
+        loss = self.word_embeddings.get_word_embedding(arg, dataset='mainichi')
+
+        return loss
 
 if __name__ == "__main__":
     model = GPT2SequenceLabelingModel(trainbert=False)
