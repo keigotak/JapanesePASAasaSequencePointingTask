@@ -37,14 +37,16 @@ from utils.ServerManager import ServerManager
 from utils.HelperFunctions import get_argparser, get_pasa, get_now, get_save_dir, add_null, get_pointer_label, concat_labels, get_cuda_id, translate_score_and_loss, print_b
 from utils.GoogleSpreadSheet import write_spreadsheet
 from utils.ParallelTrials import ParallelTrials
-from utils.WSCDataset import WSCGPT2Dataset
+from utils.WSCDataset import WSCT5Dataset
 
 from Loss import *
 from Batcher import SequenceBatcherBert
 from Validation import get_pr_numbers, get_f_score
 from Decoders import get_restricted_prediction, get_ordered_prediction, get_no_decode_prediction
 
-from GPT2SequencePointingModel import GPT2SimpleSequencePointingModel
+from T5SequencePointingModel import T5SimpleSequencePointingModel
+from transformers import AdamW
+
 
 arguments = get_argparser()
 
@@ -121,7 +123,7 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
     fc2_size = 0
     dropout_ratio = round(dropout_ratio, 2)
 
-    model = GPT2SimpleSequencePointingModel(target_size=1,
+    model = T5SimpleSequencePointingModel(target_size=1,
                                       dropout_ratio=dropout_ratio,
                                       device=device,
                                       seed=arguments.seed)
@@ -141,16 +143,16 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
         num_params += len(parameter)
     print_b(num_params)
 
-    if arguments.device != "cpu":
-        if torch.cuda.device_count() > 1:
-            print("Let's use", torch.cuda.device_count(), "GPUs!")
-            model = nn.DataParallel(model, device_ids=get_cuda_id(arguments.device))
+    # if arguments.device != "cpu":
+    #     if torch.cuda.device_count() > 1:
+    #         print("Let's use", torch.cuda.device_count(), "GPUs!")
+    #         model = nn.DataParallel(model, device_ids=get_cuda_id(arguments.device))
     model.to(device)
 
     weight_decay = norm_type['weight_decay']
     clip = int(norm_type['clip'])
 
-    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
     if optim == 'adadelta':
         optimizer = torch.optim.Adadelta(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
     elif optim == 'sgd':
@@ -161,10 +163,11 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
         optimizer = torch.optim.RMSprop(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
     elif optim == 'adabound':
         optimizer = adabound.AdaBound(model.parameters(), lr=learning_rate, final_lr=0.1)
+    optimizer = AdamW(model.parameters(), lr=2e-5)
 
-    wsc_train_batcher = DataLoader(WSCGPT2Dataset(mode='train'), batch_size=32, shuffle=True)
-    wsc_dev_batcher = DataLoader(WSCGPT2Dataset(mode='dev'), batch_size=1, shuffle=False)
-    wsc_test_batcher = DataLoader(WSCGPT2Dataset(mode='test'), batch_size=1, shuffle=False)
+    wsc_train_batcher = DataLoader(WSCT5Dataset(mode='train'), batch_size=1, shuffle=True)
+    wsc_dev_batcher = DataLoader(WSCT5Dataset(mode='dev'), batch_size=1, shuffle=False)
+    wsc_test_batcher = DataLoader(WSCT5Dataset(mode='test'), batch_size=1, shuffle=False)
 
     if len(trials) != 1 and not arguments.hyp:
         hyp_max_score.set(translate_score_and_loss(trials.best_trial['result']['loss']))
@@ -300,7 +303,7 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
             print(f'test, {e}, ' + ', '.join([str(acc), str(tp), str(fn)]))
             result_texts.append(','.join(['test', str(e), str(acc), str(tp), str(fn), str('-')]))
 
-        with Path(f'./wsc_gpt2_{token_pooling_method}_result.txt').open('w') as f:
+        with Path(f'./wsc_t5_{token_pooling_method}_result.dec.txt').open('w') as f:
             for text in result_texts:
                 f.write(text)
                 f.write('\n')
@@ -308,7 +311,7 @@ def train(batch_size, learning_rate=1e-3, fc1_size=128, optim="adam",  dropout_r
 if __name__ == "__main__":
     if arguments.hyp:
         train(batch_size=2,
-              learning_rate=0.01, fc1_size=32, optim="sgd", dropout_ratio=0.4,
+              learning_rate=0.01, fc1_size=88, optim="sgd", dropout_ratio=0.4,
               norm_type={'clip': 2, 'weight_decay': 0.0})
     else:
         def objective(args):

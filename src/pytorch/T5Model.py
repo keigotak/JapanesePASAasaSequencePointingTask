@@ -5,7 +5,7 @@ from operator import itemgetter
 import numpy as np
 import torch
 import torch.nn as nn
-from transformers import T5Tokenizer, AutoModelForCausalLM
+from transformers import T5Tokenizer, T5Model
 import os
 import sys
 
@@ -14,31 +14,29 @@ from utils.HelperFunctions import get_cuda_id
 from Model import Model
 
 
-class GPT2Model(Model):
+class T5SPModel(Model):
     def __init__(self,
                  vocab_file_name="vocab.txt",
                  device='cpu',
                  trainable=False):
         super().__init__()
-        self.tokenizer = T5Tokenizer.from_pretrained("rinna/japanese-gpt2-medium")
-        self.model = AutoModelForCausalLM.from_pretrained("rinna/japanese-gpt2-medium")
+        self.tokenizer = T5Tokenizer.from_pretrained("megagonlabs/t5-base-japanese-web")
+        self.model = T5Model.from_pretrained("megagonlabs/t5-base-japanese-web")
         for k, v in self.model.named_parameters():
             v.requires_grad = trainable
         self.device = device
         self.embedding_dim = self.model.config.hidden_size
         self.vocab_size = self.model.config.vocab_size
-        self.max_seq_length = self.model.config.max_position_embeddings - 4
-        state_dict = torch.load('../../results/gpt2-mainichi/epoch0.pkl', map_location='cpu')
-        self.model.load_state_dict(state_dict)
+        self.max_seq_length = 128 # self.model.config.max_length - 4
 
-        if torch.cuda.device_count() > 1:
-            self.device = torch.device('cuda')
-            print("Let's use", torch.cuda.device_count(), "GPUs!")
-            self.model = nn.DataParallel(self.model, device_ids=[i for i in range(torch.cuda.device_count())])
-            self.model.to(self.device)
-        else:
-            self.device = torch.device(self.device)
-            self.model.to(self.device)
+        # if torch.cuda.device_count() > 1:
+        #     self.device = torch.device('cuda')
+        #     print("Let's use", torch.cuda.device_count(), "GPUs!")
+        #     self.model = nn.DataParallel(self.model, device_ids=[i for i in range(torch.cuda.device_count())])
+        #     self.model.to(self.device)
+        # else:
+        self.device = torch.device(self.device)
+        self.model.to(self.device)
         self.slice = 'None'
 
     def _preprocess_text(self, text):
@@ -188,7 +186,7 @@ class GPT2Model(Model):
         return self.tokenizer.pad_token_id
 
 
-class GPT2ModelForPretraining(GPT2Model):
+class T5ModelForPretraining(T5Model):
     def __init__(self,
                  vocab_file_name="vocab.txt",
                  device='cpu',
@@ -209,9 +207,8 @@ class GPT2ModelForPretraining(GPT2Model):
 
 
 
-
 if __name__ == "__main__":
-    model = GPT2Model(trainable=False)
+    model = T5Model(trainable=False)
     ret = model.get_word_embedding([[u"どう", u"いた", u"しま", u"して", u"。"]], dup_mode='lead')
     print(ret)
     for k, v in model.named_parameters():

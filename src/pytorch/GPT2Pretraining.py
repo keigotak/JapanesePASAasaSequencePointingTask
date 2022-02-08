@@ -85,7 +85,7 @@ if mode_train_dataset == 'mainichi':
     with mainichi_path.open('r') as f:
         train_args = f.readlines()
     train_args = [text.strip() for text in train_args]
-
+    train_args = [text for text in train_args if len(text) < 1024]
 
 vocab = Vocab()
 vocab.fit(train_vocab, arguments.vocab_thresh)
@@ -164,7 +164,8 @@ def train(batch_size, learning_rate=5e-5, optim="adamw",  dropout_ratio=0.4, nul
     #     if torch.cuda.device_count() > 1:
     #         print("Let's use", torch.cuda.device_count(), "GPUs!")
     #         model = nn.DataParallel(model, device_ids=get_cuda_id(arguments.device))
-    model.to(device)
+    if torch.cuda.device_count() == 1 or arguments.device == 'cpu':
+        model.to(device)
 
     weight_decay = norm_type['weight_decay']
     clip = int(norm_type['clip'])
@@ -277,10 +278,21 @@ def train(batch_size, learning_rate=5e-5, optim="adamw",  dropout_ratio=0.4, nul
 
             optimizer.zero_grad()
             # output shape: Batch, Sentence_length
-            t_args = train_args[t_batch: t_batch + batch_size]
+            if len(train_args) >= t_batch * batch_size + batch_size:
+                t_args = train_args[t_batch * batch_size: t_batch * batch_size + batch_size]
+            else:
+                t_args = train_args[t_batch * batch_size: ]
+
+
+
+            if type(t_args[0]) != str or len(t_args) == 0:
+                continue
+
             # t_args, t_preds, t_labels, t_props, t_word_pos, t_ku_pos, t_mode = train_batcher.get_batch()
 
             # output shape: 3, Batch, Sentence_length
+
+            # print(t_args)
             loss = model(t_args, None, None, None, None, tag='train')
             loss.backward()
 
@@ -292,218 +304,227 @@ def train(batch_size, learning_rate=5e-5, optim="adamw",  dropout_ratio=0.4, nul
 
             vw_train_loss.add(float(loss))
 
+        if mode_train_dataset != 'mainichi':
+
+            # Make sure network is in eval mode for inference
+            model.eval()
+
+            # Turn off gradients for validation, saves memory and computations
+            tp_history = []
+            fp_history = []
+            fn_history = []
+            with torch.no_grad():
+                for d_batch in range(len(dev_batcher)):
+                    # output shape: Batch, Sentence_length
+                    d_args, d_preds, d_labels, d_props, d_word_pos, d_ku_pos, d_mode = dev_batcher.get_batch()
+
+                    # output shape: Batch, Sentence_length
+                    d_word_pos = torch.from_numpy(d_word_pos).long().to(device)
+                    d_ku_pos = torch.from_numpy(d_ku_pos).long().to(device)
+                    d_mode = torch.from_numpy(d_mode).long().to(device)
+
+                    # output shape: 3, Batch, Sentence_length+1
+                    dev_loss = model(d_args, None, None, None, None, tag='dev')
+
+                    # output shape: Batch, Sentence_length+1
+                    vw_dev_loss.add(float(dev_loss))
+
+                    tp, fp, fn = 0, 0, 0
+
+                    tp_history.append(tp)
+                    fp_history.append(fp)
+                    fn_history.append(fn)
+                    if arguments.overfit:
+                        break
+                dev_batcher.reset()
+
+                # print_text = ["Current: {:%Y%m%d-%H%M%S} ".format(get_now()),
+                #               "Lap: {:.2f}s/{:.2f}s ".format(sw_lap.stop(), sw_total.stop()),
+                #               "Hyp: {}/{} ".format(op.get_count(), arguments.max_eval),
+                #               "Epoch: {:03}/{:03} ".format(e + 1, arguments.epochs),
+                #               "Data: {:06}/{:06} ".format(train_batcher.get_current_index(), train_batcher.get_max_index()),
+                #               "Train Loss: {:.4f} ".format(vw_train_loss.get_ave()),
+                #               "Dev Loss: {:.4f} ".format(vw_dev_loss.get_ave())]
+                print_text = ["Current: {:%Y%m%d-%H%M%S} ".format(get_now()),
+                              "Lap: {:.2f}s/{:.2f}s ".format(sw_lap.stop(), sw_total.stop()),
+                              # "Hyp: {}/{} ".format(op.get_count(), arguments.max_eval),
+                              "Epoch: {:03}/{:03} ".format(e + 1, arguments.epochs),
+                              # "Data: {:06}/{:06} ".format(train_batcher.get_current_index(), train_batcher.get_max_index()),
+                              "Train Loss: {:.4f} ".format(vw_train_loss.get_ave())]
+                sw_lap.start()
+
+                # es.is_maximum_delay(all_score)
+
+                print_b(''.join(print_text))
+                if arguments.line and (es.is_over() or e == arguments.epochs - 1):
+                    ln.send_message("\nStart: {0:%Y%m%d-%H%M%S}\n".format(now) +
+                                    arguments.model + "\n" +
+                                    "\n".join(print_text + _params))
+
+                max_all_score, all_score = 0.0, 0.0
+                num_tp, num_fp, num_fn = 0, 0, 0
+                _log_path = save_dir_base.joinpath('trainlog_{0:%Y%m%d-%H%M%S}.txt'.format(now))
+                with _log_path.open(mode='a') as f:
+                    _line = '{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}' \
+                        .format(get_now(), e + 1, vw_train_loss.get_ave(), vw_dev_loss.get_ave(), all_score, max_all_score, num_tp, num_fp, num_fn)
+                    f.write(_line + '\n')
+                vw_train_loss.reset()
+
+                if arguments.save_model:
+                    best_model = model
+                    # model_path = model_dir.joinpath('epoch{0}-f{1:.4f}.h5'.format(e, all_score))
+                    # torch.save(model.state_dict(), model_path)
+                    model_path = model_dir.joinpath('epoch{0}-f{1:.4f}_bert.h5'.format(e, all_score))
+                    torch.save(model.word_embeddings.state_dict(), model_path)
+                    # best_model_path = model_path
+                    pass
+
+                if es.is_over():
+                    break
+
+            train_batcher.reshuffle()
+            dev_batcher.reset()
+
+            if es.is_over():
+                print('Stop learning with early stopping.')
+                break
+
+    if mode_train_dataset != 'mainichi':
+        # _log_path = save_dir_base.joinpath('optlog_{0:%Y%m%d-%H%M%S}.txt'.format(now))
+        # with _log_path.open(mode='a') as f:
+        #     _line = '{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}, {21}, {22}, {23}' \
+        #         .format("{:%Y%m%d-%H%M%S} ".format(get_now()), best_e, max_all_score, best_dep_score, best_zero_score, best_num_tp, best_num_fp, best_num_fn, best_f1s, optim, learning_rate, batch_size, fc1_size, fc2_size,
+        #                 embedding_dim, hidden_size, clip, weight_decay, dropout_ratio, null_weight, loss_weight, best_model_path, arguments.seed, arguments.trainbert)
+        #     f.write(_line + '\n')
+
+        # if arguments.spreadsheet:
+        #     str_best_num_tp = list(map(str, best_num_tp))
+        #     str_best_num_fp = list(map(str, best_num_fp))
+        #     str_best_num_fn = list(map(str, best_num_fn))
+        #     str_best_f1s = list(map(str, best_f1s))
+        #     if null_weight is None:
+        #         null_weight = [0] * 4
+        #     str_null_weight = list(map(str, null_weight))
+        #     if loss_weight is None:
+        #         str_loss_weight = list(map(str, [0] * 4))
+        #     else:
+        #         str_loss_weight = [0] + list(map(str, loss_weight.values()))
+        #     _file = Path(__file__).name
+        #     _spreadline = ["{:%Y%m%d-%H%M%S} ".format(now),
+        #                    "{:%Y%m%d-%H%M%S-%f} ".format(get_now()),
+        #                    _file,
+        #                    '{} {}'.format(sm.server_name, sm.device_name),
+        #                    best_e,
+        #                    max_all_score,
+        #                    best_dep_score,
+        #                    best_zero_score]\
+        #                   + str_best_num_tp\
+        #                   + str_best_num_fp\
+        #                   + str_best_num_fn\
+        #                   + str_best_f1s\
+        #                   + [optim,
+        #                      learning_rate,
+        #                      batch_size,
+        #                      fc1_size,
+        #                      fc2_size,
+        #                      embedding_dim,
+        #                      hidden_size,
+        #                      clip,
+        #                      weight_decay,
+        #                      dropout_ratio]\
+        #                   + str_null_weight\
+        #                   + str_loss_weight\
+        #                   + [best_model_path]\
+        #                   + [arguments.seed]\
+        #                   + [gm.sha]\
+        #                   + [arguments.with_linear]\
+        #                   + [num_params]\
+        #                   + [arguments.num_data]\
+        #                   + ["sl"]\
+        #                   + [arguments.model]\
+        #                   + [arguments.with_bccwj]\
+        #                   + [arguments.trainbert]\
+        #                   + [arguments.with_db]
+        #     write_spreadsheet(_spreadline)
+
+        op.count_up()
+
+        # del model
+        # del optimizer
+        # del train_batcher
+        # del dev_batcher
+        gc.collect()
+        if arguments.device != "cpu":
+            torch.cuda.empty_cache()
+
+        ####### Test
+        sw = StopWatch()
+        sw.start()
+
         # Make sure network is in eval mode for inference
+        model = best_model
         model.eval()
 
         # Turn off gradients for validation, saves memory and computations
         tp_history = []
         fp_history = []
         fn_history = []
+        data_history = []
         with torch.no_grad():
-            for d_batch in range(len(dev_batcher)):
+            for t_batch in range(len(test_batcher)):
                 # output shape: Batch, Sentence_length
-                d_args, d_preds, d_labels, d_props, d_word_pos, d_ku_pos, d_mode = dev_batcher.get_batch()
+                t_args, t_preds, t_labels, t_props, t_word_pos, t_ku_pos, t_mode = test_batcher.get_batch()
 
                 # output shape: Batch, Sentence_length
-                d_word_pos = torch.from_numpy(d_word_pos).long().to(device)
-                d_ku_pos = torch.from_numpy(d_ku_pos).long().to(device)
-                d_mode = torch.from_numpy(d_mode).long().to(device)
+                t_word_pos = torch.from_numpy(t_word_pos).long().to(device)
+                t_ku_pos = torch.from_numpy(t_ku_pos).long().to(device)
+                t_mode = torch.from_numpy(t_mode).long().to(device)
 
                 # output shape: 3, Batch, Sentence_length+1
-                dev_loss = model(d_args, d_preds, d_word_pos, d_ku_pos, d_mode, tag='dev')
+                test_loss = model(t_args, t_preds, t_word_pos, t_ku_pos, t_mode, tag='test')
 
                 # output shape: Batch, Sentence_length+1
-                vw_dev_loss.add(float(dev_loss))
+                vw_test_loss.add(float(test_loss))
 
                 tp, fp, fn = 0, 0, 0
+
+                _log_path = save_dir_base.joinpath('detaillog_{0}_{1:%Y%m%d-%H%M%S}.txt'.format(arguments.model, now))
+                with _log_path.open(mode='a', encoding="utf-8") as f:
+                    sentence = [item for item in t_args[0]]
+                    sentence = ' '.join(sentence)
+                    for arg, pred, prop, word_pos, ku_pos, mode, label, predict in zip(t_args[0], t_preds[0], t_props[0], t_word_pos[0], t_ku_pos[0], t_mode[0], t_labels[0], prediction.tolist()[0]):
+                        conflict = False
+                        if type(predict) == list:
+                            ret = ''
+                            for item in predict:
+                                ret += str(item)
+                            predict = ret
+                            conflict = True
+                        _line = '{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}' \
+                            .format(arg,
+                                    pred,
+                                    prop,
+                                    word_pos_indexer.id2word(word_pos),
+                                    ku_pos_indexer.id2word(ku_pos),
+                                    mode_indexer.id2word(mode),
+                                    label,
+                                    predict,
+                                    sentence,
+                                    conflict)
+                        f.write(_line + '\n')
 
                 tp_history.append(tp)
                 fp_history.append(fp)
                 fn_history.append(fn)
                 if arguments.overfit:
                     break
-            dev_batcher.reset()
 
-            print_text = ["Current: {:%Y%m%d-%H%M%S} ".format(get_now()),
-                          "Lap: {:.2f}s/{:.2f}s ".format(sw_lap.stop(), sw_total.stop()),
-                          "Hyp: {}/{} ".format(op.get_count(), arguments.max_eval),
-                          "Epoch: {:03}/{:03} ".format(e + 1, arguments.epochs),
-                          "Data: {:06}/{:06} ".format(train_batcher.get_current_index(), train_batcher.get_max_index()),
-                          "Train Loss: {:.4f} ".format(vw_train_loss.get_ave()),
-                          "Dev Loss: {:.4f} ".format(vw_dev_loss.get_ave())]
-            sw_lap.start()
+        print_text = ["Current: {:%Y%m%d-%H%M%S} ".format(get_now()),
+                      "Lap: {:.2f}s ".format(sw.stop()),
+                      "Data: {:06}/{:06} ".format(test_batcher.get_current_index(), test_batcher.get_max_index()),
+                      "Test Loss: {:.4f} ".format(vw_test_loss.get_ave())]
 
-            # es.is_maximum_delay(all_score)
-
-            print_b(''.join(print_text))
-            if arguments.line and (es.is_over() or e == arguments.epochs - 1):
-                ln.send_message("\nStart: {0:%Y%m%d-%H%M%S}\n".format(now) +
-                                arguments.model + "\n" +
-                                "\n".join(print_text + _params))
-
-            max_all_score, all_score = 0.0, 0.0
-            num_tp, num_fp, num_fn = 0, 0, 0
-            _log_path = save_dir_base.joinpath('trainlog_{0:%Y%m%d-%H%M%S}.txt'.format(now))
-            with _log_path.open(mode='a') as f:
-                _line = '{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}' \
-                    .format(get_now(), e + 1, vw_train_loss.get_ave(), vw_dev_loss.get_ave(), all_score, max_all_score, num_tp, num_fp, num_fn)
-                f.write(_line + '\n')
-            vw_train_loss.reset()
-
-            if arguments.save_model:
-                best_model = model
-                # model_path = model_dir.joinpath('epoch{0}-f{1:.4f}.h5'.format(e, all_score))
-                # torch.save(model.state_dict(), model_path)
-                model_path = model_dir.joinpath('epoch{0}-f{1:.4f}_bert.h5'.format(e, all_score))
-                torch.save(model.word_embeddings.state_dict(), model_path)
-                # best_model_path = model_path
-                pass
-
-            if es.is_over():
-                break
-
-        train_batcher.reshuffle()
-        dev_batcher.reset()
-
-        if es.is_over():
-            print('Stop learning with early stopping.')
-            break
-
-    # _log_path = save_dir_base.joinpath('optlog_{0:%Y%m%d-%H%M%S}.txt'.format(now))
-    # with _log_path.open(mode='a') as f:
-    #     _line = '{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}, {21}, {22}, {23}' \
-    #         .format("{:%Y%m%d-%H%M%S} ".format(get_now()), best_e, max_all_score, best_dep_score, best_zero_score, best_num_tp, best_num_fp, best_num_fn, best_f1s, optim, learning_rate, batch_size, fc1_size, fc2_size,
-    #                 embedding_dim, hidden_size, clip, weight_decay, dropout_ratio, null_weight, loss_weight, best_model_path, arguments.seed, arguments.trainbert)
-    #     f.write(_line + '\n')
-
-    # if arguments.spreadsheet:
-    #     str_best_num_tp = list(map(str, best_num_tp))
-    #     str_best_num_fp = list(map(str, best_num_fp))
-    #     str_best_num_fn = list(map(str, best_num_fn))
-    #     str_best_f1s = list(map(str, best_f1s))
-    #     if null_weight is None:
-    #         null_weight = [0] * 4
-    #     str_null_weight = list(map(str, null_weight))
-    #     if loss_weight is None:
-    #         str_loss_weight = list(map(str, [0] * 4))
-    #     else:
-    #         str_loss_weight = [0] + list(map(str, loss_weight.values()))
-    #     _file = Path(__file__).name
-    #     _spreadline = ["{:%Y%m%d-%H%M%S} ".format(now),
-    #                    "{:%Y%m%d-%H%M%S-%f} ".format(get_now()),
-    #                    _file,
-    #                    '{} {}'.format(sm.server_name, sm.device_name),
-    #                    best_e,
-    #                    max_all_score,
-    #                    best_dep_score,
-    #                    best_zero_score]\
-    #                   + str_best_num_tp\
-    #                   + str_best_num_fp\
-    #                   + str_best_num_fn\
-    #                   + str_best_f1s\
-    #                   + [optim,
-    #                      learning_rate,
-    #                      batch_size,
-    #                      fc1_size,
-    #                      fc2_size,
-    #                      embedding_dim,
-    #                      hidden_size,
-    #                      clip,
-    #                      weight_decay,
-    #                      dropout_ratio]\
-    #                   + str_null_weight\
-    #                   + str_loss_weight\
-    #                   + [best_model_path]\
-    #                   + [arguments.seed]\
-    #                   + [gm.sha]\
-    #                   + [arguments.with_linear]\
-    #                   + [num_params]\
-    #                   + [arguments.num_data]\
-    #                   + ["sl"]\
-    #                   + [arguments.model]\
-    #                   + [arguments.with_bccwj]\
-    #                   + [arguments.trainbert]\
-    #                   + [arguments.with_db]
-    #     write_spreadsheet(_spreadline)
-
-    op.count_up()
-
-    # del model
-    # del optimizer
-    # del train_batcher
-    # del dev_batcher
-    gc.collect()
-    if arguments.device != "cpu":
-        torch.cuda.empty_cache()
-
-    ####### Test
-    sw = StopWatch()
-    sw.start()
-
-    # Make sure network is in eval mode for inference
-    model = best_model
-    model.eval()
-
-    # Turn off gradients for validation, saves memory and computations
-    tp_history = []
-    fp_history = []
-    fn_history = []
-    data_history = []
-    with torch.no_grad():
-        for t_batch in range(len(test_batcher)):
-            # output shape: Batch, Sentence_length
-            t_args, t_preds, t_labels, t_props, t_word_pos, t_ku_pos, t_mode = test_batcher.get_batch()
-
-            # output shape: Batch, Sentence_length
-            t_word_pos = torch.from_numpy(t_word_pos).long().to(device)
-            t_ku_pos = torch.from_numpy(t_ku_pos).long().to(device)
-            t_mode = torch.from_numpy(t_mode).long().to(device)
-
-            # output shape: 3, Batch, Sentence_length+1
-            test_loss = model(t_args, t_preds, t_word_pos, t_ku_pos, t_mode, tag='test')
-
-            # output shape: Batch, Sentence_length+1
-            vw_test_loss.add(float(test_loss))
-
-            tp, fp, fn = 0, 0, 0
-
-            _log_path = save_dir_base.joinpath('detaillog_{0}_{1:%Y%m%d-%H%M%S}.txt'.format(arguments.model, now))
-            with _log_path.open(mode='a', encoding="utf-8") as f:
-                sentence = [item for item in t_args[0]]
-                sentence = ' '.join(sentence)
-                for arg, pred, prop, word_pos, ku_pos, mode, label, predict in zip(t_args[0], t_preds[0], t_props[0], t_word_pos[0], t_ku_pos[0], t_mode[0], t_labels[0], prediction.tolist()[0]):
-                    conflict = False
-                    if type(predict) == list:
-                        ret = ''
-                        for item in predict:
-                            ret += str(item)
-                        predict = ret
-                        conflict = True
-                    _line = '{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}' \
-                        .format(arg,
-                                pred,
-                                prop,
-                                word_pos_indexer.id2word(word_pos),
-                                ku_pos_indexer.id2word(ku_pos),
-                                mode_indexer.id2word(mode),
-                                label,
-                                predict,
-                                sentence,
-                                conflict)
-                    f.write(_line + '\n')
-
-            tp_history.append(tp)
-            fp_history.append(fp)
-            fn_history.append(fn)
-            if arguments.overfit:
-                break
-
-    print_text = ["Current: {:%Y%m%d-%H%M%S} ".format(get_now()),
-                  "Lap: {:.2f}s ".format(sw.stop()),
-                  "Data: {:06}/{:06} ".format(test_batcher.get_current_index(), test_batcher.get_max_index()),
-                  "Test Loss: {:.4f} ".format(vw_test_loss.get_ave())]
-
-    print(''.join(print_text))
+        print(''.join(print_text))
     if arguments.line:
         ln.send_message("\nStart: {0:%Y%m%d-%H%M%S}\n".format(now) +
                         arguments.model + "\n" +
@@ -528,7 +549,7 @@ def train(batch_size, learning_rate=5e-5, optim="adamw",  dropout_ratio=0.4, nul
 
 if __name__ == "__main__":
     if arguments.hyp:
-        train(batch_size=2,
+        train(batch_size=4,
               learning_rate=5e-5, optim="adamw", dropout_ratio=0.4,
               norm_type={'clip': 2, 'weight_decay': 0.0})
     else:

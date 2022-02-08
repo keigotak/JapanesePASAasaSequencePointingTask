@@ -12,22 +12,31 @@ from sentence_transformers.datasets import SentencesDataset
 from torch.utils.data import DataLoader
 
 def get_properties(mode):
-    if mode == 'rinna-search':
-        return 'rinna/japanese-gpt2-medium', '../../results/wsc_sbert.rinna-japanese-gpt2-medium.search', 100
-    elif mode == 'rinna-best':
-        return 'rinna/japanese-gpt2-medium', '../../results/wsc_sbert.rinna-japanese-gpt2-medium.best', 100
-    elif mode == 'tohoku-bert-search':
-        return 'cl-tohoku/bert-base-japanese-whole-word-masking', '../../results/wsc_sbert.bert-base-japanese-whole-word-masking.search', 100
-    elif mode == 'tohoku-bert-best':
-        return 'cl-tohoku/bert-base-japanese-whole-word-masking', '../../results/wsc_sbert.bert-base-japanese-whole-word-masking.best', 100
+    if mode == 'rinna-dev':
+        return 'rinna/japanese-gpt2-medium', '../../results/wsc_sbert.rinna-japanese-gpt2-medium.triplet.dev', 100
+    elif mode == 'rinna-test':
+        return 'rinna/japanese-gpt2-medium', '../../results/wsc_sbert.rinna-japanese-gpt2-medium.triplet.test', 100
+    elif mode == 'tohoku-bert-dev':
+        return 'cl-tohoku/bert-base-japanese-whole-word-masking', '../../results/wsc_sbert.bert-base-japanese-whole-word-masking.triplet.dev', 100
+    elif mode == 'tohoku-bert-test':
+        return 'cl-tohoku/bert-base-japanese-whole-word-masking', '../../results/wsc_sbert.bert-base-japanese-whole-word-masking.triplet.test', 100
+    elif mode == 'mbart':
+        return 'facebook/mbart-large-cc25', '../../results/wsc_sbert.mbart-large-cc25.search.triplet', 100
+    elif mode == 't5-base-dev':
+        return 'megagonlabs/t5-base-japanese-web', '../../results/wsc_sbert.t5-base-japanese-web.triplet.dev', 100
+    elif mode == 't5-base-test':
+        return 'megagonlabs/t5-base-japanese-web', '../../results/wsc_sbert.t5-base-japanese-web.triplet.test', 100
+
+
+
 
 def train_model():
     BATCH_SIZE = 16
     WARMUP_STEPS = int(1000 // BATCH_SIZE * 0.1)
 
-    run_mode = 'tohoku-bert-best'
+    run_mode = 't5-base-dev'
     model_name, OUTPUT_PATH, NUM_EPOCHS = get_properties(run_mode)
-    OUTPUT_PATH = OUTPUT_PATH + '.210912'
+    OUTPUT_PATH = OUTPUT_PATH + '.211120'
     Path(OUTPUT_PATH).mkdir(exist_ok=True)
 
     transformer = models.Transformer(model_name)
@@ -40,7 +49,7 @@ def train_model():
     train_dataloader = DataLoader(train_data, shuffle=True, batch_size=BATCH_SIZE)
     train_loss = TripletLoss(model=model, distance_metric=TripletDistanceMetric.EUCLIDEAN, triplet_margin=1)
 
-    if 'best' in run_mode:
+    if 'test' in run_mode:
         test_data = SentencesDataset(triplet_reader.get_examples(f'test-triplet.txt'), model=model)
         test_dataloader = DataLoader(test_data, shuffle=False, batch_size=BATCH_SIZE)
         test_anchor, test_positive, test_negative = [t.texts[0] for t in test_dataloader.dataset],\

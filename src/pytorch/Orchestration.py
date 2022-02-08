@@ -131,12 +131,19 @@ processes = [
     # ["python", "SequenceLabelingGPT2.py", "--model", "gpt2sl"] + train_base_list_ntc + ["--device", device, "--seed", "0"]
     # ["python", "SequenceLabelingGPT2.py", "--model", "gpt2sl"] + train_base_list_bccwj + ["--device", device, "--seed", "0"]
 
+    # train GPT2 pointer ntc with WSC
+    # ["python", "SequencePointingGPT2.py", "--model", "gpt2spn", "--decode", "no_decoder"] + train_base_list_ntc + ["--device", device, "--seed", "0"]
+    ["python", "SequencePointingGPT2WSC.py", "--model", "gpt2spn", "--decode", "no_decoder"] + train_base_list_ntc + ["--device", device, "--seed", "0"]
+
+    # train bspn with WSC
+    # ["python", "SequencePointingBert.py", "--model", "bertptr", "--decode", "no_decoder"] + train_base_list_ntc + ["--device", device, "--seed", "0"],
+
     # train GPT2 fine-tuning
     # ["python", "GPT2Finetuning.py", "--model", "gpt2ft"] + train_base_list_ntc + ["--device", device, "--seed", "0"]
     # ["python", "GPT2Finetuning.py", "--model", "gpt2ft"] + train_base_list_bccwj + ["--device", device, "--seed", "0"]
 
     # train GPT2 pre-training
-    ["python", "GPT2Pretraining.py", "--model", "gpt2pt"] + train_base_list_ntc + ["--device", device, "--seed", "0"]
+    # ["python", "GPT2Pretraining.py", "--model", "gpt2pt"] + train_base_list_ntc + ["--device", device, "--seed", "0"]
 
     # train GPT2 ntc with ft GPT2
     # ["python", "SequenceLabelingGPT2.py", "--model", "gpt2sl"] + train_base_list_ntc + ["--device", device, "--seed", "0"]

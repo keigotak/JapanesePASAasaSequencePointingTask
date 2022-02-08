@@ -110,6 +110,6 @@ if __name__ == '__main__':
     # ns = cls.get_collocated_sentences(mode='train')
     # print(len(ns))
 
-    cls = GetPreviousSentences(with_bccwj=True, num_sentence=-2)
+    cls = GetPreviousSentences(with_bccwj=False, num_sentence=-2)
     ps = cls.get_collocated_sentences(mode='train')
     print(len(ps))

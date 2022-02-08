@@ -6,6 +6,7 @@ from torch.utils.data import Dataset
 from torchvision import datasets
 from torchvision.transforms import ToTensor
 from transformers import T5Tokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer
 from transformers import BertTokenizer
 
 import six
@@ -102,11 +103,13 @@ class GenerateWSCDataset:
         tokenizer.do_lower_case = True  # due to some bug of tokenizer config loading
 
         bert_tokenizer = BertTokenizer.from_pretrained("cl-tohoku/bert-base-japanese-whole-word-masking")
+        t5_tokenizer = T5Tokenizer.from_pretrained("megagonlabs/t5-base-japanese-web")
 
-        write_mecab, write_gpt2, write_bert = False, False, True
+        write_mecab, write_gpt2, write_bert, write_t5 = False, False, False, True
         f_mecab = Path(f'../../data/Winograd-Schema-Challenge-Ja-master/{mode}-mecab.txt').open('w') if write_mecab else None
         f_gpt2 = Path(f'../../data/Winograd-Schema-Challenge-Ja-master/{mode}-gpt2.txt').open('w') if write_gpt2 else None
         f_bert = Path(f'../../data/Winograd-Schema-Challenge-Ja-master/{mode}-bert.txt').open('w') if write_bert else None
+        f_t5 = Path(f'../../data/Winograd-Schema-Challenge-Ja-master/{mode}-t5.txt').open('w') if write_t5 else None
 
         batch_words = []
         for data in data_set:
@@ -197,12 +200,44 @@ class GenerateWSCDataset:
                     else:
                         f_bert.write(f"{' '.join(pronouns)}\n")
 
+            ids_t5_words = t5_tokenizer(data.j_sentence.strip())
+            t5_words = t5_tokenizer.convert_ids_to_tokens(ids_t5_words['input_ids'])
+            labels = ['1' if word == data.j_answer else '0' for word in t5_words]
+            pronouns = ['1' if data.j_target in word else '0' for word in t5_words]
+            if f_t5 is not None:
+                if labels.count('1') == 1 and pronouns.count('1') == 1:
+                    f_t5.write(f">{data.j_sentence}\n")
+                    f_t5.write(f"{' '.join(t5_words)}\n")
+                    f_t5.write(f"{' '.join([data.j_target] * len(t5_words))}\n")
+                    f_t5.write(f"{' '.join(labels)}\n")
+                    f_t5.write(f"{' '.join([data.j_answer] * len(t5_words))}\n")
+                    f_t5.write(f"{' '.join(map(str, ids_t5_words['input_ids']))}\n")
+                    f_t5.write(f"{' '.join(map(str, ids_t5_words['attention_mask']))}\n")
+                    f_t5.write(f"{' '.join(pronouns)}\n")
+                else:
+                    f_t5.write(f">{data.j_sentence}\n")
+                    f_t5.write(f"{' '.join(t5_words)}\n")
+                    f_t5.write(f"{' '.join([data.j_target] * len(t5_words))}\n")
+                    if labels.count('1') != 1:
+                        f_t5.write(f"***{' '.join(labels)}\n")
+                    else:
+                        f_t5.write(f"{' '.join(labels)}\n")
+                    f_t5.write(f"{' '.join([data.j_answer] * len(t5_words))}\n")
+                    f_t5.write(f"{' '.join(map(str, ids_t5_words['input_ids']))}\n")
+                    f_t5.write(f"{' '.join(map(str, ids_t5_words['attention_mask']))}\n")
+                    if pronouns.count('1') != 1:
+                        f_t5.write(f"***{' '.join(pronouns)}\n")
+                    else:
+                        f_t5.write(f"{' '.join(pronouns)}\n")
+
         if f_mecab is not None:
             f_mecab.close()
         if f_gpt2 is not None:
             f_gpt2.close()
         if f_bert is not None:
             f_bert.close()
+        if f_t5 is not None:
+            f_t5.close()
 
 
 class WSCGPT2Dataset(Dataset):
@@ -380,6 +415,93 @@ class WSCBERTDataset(Dataset):
                self.datasets[idx]['candidate_labels']
 
 
+class WSCT5Dataset(Dataset):
+    def __init__(self, mode='train'):
+        if mode == 'dev':
+            with Path(f'../../data/Winograd-Schema-Challenge-Ja-master/fixed/train-token.txt').open('r') as f:
+                texts = f.readlines()
+        else:
+            with Path(f'../../data/Winograd-Schema-Challenge-Ja-master/fixed/{mode}-token.txt').open('r') as f:
+                texts = f.readlines()
+
+        self.token_datasets = {}
+        for i in range(0, len(texts), 5):
+            key = texts[i].strip()[1:]
+            record = {}
+            record['tokens'] = [t for t in key]
+            record['candidates'] = texts[i + 1].strip().split(' ')
+            record['pronoun_pos'] = texts[i + 2].strip().split(' ')
+            record['answer_pos'] = texts[i + 3].strip().split(' ')
+            record['candidate_pos'] = texts[i + 4].strip().split(' ')
+            self.token_datasets[key] = record
+
+        if mode == 'train':
+            with Path(f'../../data/Winograd-Schema-Challenge-Ja-master/fixed/{mode}-t5.txt').open('r') as f:
+                texts = f.readlines()
+        elif mode == 'dev':
+            with Path(f'../../data/Winograd-Schema-Challenge-Ja-master/fixed/train-t5.txt').open('r') as f:
+                texts = f.readlines()
+        elif mode == 'test':
+            with Path(f'../../data/Winograd-Schema-Challenge-Ja-master/fixed/{mode}-t5.txt').open('r') as f:
+                texts = f.readlines()
+
+        self.datasets = []
+        for i in range(0, len(texts), 8):
+            table = {}
+            table['tokens'] = texts[i + 1].strip().split(' ')
+            table['pronoun'] = texts[i + 2].strip().split(' ')
+            table['labels'] = texts[i + 3].strip().split(' ')
+            table['target'] = texts[i + 4].strip().split(' ')
+            table['token_ids'] = texts[i + 5].strip().split(' ')
+            table['attention_heads'] = texts[i + 6].strip().split(' ')
+            table['pronoun_labels'] = texts[i + 7].strip().split(' ')
+
+            pronoun_labels, answer_labels, candidate_labels = [], [], []
+            current_index, end_index = 0, 0
+            sentence = texts[i].strip()[1:] # ''.join(table['tokens'][1:-1])
+            for raw_t in table['tokens']:
+                t = raw_t.replace('▁', '')
+                start_index = current_index
+                end_index = start_index + len(t)
+
+                if '1' in self.token_datasets[sentence]['pronoun_pos'][start_index: end_index]:
+                    pronoun_labels.append('1')
+                else:
+                    pronoun_labels.append('0')
+
+                if '1' in self.token_datasets[sentence]['answer_pos'][start_index: end_index]:
+                    answer_labels.append('1')
+                else:
+                    answer_labels.append('0')
+
+                if '1' in self.token_datasets[sentence]['candidate_pos'][start_index: end_index]:
+                    candidate_labels.append('1')
+                else:
+                    candidate_labels.append('0')
+
+                current_index = end_index
+
+            table['pronoun_labels'] = pronoun_labels
+            table['answer_labels'] = answer_labels
+            table['candidate_labels'] = candidate_labels
+            self.datasets.append(table.copy())
+        if mode == 'train':
+            self.datasets = self.datasets[:1000]
+        elif mode == 'dev':
+            self.datasets = self.datasets[1000:]
+
+    def __len__(self):
+        return len(self.datasets)
+
+    def __getitem__(self, idx):
+        length = len(self.datasets[idx]['token_ids'])
+        # d_args, d_preds, d_labels, d_props, d_word_pos, d_ku_pos, d_mode
+        return self.datasets[idx]['token_ids'],\
+               self.datasets[idx]['pronoun_labels'],\
+               self.datasets[idx]['answer_labels'],\
+               self.datasets[idx]['candidate_labels']
+
+
 class WSCDatasetForShots(Dataset):
     def __init__(self, mode='train'):
         wsc_ja_reader = WSCJaReader()
@@ -498,10 +620,10 @@ class WSCMecabDataset(Dataset):
                self.datasets[idx]['tokens']
 
 if __name__ == '__main__':
-    # print('[train]')
-    # dataset = GenerateWSCDataset(mode='train')
-    # print('[test]')
-    # dataset = GenerateWSCDataset(mode='test')
+    print('[train]')
+    dataset = GenerateWSCDataset(mode='train')
+    print('[test]')
+    dataset = GenerateWSCDataset(mode='test')
 
     # WSCDataset(mode='train')
     # WSCGPT2Dataset(mode='train')

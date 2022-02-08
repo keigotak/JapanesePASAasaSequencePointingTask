@@ -5,7 +5,9 @@ from operator import itemgetter
 import numpy as np
 import torch
 import torch.nn as nn
-from pytorch_transformers import BertTokenizer, BertModel
+# from pytorch_transformers import BertTokenizer, BertModel
+from transformers import BertTokenizer, BertModel
+
 from pyknp import Juman
 import os
 import sys
