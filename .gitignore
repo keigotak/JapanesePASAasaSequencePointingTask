@@ -6,4 +6,6 @@
 *.txt
 src/utils/utils.json
 !/data/NTC_dataset/raw_create.py
-!/data/Winograd-Schema-Challenge-Ja-master/fixed/*
+!/data/Winograd-Schema-Challenge-Ja-master/fixed/test-token.txt
+!/data/Winograd-Schema-Challenge-Ja-master/fixed/train-token.txt
+
