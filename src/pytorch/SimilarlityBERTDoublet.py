@@ -4,6 +4,7 @@ import random
 import torch.nn
 
 random.seed(0)
+torch.manual_seed(0)
 
 from pathlib import Path
 import transformers
@@ -27,6 +28,7 @@ from transformers import AdamW
 from transformers import AutoConfig, AutoTokenizer, AutoModel
 # from transformers import MBart50TokenizerFast, MBartForConditionalGeneration
 from transformers import BertJapaneseTokenizer, BertModel
+from BertJapaneseTokenizerFast import BertJapaneseTokenizerFast
 
 def get_properties(mode):
     if mode == 'rinna-search':
@@ -40,7 +42,13 @@ def get_properties(mode):
     elif mode == 'mbart':
         return 'facebook/mbart-large-cc25', '../../results/wsc_sbert.mbart-large-cc25.search.doublet', 100
     elif mode == 't5-base':
-        return 'megagonlabs/t5-base-japanese-web', '../../results/wsc_sbert.t5-base-japanese-web', 100
+        return 'megagonlabs/t5-base-japanese-web', '../../results/wsc_sbert.t5-base-japanese-web.doublet', 100
+    elif mode =='rinna-roberta-best':
+        return 'rinna/japanese-roberta-base', '../../results/wsc_sbert.rinna-japanese-roberta-base.doublet', 100
+    elif mode == 'nlp-waseda-roberta-base-japanese':
+        return 'nlp-waseda/roberta-base-japanese', '../../results/wsc_sbert.nlp-waseda-roberta-base-japanese.doublet', 100
+    elif mode == 'rinna-japanese-gpt-1b':
+        return 'rinna/japanese-gpt-1b', '../../results/wsc_sbert.rinna-japanese-gpt-1b.doublet', 100
 
 def get_datasets(path):
     with Path(path).open('r') as f:
@@ -71,11 +79,11 @@ def train_model():
     DEVICE = 'cuda:0' # 'cuda:0'
     with_activation_function = False
     with_print_logits = False
-    os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
-    run_mode = 't5-base'
+    run_mode = 'rinna-search'
     model_name, OUTPUT_PATH, NUM_EPOCHS = get_properties(run_mode)
-    OUTPUT_PATH = OUTPUT_PATH + '.220204'
+    OUTPUT_PATH = OUTPUT_PATH + '.220223'
     Path(OUTPUT_PATH).mkdir(exist_ok=True)
     print(run_mode)
     print(OUTPUT_PATH)
@@ -92,7 +100,7 @@ def train_model():
         tokenizer = T5Tokenizer.from_pretrained(model_name)
     elif 'tohoku' in model_name:
         model = BertModel.from_pretrained(model_name)
-        tokenizer = BertJapaneseTokenizer.from_pretrained(model_name)
+        tokenizer = BertJapaneseTokenizerFast.from_pretrained(model_name)
     else:
         model = AutoModel.from_pretrained(model_name)
         tokenizer = AutoTokenizer.from_pretrained(model_name)
@@ -104,9 +112,11 @@ def train_model():
 
     output_layer = allocate_data_to_device(torch.nn.Linear(model.config.hidden_size, 1), DEVICE)
     activation_function = torch.nn.SELU()
-    optimizer = AdamW(params=list(model.parameters()) + list(output_layer.parameters()), lr=7e-5, weight_decay=0.01)
+    optimizer = AdamW(params=list(model.parameters()) + list(output_layer.parameters()), lr=2e-5, weight_decay=0.01)
     # optimizer = AdamW(params=list(output_layer.parameters()), lr=1e-4, weight_decay=0.01)
     loss_func = torch.nn.CrossEntropyLoss()
+    # loss_func = torch.nn.BCEWithLogitsLoss()
+
 
     result_lines = []
     for e in range(100):
@@ -230,7 +240,7 @@ def train_model():
         print(f'e: {e}, train_loss: {train_total_loss}, dev_loss: {dev_total_loss}, dev_acc: {dev_acc}, test_loss: {test_total_loss}, test_acc: {test_acc}')
         result_lines.append([e, train_total_loss, dev_total_loss, dev_acc, test_total_loss, test_acc])
 
-    with Path(f'./result.doublet.{model_name.replace("/", ".")}.csv').open('w') as f:
+    with Path(f'{OUTPUT_PATH}/result.doublet.{model_name.replace("/", ".")}.csv').open('w') as f:
         f.write(','.join(['epoch', 'train_loss', 'dev_loss', 'dev_acc', 'test_loss', 'test_acc']))
         f.write('\n')
         for line in result_lines:
@@ -581,5 +591,110 @@ e: 96, train_loss: 0.6900260111689568, dev_loss: 0.6907417354006204, dev_acc: 0.
 e: 97, train_loss: 0.6910287758708, dev_loss: 0.6906745361615412, dev_acc: 0.593167701863354, test_loss: 0.6910636552893523, test_acc: 0.5762411347517731
 e: 98, train_loss: 0.6909538558125496, dev_loss: 0.6906782111025745, dev_acc: 0.5993788819875776, test_loss: 0.6910543926852815, test_acc: 0.5709219858156028
 e: 99, train_loss: 0.6900167833566666, dev_loss: 0.6906618137167108, dev_acc: 0.5962732919254659, test_loss: 0.6910297108668808, test_acc: 0.5620567375886525
+
+
+rinna-gpt-1b
+e: 0, train_loss: 0.694013169169426, dev_loss: 0.6935374703466523, dev_acc: 0.4968944099378882, test_loss: 0.6926138098780991, test_acc: 0.49645390070921985
+e: 1, train_loss: 0.6920636768937111, dev_loss: 0.6929523287722783, dev_acc: 0.5031055900621118, test_loss: 0.6918699662102029, test_acc: 0.5088652482269503
+e: 2, train_loss: 0.6898258593678475, dev_loss: 0.69169208333359, dev_acc: 0.5248447204968945, test_loss: 0.6902397967188071, test_acc: 0.5478723404255319
+e: 3, train_loss: 0.6864021334648133, dev_loss: 0.6881397331353301, dev_acc: 0.5838509316770186, test_loss: 0.6859726823390798, test_acc: 0.5921985815602837
+e: 4, train_loss: 0.6723368689119816, dev_loss: 0.6726913330902965, dev_acc: 0.6211180124223602, test_loss: 0.665476771269707, test_acc: 0.6347517730496454
+e: 5, train_loss: 0.6072325671389699, dev_loss: 0.5959429624635055, dev_acc: 0.6925465838509317, test_loss: 0.6091323361223471, test_acc: 0.6648936170212766
+e: 6, train_loss: 0.4638537338748574, dev_loss: 0.5415255182215898, dev_acc: 0.7111801242236024, test_loss: 0.5956756433875363, test_acc: 0.7180851063829787
+e: 7, train_loss: 0.3007559957126505, dev_loss: 0.5764110677046571, dev_acc: 0.7236024844720497, test_loss: 0.6100538369060324, test_acc: 0.723404255319149
+e: 8, train_loss: 0.22771396329933485, dev_loss: 0.5949175519919708, dev_acc: 0.7236024844720497, test_loss: 0.6951323136954735, test_acc: 0.725177304964539
+e: 9, train_loss: 0.14713722983771912, dev_loss: 0.6504231900872125, dev_acc: 0.7080745341614907, test_loss: 0.705693395966288, test_acc: 0.7145390070921985
+e: 10, train_loss: 0.1158471045020924, dev_loss: 0.7276789909578245, dev_acc: 0.6708074534161491, test_loss: 0.772978414166162, test_acc: 0.7074468085106383
+e: 11, train_loss: 0.09427184867152755, dev_loss: 0.8031578958508144, dev_acc: 0.7018633540372671, test_loss: 0.9157768135509424, test_acc: 0.7304964539007093
+e: 12, train_loss: 0.07488025252334478, dev_loss: 0.8398822492705668, dev_acc: 0.7204968944099379, test_loss: 1.0149864641096829, test_acc: 0.7287234042553191
+e: 13, train_loss: 0.047179987207183444, dev_loss: 0.776179242902576, dev_acc: 0.7546583850931677, test_loss: 0.8584594442217811, test_acc: 0.7429078014184397
+e: 14, train_loss: 0.03767942355081044, dev_loss: 0.8107010829938935, dev_acc: 0.7329192546583851, test_loss: 0.8943010438233517, test_acc: 0.7340425531914894
+e: 15, train_loss: 0.03330071397882806, dev_loss: 0.8175664533261388, dev_acc: 0.7329192546583851, test_loss: 0.9277668057049158, test_acc: 0.7340425531914894
+e: 16, train_loss: 0.02879833749713813, dev_loss: 0.8399036838543784, dev_acc: 0.7422360248447205, test_loss: 0.924267415127329, test_acc: 0.7340425531914894
+e: 17, train_loss: 0.024146934420547127, dev_loss: 0.867595351449281, dev_acc: 0.7236024844720497, test_loss: 0.9851697134794524, test_acc: 0.7393617021276596
+e: 18, train_loss: 0.016496464349810395, dev_loss: 0.9236933424774344, dev_acc: 0.7298136645962733, test_loss: 1.0347689820051635, test_acc: 0.7322695035460993
+e: 19, train_loss: 0.014157360211717495, dev_loss: 0.9319050687691973, dev_acc: 0.7360248447204969, test_loss: 0.9739094894048729, test_acc: 0.7393617021276596
+e: 20, train_loss: 0.010833074871596828, dev_loss: 0.9900461238521194, dev_acc: 0.7298136645962733, test_loss: 1.0198528735010826, test_acc: 0.7446808510638298
+e: 21, train_loss: 0.012529987264209261, dev_loss: 1.1167785473029628, dev_acc: 0.6956521739130435, test_loss: 1.160942339160153, test_acc: 0.7429078014184397
+e: 22, train_loss: 0.010790494372389525, dev_loss: 0.9164217041254059, dev_acc: 0.7453416149068323, test_loss: 1.0370726200366742, test_acc: 0.7429078014184397
+e: 23, train_loss: 0.007461759992758765, dev_loss: 0.9535898528052593, dev_acc: 0.7267080745341615, test_loss: 1.0266366378908904, test_acc: 0.7429078014184397
+e: 24, train_loss: 0.009199957441487577, dev_loss: 0.9991427267952243, dev_acc: 0.7267080745341615, test_loss: 1.053454569376202, test_acc: 0.75
+e: 25, train_loss: 0.0056003489204699336, dev_loss: 0.9977374204979561, dev_acc: 0.7329192546583851, test_loss: 1.049727191700924, test_acc: 0.75
+e: 26, train_loss: 0.014754329616466933, dev_loss: 1.0746568724551155, dev_acc: 0.7018633540372671, test_loss: 1.3314089846335424, test_acc: 0.7304964539007093
+e: 27, train_loss: 0.018315866581813046, dev_loss: 0.9611410093483633, dev_acc: 0.7298136645962733, test_loss: 0.9952858181953853, test_acc: 0.7535460992907801
+e: 28, train_loss: 0.010365510579247754, dev_loss: 0.9904846401644684, dev_acc: 0.7360248447204969, test_loss: 1.0536700718751322, test_acc: 0.75177304964539
+e: 29, train_loss: 0.009437875666295156, dev_loss: 1.0273098705233457, dev_acc: 0.7329192546583851, test_loss: 1.0321446668218137, test_acc: 0.75
+e: 30, train_loss: 0.021810924570400694, dev_loss: 1.0153061799712035, dev_acc: 0.717391304347826, test_loss: 1.146840678657173, test_acc: 0.7535460992907801
+e: 31, train_loss: 0.0082223907508708, dev_loss: 0.9872905127987398, dev_acc: 0.7391304347826086, test_loss: 1.035572166690149, test_acc: 0.7411347517730497
+e: 32, train_loss: 0.0055992642366402305, dev_loss: 1.0308232799737702, dev_acc: 0.7484472049689441, test_loss: 1.115151397698476, test_acc: 0.7464539007092199
+e: 33, train_loss: 0.0036319659157456386, dev_loss: 1.030217699512362, dev_acc: 0.7422360248447205, test_loss: 1.1240766953220684, test_acc: 0.7375886524822695
+e: 34, train_loss: 0.005221085823260481, dev_loss: 1.1038736939354086, dev_acc: 0.7391304347826086, test_loss: 1.2210837881231151, test_acc: 0.7375886524822695
+e: 35, train_loss: 0.00485790480128096, dev_loss: 1.0708843669020116, dev_acc: 0.7422360248447205, test_loss: 1.1280308615274892, test_acc: 0.7429078014184397
+e: 36, train_loss: 0.0027299038341466043, dev_loss: 1.0859794735064203, dev_acc: 0.7422360248447205, test_loss: 1.1478528667842967, test_acc: 0.7393617021276596
+e: 37, train_loss: 0.0019384665335696453, dev_loss: 1.1125980813147667, dev_acc: 0.7360248447204969, test_loss: 1.1826657898580892, test_acc: 0.7446808510638298
+e: 38, train_loss: 0.0024386347849845507, dev_loss: 1.136397116427938, dev_acc: 0.7267080745341615, test_loss: 1.1985297126368422, test_acc: 0.7411347517730497
+e: 39, train_loss: 0.0012434525186842222, dev_loss: 1.1576098772251635, dev_acc: 0.7267080745341615, test_loss: 1.2193532486900194, test_acc: 0.7411347517730497
+e: 40, train_loss: 0.004434107060726674, dev_loss: 1.1977779448587151, dev_acc: 0.7142857142857143, test_loss: 1.281991301037472, test_acc: 0.7375886524822695
+e: 41, train_loss: 0.0025534201821954595, dev_loss: 1.1734340787119815, dev_acc: 0.7329192546583851, test_loss: 1.2345929709080297, test_acc: 0.7322695035460993
+e: 42, train_loss: 0.0015571121175021858, dev_loss: 1.1899124774072949, dev_acc: 0.7360248447204969, test_loss: 1.2533444553056117, test_acc: 0.7358156028368794
+e: 43, train_loss: 0.0015701587533508813, dev_loss: 1.1831111034923247, dev_acc: 0.7298136645962733, test_loss: 1.2481652592764665, test_acc: 0.7411347517730497
+e: 44, train_loss: 0.0029331316568427324, dev_loss: 1.1965484057627678, dev_acc: 0.7204968944099379, test_loss: 1.2645951461994904, test_acc: 0.7375886524822695
+e: 45, train_loss: 0.0023544856296879714, dev_loss: 1.1774351028116044, dev_acc: 0.7204968944099379, test_loss: 1.2690354884567687, test_acc: 0.7411347517730497
+e: 46, train_loss: 0.003554898737930792, dev_loss: 1.175365211455482, dev_acc: 0.7236024844720497, test_loss: 1.2622875028787386, test_acc: 0.7429078014184397
+e: 47, train_loss: 0.0035047802239579367, dev_loss: 1.284685789060484, dev_acc: 0.7267080745341615, test_loss: 1.3883666688454377, test_acc: 0.7393617021276596
+e: 48, train_loss: 0.002166844399913025, dev_loss: 1.2501371802959014, dev_acc: 0.7329192546583851, test_loss: 1.3784783925481896, test_acc: 0.7322695035460993
+e: 49, train_loss: 0.0047721545218153165, dev_loss: 1.1854312272360974, dev_acc: 0.7360248447204969, test_loss: 1.2762463854086612, test_acc: 0.7375886524822695
+e: 50, train_loss: 0.02129426255295894, dev_loss: 1.0820920616207055, dev_acc: 0.7142857142857143, test_loss: 1.259394249768123, test_acc: 0.7304964539007093
+e: 51, train_loss: 0.014595719924689889, dev_loss: 0.9438143523223254, dev_acc: 0.7298136645962733, test_loss: 1.0725410167463898, test_acc: 0.7375886524822695
+e: 52, train_loss: 0.008359258648130741, dev_loss: 1.0129009947119245, dev_acc: 0.7298136645962733, test_loss: 1.1622325509979434, test_acc: 0.7340425531914894
+e: 53, train_loss: 0.005233554146940058, dev_loss: 1.086887555005286, dev_acc: 0.7267080745341615, test_loss: 1.233252122102636, test_acc: 0.75
+e: 54, train_loss: 0.010146808106568279, dev_loss: 1.0049340096473587, dev_acc: 0.7298136645962733, test_loss: 1.1280222680602168, test_acc: 0.7393617021276596
+e: 55, train_loss: 0.0022064802726463667, dev_loss: 1.0735185519140402, dev_acc: 0.7329192546583851, test_loss: 1.2257388325287324, test_acc: 0.75
+e: 56, train_loss: 0.0018259234231671187, dev_loss: 1.0953450590307787, dev_acc: 0.7298136645962733, test_loss: 1.2340435210200609, test_acc: 0.7411347517730497
+e: 57, train_loss: 0.00783993359417235, dev_loss: 1.2052422089812633, dev_acc: 0.7142857142857143, test_loss: 1.336733226663714, test_acc: 0.7340425531914894
+e: 58, train_loss: 0.02487488295735512, dev_loss: 1.0028156556582535, dev_acc: 0.7142857142857143, test_loss: 1.0246607347950472, test_acc: 0.7322695035460993
+e: 59, train_loss: 0.007200567037687336, dev_loss: 1.150052430846389, dev_acc: 0.717391304347826, test_loss: 1.1805742875603027, test_acc: 0.74822695035461
+e: 60, train_loss: 0.003975860045028753, dev_loss: 1.1592126806662828, dev_acc: 0.7204968944099379, test_loss: 1.1964884969449618, test_acc: 0.74822695035461
+e: 61, train_loss: 0.0018911740005683412, dev_loss: 1.1727281887472543, dev_acc: 0.7142857142857143, test_loss: 1.2233953985714883, test_acc: 0.7446808510638298
+e: 62, train_loss: 0.003216387360919981, dev_loss: 1.1729689619069534, dev_acc: 0.7142857142857143, test_loss: 1.2476417913510127, test_acc: 0.7411347517730497
+e: 63, train_loss: 0.00107688926713778, dev_loss: 1.2191966378982986, dev_acc: 0.7142857142857143, test_loss: 1.3097475501350868, test_acc: 0.7375886524822695
+e: 64, train_loss: 0.0015038420833702873, dev_loss: 1.2207788346468462, dev_acc: 0.7204968944099379, test_loss: 1.330202822495239, test_acc: 0.7393617021276596
+e: 65, train_loss: 0.0009417347951020076, dev_loss: 1.2299515044674016, dev_acc: 0.7204968944099379, test_loss: 1.3449298786788548, test_acc: 0.7393617021276596
+e: 66, train_loss: 0.000709924181544018, dev_loss: 1.2316483944190715, dev_acc: 0.7236024844720497, test_loss: 1.343844024814421, test_acc: 0.7411347517730497
+e: 67, train_loss: 0.0007679639381728975, dev_loss: 1.2391327266684233, dev_acc: 0.717391304347826, test_loss: 1.3569564843338306, test_acc: 0.7411347517730497
+e: 68, train_loss: 0.0005605168860098644, dev_loss: 1.2582547505805828, dev_acc: 0.7236024844720497, test_loss: 1.3736119316292041, test_acc: 0.7375886524822695
+e: 69, train_loss: 0.0006886960526531923, dev_loss: 1.2524599373920842, dev_acc: 0.7204968944099379, test_loss: 1.3565765008893576, test_acc: 0.7340425531914894
+e: 70, train_loss: 0.0005020847215066624, dev_loss: 1.2684100859878957, dev_acc: 0.7298136645962733, test_loss: 1.3796503688502086, test_acc: 0.7411347517730497
+e: 71, train_loss: 0.0004998900528864425, dev_loss: 1.2919172904684884, dev_acc: 0.717391304347826, test_loss: 1.4159277531374024, test_acc: 0.7393617021276596
+e: 72, train_loss: 0.0003383270205928781, dev_loss: 1.2993172404141913, dev_acc: 0.7204968944099379, test_loss: 1.4304962248237016, test_acc: 0.7393617021276596
+e: 73, train_loss: 0.00042974408862055927, dev_loss: 1.2941202850023152, dev_acc: 0.717391304347826, test_loss: 1.4246879232115213, test_acc: 0.7411347517730497
+e: 74, train_loss: 0.000516328855416809, dev_loss: 1.294446283409237, dev_acc: 0.7267080745341615, test_loss: 1.4303480782499436, test_acc: 0.7393617021276596
+e: 75, train_loss: 0.00040236473024742736, dev_loss: 1.2932946019953826, dev_acc: 0.7329192546583851, test_loss: 1.4368042142574535, test_acc: 0.7375886524822695
+e: 76, train_loss: 0.0002921171937659466, dev_loss: 1.2960370941052832, dev_acc: 0.7298136645962733, test_loss: 1.4379952594293726, test_acc: 0.7358156028368794
+e: 77, train_loss: 0.00029470452551755245, dev_loss: 1.3005519122217475, dev_acc: 0.7298136645962733, test_loss: 1.4447787725154202, test_acc: 0.7375886524822695
+e: 78, train_loss: 0.00034133618551363297, dev_loss: 1.304393107560493, dev_acc: 0.7329192546583851, test_loss: 1.4526234337497248, test_acc: 0.7340425531914894
+e: 79, train_loss: 0.000485501907632397, dev_loss: 1.2934422961889462, dev_acc: 0.7204968944099379, test_loss: 1.4408078246203904, test_acc: 0.7375886524822695
+e: 80, train_loss: 0.00023890695285552256, dev_loss: 1.2837559928064104, dev_acc: 0.7236024844720497, test_loss: 1.4036224775491832, test_acc: 0.7340425531914894
+e: 81, train_loss: 0.0002585996232633434, dev_loss: 1.289872037350787, dev_acc: 0.7236024844720497, test_loss: 1.4120217447563002, test_acc: 0.7340425531914894
+e: 82, train_loss: 0.0002529762717756938, dev_loss: 1.2937979538989028, dev_acc: 0.7204968944099379, test_loss: 1.4329399519085735, test_acc: 0.7411347517730497
+e: 83, train_loss: 0.00018148880991783754, dev_loss: 1.2981600121575063, dev_acc: 0.717391304347826, test_loss: 1.4445083871300417, test_acc: 0.7411347517730497
+e: 84, train_loss: 0.00022063973851523143, dev_loss: 1.3092076521234555, dev_acc: 0.7204968944099379, test_loss: 1.4559150684378348, test_acc: 0.7393617021276596
+e: 85, train_loss: 0.00027433204704539093, dev_loss: 1.3167209001528992, dev_acc: 0.7142857142857143, test_loss: 1.4654792660671587, test_acc: 0.7393617021276596
+e: 86, train_loss: 0.0003328539880351968, dev_loss: 1.3208494753375326, dev_acc: 0.7142857142857143, test_loss: 1.4681658710305618, test_acc: 0.7375886524822695
+e: 87, train_loss: 0.0016466646292947473, dev_loss: 1.3493983417802635, dev_acc: 0.7018633540372671, test_loss: 1.281652625300336, test_acc: 0.7340425531914894
+e: 88, train_loss: 0.0021984762918867275, dev_loss: 1.3188374520734407, dev_acc: 0.7142857142857143, test_loss: 1.413064946208768, test_acc: 0.7375886524822695
+e: 89, train_loss: 0.0008271546897610662, dev_loss: 1.3091344728235363, dev_acc: 0.7204968944099379, test_loss: 1.3951985568265137, test_acc: 0.7358156028368794
+e: 90, train_loss: 0.0006415425906326249, dev_loss: 1.2852169631938513, dev_acc: 0.717391304347826, test_loss: 1.416563775397746, test_acc: 0.7375886524822695
+e: 91, train_loss: 0.0025948476758292146, dev_loss: 1.1894236975106538, dev_acc: 0.7298136645962733, test_loss: 1.3013003420911575, test_acc: 0.7464539007092199
+e: 92, train_loss: 0.015574356141759189, dev_loss: 1.2360086074421355, dev_acc: 0.717391304347826, test_loss: 1.3638936715318841, test_acc: 0.7429078014184397
+e: 93, train_loss: 0.002759041434788422, dev_loss: 1.1200158919642877, dev_acc: 0.7111801242236024, test_loss: 1.2246741305799653, test_acc: 0.7429078014184397
+e: 94, train_loss: 0.001973490410623036, dev_loss: 1.1956120870944413, dev_acc: 0.7329192546583851, test_loss: 1.3690246596616245, test_acc: 0.7393617021276596
+e: 95, train_loss: 0.0005784076669283423, dev_loss: 1.1770276127786616, dev_acc: 0.7329192546583851, test_loss: 1.3425284901224506, test_acc: 0.7358156028368794
+e: 96, train_loss: 0.0004418677739430379, dev_loss: 1.1790578961339773, dev_acc: 0.7329192546583851, test_loss: 1.3402671933955972, test_acc: 0.75
+e: 97, train_loss: 0.00029539164163303153, dev_loss: 1.1876241279420725, dev_acc: 0.7267080745341615, test_loss: 1.3486827029353783, test_acc: 0.7464539007092199
+e: 98, train_loss: 0.0004025329680879395, dev_loss: 1.2191747591894198, dev_acc: 0.7298136645962733, test_loss: 1.3690776353322263, test_acc: 0.7464539007092199
+e: 99, train_loss: 0.0002704177497694147, dev_loss: 1.2176454824632224, dev_acc: 0.7329192546583851, test_loss: 1.3696168846621601, test_acc: 0.7464539007092199
+                                                                                                                                                                                          100,1         Bot
+                                                                                                                                                                                          1,1           Top
 
 '''
