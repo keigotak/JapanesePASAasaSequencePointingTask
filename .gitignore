@@ -11,4 +11,7 @@ src/utils/utils.json
 !/data/Winograd-Schema-Challenge-Ja-master/fixed/test-triplet.txt
 !/data/Winograd-Schema-Challenge-Ja-master/fixed/dev-triplet.txt
 !/data/Winograd-Schema-Challenge-Ja-master/fixed/train-triplet.txt
+!/data/WSC-crosslingal/*
+!/data/WSC-kawahara/*
+!/data/WSC-yandex/*
 
