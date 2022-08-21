@@ -37,41 +37,6 @@ class WarmupConstantSchedule(torch.optim.lr_scheduler.LambdaLR):
 
         super(WarmupConstantSchedule, self).__init__(optimizer, lr_lambda, last_epoch=last_epoch)
 
-def pooling_mean(x, mask):
-    # mask のエッジのインデックス取得
-    mask = torch.argmin(mask, dim=1, keepdim=True)
-    # mask をソート
-    mask, idx = torch.sort(mask, dim=0)
-    # mask で並べ直した順に x をソート
-    x = torch.gather(x, dim=0, index=idx.unsqueeze(2).expand(-1, x.shape[1], x.shape[2]))
-    # mask の長さでまとまったので，同じ長さの mask をまとめて処理
-    unique_items, counts = torch.unique_consecutive(mask, return_counts=True)
-    unique_items = unique_items.tolist()
-    counts = [0] + torch.cumsum(counts, -1).tolist()
-    x = torch.cat([torch.mean(x[counts[i]: counts[i+1], :ui, :], dim=1) if ui != 0 else torch.mean(x[counts[i]: counts[i+1], :, :], dim=1) for i, ui in enumerate(unique_items)])
-    # 元に戻す
-    idx = torch.argsort(idx, dim=0)
-    x = torch.gather(x, dim=0, index=idx.expand(-1, x.shape[1]))
-    return x
-
-def pooling_max(x, mask):
-    # mask のエッジのインデックス取得
-    mask = torch.argmin(mask, dim=1, keepdim=True)
-    # mask をソート
-    mask, idx = torch.sort(mask, dim=0)
-    # mask で並べ直した順に x をソート
-    x = torch.gather(x, dim=0, index=idx.unsqueeze(2).expand(-1, x.shape[1], x.shape[2]))
-    # mask の長さでまとまったので，同じ長さの mask をまとめて処理
-    unique_items, counts = torch.unique_consecutive(mask, return_counts=True)
-    unique_items = unique_items.tolist()
-    counts = [0] + torch.cumsum(counts, -1).tolist()
-    x = torch.cat([torch.max(x[counts[i]: counts[i+1], :ui, :], dim=1)[0] if ui != 0 else torch.max(x[counts[i]: counts[i+1], :, :], dim=1)[0] for i, ui in enumerate(unique_items)])
-    # 元に戻す
-    idx = torch.argsort(idx, dim=0)
-    x = torch.gather(x, dim=0, index=idx.expand(-1, x.shape[1]))
-    return x
-
-
 def get_properties(mode):
     if mode == 'rinna-gpt2':
         return 'rinna/japanese-gpt2-medium', '../../results/wsc_sbert.rinna-japanese-gpt2-medium.triplet', 100
@@ -197,7 +162,7 @@ def train_model(run_mode='rinna-japanese-gpt-1b'):
 	# 		 	     embedding_regularizer = LpRegularizer(p=2))
 
     # loss_func = torch.nn.CosineSimilarity()
-    distance_metric = TripletDistanceMetric.EUCLIDEAN
+    distance_metric = TripletDistanceMetric.COSINE
     scheduler = WarmupConstantSchedule(optimizer, warmup_steps=WARMUP_STEPS)
     vw = ValueWatcher()
 

@@ -37,56 +37,21 @@ class WarmupConstantSchedule(torch.optim.lr_scheduler.LambdaLR):
 
         super(WarmupConstantSchedule, self).__init__(optimizer, lr_lambda, last_epoch=last_epoch)
 
-def pooling_mean(x, mask):
-    # mask のエッジのインデックス取得
-    mask = torch.argmin(mask, dim=1, keepdim=True)
-    # mask をソート
-    mask, idx = torch.sort(mask, dim=0)
-    # mask で並べ直した順に x をソート
-    x = torch.gather(x, dim=0, index=idx.unsqueeze(2).expand(-1, x.shape[1], x.shape[2]))
-    # mask の長さでまとまったので，同じ長さの mask をまとめて処理
-    unique_items, counts = torch.unique_consecutive(mask, return_counts=True)
-    unique_items = unique_items.tolist()
-    counts = [0] + torch.cumsum(counts, -1).tolist()
-    x = torch.cat([torch.mean(x[counts[i]: counts[i+1], :ui, :], dim=1) if ui != 0 else torch.mean(x[counts[i]: counts[i+1], :, :], dim=1) for i, ui in enumerate(unique_items)])
-    # 元に戻す
-    idx = torch.argsort(idx, dim=0)
-    x = torch.gather(x, dim=0, index=idx.expand(-1, x.shape[1]))
-    return x
-
-def pooling_max(x, mask):
-    # mask のエッジのインデックス取得
-    mask = torch.argmin(mask, dim=1, keepdim=True)
-    # mask をソート
-    mask, idx = torch.sort(mask, dim=0)
-    # mask で並べ直した順に x をソート
-    x = torch.gather(x, dim=0, index=idx.unsqueeze(2).expand(-1, x.shape[1], x.shape[2]))
-    # mask の長さでまとまったので，同じ長さの mask をまとめて処理
-    unique_items, counts = torch.unique_consecutive(mask, return_counts=True)
-    unique_items = unique_items.tolist()
-    counts = [0] + torch.cumsum(counts, -1).tolist()
-    x = torch.cat([torch.max(x[counts[i]: counts[i+1], :ui, :], dim=1)[0] if ui != 0 else torch.max(x[counts[i]: counts[i+1], :, :], dim=1)[0] for i, ui in enumerate(unique_items)])
-    # 元に戻す
-    idx = torch.argsort(idx, dim=0)
-    x = torch.gather(x, dim=0, index=idx.expand(-1, x.shape[1]))
-    return x
-
-
 def get_properties(mode):
     if mode == 'rinna-gpt2':
-        return 'rinna/japanese-gpt2-medium', '../../results/wsc_sbert.rinna-japanese-gpt2-medium.triplet', 100
+        return 'rinna/japanese-gpt2-medium', '../../results/wsc_sbert.rinna-japanese-gpt2-medium.wang', 100
     elif mode == 'tohoku-bert':
-        return 'cl-tohoku/bert-base-japanese-whole-word-masking', '../../results/wsc_sbert.bert-base-japanese-whole-word-masking.triplet', 100
+        return 'cl-tohoku/bert-base-japanese-whole-word-masking', '../../results/wsc_sbert.bert-base-japanese-whole-word-masking.wang', 100
     elif mode == 'mbart':
-        return 'facebook/mbart-large-cc25', '../../results/wsc_sbert.mbart-large-cc25.search.triplet', 100
+        return 'facebook/mbart-large-cc25', '../../results/wsc_sbert.mbart-large-cc25.search.wang', 100
     elif mode == 't5-base':
-        return 'megagonlabs/t5-base-japanese-web', '../../results/wsc_sbert.t5-base-japanese-web.triplet', 100
+        return 'megagonlabs/t5-base-japanese-web', '../../results/wsc_sbert.t5-base-japanese-web.wang', 100
     elif mode =='rinna-roberta':
-        return 'rinna/japanese-roberta-base', '../../results/wsc_sbert.rinna-japanese-roberta-base.triplet', 100
+        return 'rinna/japanese-roberta-base', '../../results/wsc_sbert.rinna-japanese-roberta-base.wang', 100
     elif mode == 'nlp-waseda-roberta-base-japanese':
-        return 'nlp-waseda/roberta-base-japanese', '../../results/wsc_sbert.nlp-waseda-roberta-base-japanese.triplet', 100
+        return 'nlp-waseda/roberta-base-japanese', '../../results/wsc_sbert.nlp-waseda-roberta-base-japanese.wang', 100
     elif mode == 'rinna-japanese-gpt-1b':
-        return 'rinna/japanese-gpt-1b', '../../results/wsc_sbert.rinna-japanese-gpt-1b.triplet', 100
+        return 'rinna/japanese-gpt-1b', '../../results/wsc_sbert.rinna-japanese-gpt-1b.wang', 100
 
 def get_datasets(path):
     with Path(path).open('r') as f:
@@ -113,13 +78,13 @@ def allocate_data_to_device(data, device='cpu'):
     else:
         return data
 
-class TripletDistanceMetric(Enum):
-    """
-    The metric for the triplet loss
-    """
-    COSINE = lambda x, y: 1 - F.cosine_similarity(x, y)
-    EUCLIDEAN = lambda x, y: F.pairwise_distance(x, y, p=2)
-    MANHATTAN = lambda x, y: F.pairwise_distance(x, y, p=1)
+# class TripletDistanceMetric(Enum):
+#     """
+#     The metric for the triplet loss
+#     """
+#     COSINE = lambda x, y: 1 - F.cosine_similarity(x, y)
+#     EUCLIDEAN = lambda x, y: F.pairwise_distance(x, y, p=2)
+#     MANHATTAN = lambda x, y: F.pairwise_distance(x, y, p=1)
 
 # def loss_func(rep_anchor, rep_pos, rep_neg, distance_metric=TripletDistanceMetric.EUCLIDEAN):
 #     triplet_margin = float(1.0)
@@ -128,6 +93,19 @@ class TripletDistanceMetric(Enum):
 #
 #     losses = F.relu(distance_pos - distance_neg + triplet_margin)
 #     return losses.mean()
+
+
+# bsz : batch size (number of positive pairs)
+# d   : latent dim
+# x   : Tensor, shape=[bsz, d]
+#       latents for one side of positive pairs
+# y   : Tensor, shape=[bsz, d]
+#       latents for the other side of positive pairs
+def align_loss(x, y, alpha=2):
+    return (x - y).norm(p=2, dim=1).pow(alpha).mean()
+
+def uniform_loss(x, t=2):
+    return torch.pdist(x, p=2).pow(2).mul(-t).exp().mean().log()
 
 def train_model(run_mode='rinna-japanese-gpt-1b'):
     BATCH_SIZE = 32
@@ -197,7 +175,6 @@ def train_model(run_mode='rinna-japanese-gpt-1b'):
 	# 		 	     embedding_regularizer = LpRegularizer(p=2))
 
     # loss_func = torch.nn.CosineSimilarity()
-    distance_metric = TripletDistanceMetric.EUCLIDEAN
     scheduler = WarmupConstantSchedule(optimizer, warmup_steps=WARMUP_STEPS)
     vw = ValueWatcher()
 
@@ -216,7 +193,7 @@ def train_model(run_mode='rinna-japanese-gpt-1b'):
             o0 = output_layer(dropout_layer(h0)) if with_dropout else output_layer(h0)
             o0 = activation_function(o0) if with_activation_function else o0
 
-            inputs = tokenizer(s1, return_tensors='pt') # negative
+            inputs = tokenizer(s1, return_tensors='pt') # l=0: positive, l=1: negative
             inputs = {k: allocate_data_to_device(inputs[k], DEVICE) for k in inputs.keys() if k != 'offset_mapping'}
             outputs = model(**inputs, output_hidden_states=True, decoder_input_ids=inputs['input_ids']) if 'mbart' in model_name or 't5' in model_name else model(**inputs, output_hidden_states=True)
             h1 = outputs.encoder_last_hidden_state if 'mbart' in model_name or 't5' in model_name else outputs.last_hidden_state
@@ -224,7 +201,7 @@ def train_model(run_mode='rinna-japanese-gpt-1b'):
             o1 = output_layer(dropout_layer(h1)) if with_dropout else output_layer(h1)
             o1 = activation_function(o1) if with_activation_function else o1
 
-            inputs = tokenizer(s2, return_tensors='pt') # positive
+            inputs = tokenizer(s2, return_tensors='pt') # l=0: negative, l=1: positive
             inputs = {k: allocate_data_to_device(inputs[k], DEVICE) for k in inputs.keys() if k != 'offset_mapping'}
             outputs = model(**inputs, output_hidden_states=True, decoder_input_ids=inputs['input_ids']) if 'mbart' in model_name or 't5' in model_name else model(**inputs, output_hidden_states=True)
             h2 = outputs.encoder_last_hidden_state if 'mbart' in model_name or 't5' in model_name else outputs.last_hidden_state
@@ -232,11 +209,16 @@ def train_model(run_mode='rinna-japanese-gpt-1b'):
             o2 = output_layer(dropout_layer(h2)) if with_dropout else output_layer(h2)
             o2 = activation_function(o2) if with_activation_function else o2
 
-            loss1 = loss_func1(anchor=h0, positive=h1, negative=h2) if l == 0 else loss_func1(anchor=h0, positive=h2, negative=h1)
-            loss2 = loss_func2(torch.cat([o1, o2], dim=1), torch.as_tensor([l], dtype=torch.long, device=DEVICE))
-            loss3 = loss_func3(anchor=h0, positive=h1, negative=h2) if l == 0 else loss_func3(anchor=h0, positive=h2, negative=h1)
+            # loss1 = loss_func1(anchor=h0, positive=h1, negative=h2) if l == 0 else loss_func1(anchor=h0, positive=h2, negative=h1)
+            # loss2 = loss_func2(torch.cat([o1, o2], dim=1), torch.as_tensor([l], dtype=torch.long, device=DEVICE))
+            # loss3 = loss_func3(anchor=h0, positive=h1, negative=h2) if l == 0 else loss_func3(anchor=h0, positive=h2, negative=h1)
             # loss = alpha.weight * loss1 + beta.weight * loss2
-            loss = loss3
+            # loss = loss3
+            h0, h1, h2 = torch.nn.functional.softmax(h0, dim=1), torch.nn.functional.softmax(h1, dim=1), torch.nn.functional.softmax(h2, dim=1)
+            loss_aline = align_loss(h0, h1) if l == 0 else align_loss(h0, h2)
+            loss_uniform = (uniform_loss(h0) + uniform_loss(h2)) / 2 if l == 0 else (uniform_loss(h0) + uniform_loss(h1)) / 2
+            loss = loss_aline + loss_uniform
+
             train_total_loss.append(loss.item())
             running_loss.append(loss)
             if len(running_loss) >= BATCH_SIZE:
@@ -286,11 +268,15 @@ def train_model(run_mode='rinna-japanese-gpt-1b'):
                 o2 = output_layer(h2)
                 o2 = activation_function(o2) if with_activation_function else o2
 
-                loss1 = loss_func1(anchor=h0, positive=h1, negative=h2) if l == 0 else loss_func1(anchor=h0, positive=h2, negative=h1)
-                loss2 = loss_func2(torch.cat([o1, o2], dim=1), torch.as_tensor([l], dtype=torch.long, device=DEVICE))
-                loss3 = loss_func3(anchor=h0, positive=h1, negative=h2) if l == 0 else loss_func3(anchor=h0, positive=h2, negative=h1)
+                # loss1 = loss_func1(anchor=h0, positive=h1, negative=h2) if l == 0 else loss_func1(anchor=h0, positive=h2, negative=h1)
+                # loss2 = loss_func2(torch.cat([o1, o2], dim=1), torch.as_tensor([l], dtype=torch.long, device=DEVICE))
+                # loss3 = loss_func3(anchor=h0, positive=h1, negative=h2) if l == 0 else loss_func3(anchor=h0, positive=h2, negative=h1)
                 # loss = alpha.weight * loss1 + beta.weight * loss2
-                loss = loss3
+                # loss = loss3
+                h0, h1, h2 = torch.nn.functional.softmax(h0, dim=1), torch.nn.functional.softmax(h1, dim=1), torch.nn.functional.softmax(h2, dim=1)
+                loss_aline = align_loss(h0, h1) if l == 0 else align_loss(h0, h2)
+                loss_uniform = (uniform_loss(h0) + uniform_loss(h2)) / 2 if l == 0 else (uniform_loss(h0) + uniform_loss(h1)) / 2
+                loss = loss_aline + loss_uniform
                 dev_total_loss.append(loss.item())
 
                 d1, d2 = torch.dist(h0, h1), torch.dist(h0, h2)
@@ -340,11 +326,15 @@ def train_model(run_mode='rinna-japanese-gpt-1b'):
                 o2 = output_layer(h2)
                 o2 = activation_function(o2) if with_activation_function else o2
 
-                loss1 = loss_func1(anchor=h0, positive=h1, negative=h2) if l == 0 else loss_func1(anchor=h0, positive=h2, negative=h1)
-                loss2 = loss_func2(torch.cat([o1, o2], dim=1), torch.as_tensor([l], dtype=torch.long, device=DEVICE))
-                loss3 = loss_func3(anchor=h0, positive=h1, negative=h2) if l == 0 else loss_func3(anchor=h0, positive=h2, negative=h1)
+                # loss1 = loss_func1(anchor=h0, positive=h1, negative=h2) if l == 0 else loss_func1(anchor=h0, positive=h2, negative=h1)
+                # loss2 = loss_func2(torch.cat([o1, o2], dim=1), torch.as_tensor([l], dtype=torch.long, device=DEVICE))
+                # loss3 = loss_func3(anchor=h0, positive=h1, negative=h2) if l == 0 else loss_func3(anchor=h0, positive=h2, negative=h1)
                 # loss = alpha.weight * loss1 + beta.weight * loss2
-                loss = loss3
+                # loss = loss3
+                h0, h1, h2 = torch.nn.functional.softmax(h0, dim=1), torch.nn.functional.softmax(h1, dim=1), torch.nn.functional.softmax(h2, dim=1)
+                loss_aline = align_loss(h0, h1) if l == 0 else align_loss(h0, h2)
+                loss_uniform = (uniform_loss(h0) + uniform_loss(h2)) / 2 if l == 0 else (uniform_loss(h0) + uniform_loss(h1)) / 2
+                loss = loss_aline + loss_uniform
                 test_total_loss.append(loss.item())
 
                 d1, d2 = torch.dist(h0, h1), torch.dist(h0, h2)
@@ -365,7 +355,7 @@ def train_model(run_mode='rinna-japanese-gpt-1b'):
             print(f'e: {e}, train_loss: {train_total_loss}, dev_loss: {dev_total_loss}, dev_acc: {dev_acc}, test_loss: {test_total_loss}, test_acc: {test_acc}')
             result_lines.append([e, train_total_loss, dev_total_loss, dev_acc, test_total_loss, test_acc])
 
-    with Path(f'{OUTPUT_PATH}/result.triplet.{model_name.replace("/", ".")}.csv').open('w') as f:
+    with Path(f'{OUTPUT_PATH}/result.wang.{model_name.replace("/", ".")}.csv').open('w') as f:
         f.write(','.join(['epoch', 'train_loss', 'dev_loss', 'dev_acc', 'test_loss', 'test_acc']))
         f.write('\n')
         for line in result_lines:

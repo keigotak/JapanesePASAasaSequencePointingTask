@@ -13,21 +13,11 @@ import transformers
 transformers.BertTokenizer = transformers.BertJapaneseTokenizer
 transformers.trainer_utils.set_seed(0)
 
-from sentence_transformers import SentenceTransformer
-from sentence_transformers import models
-from sentence_transformers import InputExample
-from sentence_transformers.losses import CosineSimilarityLoss, SoftmaxLoss
-from sentence_transformers.evaluation import TripletEvaluator, LabelAccuracyEvaluator, BinaryClassificationEvaluator
-from sentence_transformers.readers import TripletReader
-from sentence_transformers.datasets import SentencesDataset
 from torch.utils.data import DataLoader
-from sentence_transformers.cross_encoder.evaluation import CEBinaryAccuracyEvaluator
-from sentence_transformers.cross_encoder import CrossEncoder
-
 from transformers import GPT2Tokenizer, GPT2TokenizerFast, GPT2Model
 from transformers import T5Tokenizer, T5TokenizerFast, AutoModelForCausalLM, T5Model
 from transformers import AdamW
-from transformers import AutoConfig, AutoTokenizer, AutoModel
+from transformers import AutoConfig, AutoTokenizer, AutoModel, AutoModelForMaskedLM
 # from transformers import MBart50TokenizerFast, MBartForConditionalGeneration
 from transformers import BertJapaneseTokenizer, BertModel
 from BertJapaneseTokenizerFast import BertJapaneseTokenizerFast
@@ -104,12 +94,18 @@ def get_properties(mode):
         return 'facebook/mbart-large-cc25', '../../results/wsc_sbert.mbart-large-cc25.search.pn', 100
     elif mode == 't5-base':
         return 'megagonlabs/t5-base-japanese-web', '../../results/wsc_sbert.t5-base-japanese-web.pn', 100
-    elif mode =='rinna-roberta-best':
+    elif mode =='rinna-roberta':
         return 'rinna/japanese-roberta-base', '../../results/wsc_sbert.rinna-japanese-roberta-base.pn', 100
     elif mode == 'nlp-waseda-roberta-base-japanese':
         return 'nlp-waseda/roberta-base-japanese', '../../results/wsc_sbert.nlp-waseda-roberta-base-japanese.pn', 100
+    elif mode == 'nlp-waseda-roberta-large-japanese':
+        return 'nlp-waseda/roberta-large-japanese', '../../results/wsc_sbert.nlp-waseda-roberta-large-japanese.pn', 100
     elif mode == 'rinna-japanese-gpt-1b':
         return 'rinna/japanese-gpt-1b', '../../results/wsc_sbert.rinna-japanese-gpt-1b.pn', 100
+    elif mode == 'xlm-roberta-large':
+        return 'xlm-roberta-large', '../../results/xlm-roberta-large.pn', 100
+    elif mode == 'xlm-roberta-base':
+        return 'xlm-roberta-base', '../../results/xlm-roberta-base.pn', 100
 
 def get_datasets(path):
     with Path(path).open('r') as f:
@@ -149,21 +145,21 @@ def allocate_data_to_device(data, device='cpu'):
 def train_model():
     BATCH_SIZE = 32
     WARMUP_STEPS = int(1000 // BATCH_SIZE * 0.1)
-    DEVICE = 'cuda:0' # 'cuda:0'
+    DEVICE = 'cuda:0'
     with_activation_function = False
     with_print_logits = False
-    os.environ["CUDA_VISIBLE_DEVICES"] = "5"
+    os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
-    run_mode = 'nlp-waseda-roberta-base-japanese'
+    run_mode = 'xlm-roberta-base'
     model_name, OUTPUT_PATH, NUM_EPOCHS = get_properties(run_mode)
-    OUTPUT_PATH = OUTPUT_PATH + '.220222'
+    OUTPUT_PATH = OUTPUT_PATH + '.220625'
     Path(OUTPUT_PATH).mkdir(exist_ok=True)
     print(run_mode)
     print(OUTPUT_PATH)
 
     if 'gpt2' in model_name:
         model = AutoModel.from_pretrained(model_name)
-        tokenizer = T5TokenizerFast.from_pretrained(model_name)
+        tokenizer = T5Tokenizer.from_pretrained(model_name)
         tokenizer.do_lower_case = True
         embedding_dim = model.config.hidden_size
     elif 'mbart' in model_name:
@@ -172,7 +168,7 @@ def train_model():
         embedding_dim = model.config.hidden_size
     elif 't5' in model_name:
         model = T5Model.from_pretrained(model_name)
-        tokenizer = T5TokenizerFast.from_pretrained(model_name)
+        tokenizer = T5Tokenizer.from_pretrained(model_name)
         embedding_dim = model.config.d_model
     elif 'tohoku' in model_name:
         model = BertModel.from_pretrained(model_name)
@@ -183,7 +179,7 @@ def train_model():
         tokenizer = AutoTokenizer.from_pretrained(model_name)
         if model_name in set(['rinna-japanese-gpt-1b']):
             embedding_dim = model.embed_dim
-        elif model_name in set(['rinna/japanese-roberta-base', 'nlp-waseda/roberta-base-japanese']):
+        elif model_name in set(['rinna/japanese-roberta-base', 'nlp-waseda/roberta-base-japanese', 'nlp-waseda/roberta-large-japanese', 'xlm-roberta-large', 'xlm-roberta-base']):
             embedding_dim = model.config.hidden_size
         else:
             embedding_dim = model.config.d_model
@@ -225,7 +221,13 @@ def train_model():
 
             inputs = {k: allocate_data_to_device(inputs[k], DEVICE) for k in inputs.data.keys() if k != 'offset_mapping'}
             outputs = model(**inputs, output_hidden_states=True, decoder_input_ids=inputs['input_ids']) if 'mbart' in model_name or 't5' in model_name else model(**inputs, output_hidden_states=True)
-            h1 = outputs.encoder_last_hidden_state if 'mbart' in model_name or 't5' in model_name else outputs.last_hidden_state
+            if 'mbart' in model_name:
+                h1 = outputs.encoder_last_hidden_state
+            elif 't5' in model_name:
+                h1 = outputs.last_hidden_state
+            else:
+                h1 = outputs.last_hidden_state
+            # h1 = outputs.encoder_last_hidden_state if 'mbart' in model_name or 't5' in model_name else outputs.last_hidden_state
             o1 = pointer_networks(h1)['logits']
             o1 = activation_function(o1) if with_activation_function else o1
 
@@ -261,7 +263,13 @@ def train_model():
 
             inputs = {k: allocate_data_to_device(inputs[k], DEVICE) for k in inputs.data.keys() if k != 'offset_mapping'}
             outputs = model(**inputs, output_hidden_states=True, decoder_input_ids=inputs['input_ids']) if 'mbart' in model_name or 't5' in model_name else model(**inputs, output_hidden_states=True)
-            h1 = outputs.encoder_last_hidden_state if 'mbart' in model_name or 't5' in model_name else outputs.last_hidden_state
+            if 'mbart' in model_name:
+                h1 = outputs.encoder_last_hidden_state
+            elif 't5' in model_name:
+                h1 = outputs.last_hidden_state
+            else:
+                h1 = outputs.last_hidden_state
+            # h1 = outputs.encoder_last_hidden_state if 'mbart' in model_name or 't5' in model_name else outputs.last_hidden_state
             o1 = pointer_networks(h1)['logits']
             o1 = activation_function(o1) if with_activation_function else o1
 
@@ -293,7 +301,13 @@ def train_model():
 
             inputs = {k: allocate_data_to_device(inputs[k], DEVICE) for k in inputs.data.keys() if k != 'offset_mapping'}
             outputs = model(**inputs, output_hidden_states=True, decoder_input_ids=inputs['input_ids']) if 'mbart' in model_name or 't5' in model_name else model(**inputs, output_hidden_states=True)
-            h1 = outputs.encoder_last_hidden_state if 'mbart' in model_name or 't5' in model_name else outputs.last_hidden_state
+            if 'mbart' in model_name:
+                h1 = outputs.encoder_last_hidden_state
+            elif 't5' in model_name:
+                h1 = outputs.last_hidden_state
+            else:
+                h1 = outputs.last_hidden_state
+            # h1 = outputs.encoder_last_hidden_state if 'mbart' in model_name or 't5' in model_name else outputs.last_hidden_state
             o1 = pointer_networks(h1)['logits']
             o1 = activation_function(o1) if with_activation_function else o1
 

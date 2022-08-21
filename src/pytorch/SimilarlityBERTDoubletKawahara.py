@@ -1,9 +1,7 @@
 import os
 import random
 
-import numpy as np
-import torch
-import torch.nn as nn
+import torch.nn
 
 random.seed(0)
 torch.manual_seed(0)
@@ -15,11 +13,12 @@ transformers.trainer_utils.set_seed(0)
 
 from transformers import T5Tokenizer, T5Model
 from transformers import AdamW
-from transformers import AutoTokenizer, AutoModel, AutoModelForMaskedLM
+from transformers import AutoTokenizer, AutoModel
 # from transformers import MBart50TokenizerFast, MBartForConditionalGeneration
 from transformers import BertModel
 from BertJapaneseTokenizerFast import BertJapaneseTokenizerFast
 from ValueWatcher import ValueWatcher
+import itertools
 
 def get_properties(mode):
     if mode == 'rinna-gpt2':
@@ -38,17 +37,12 @@ def get_properties(mode):
         return 'nlp-waseda/roberta-large-japanese', '../../results/wsc_sbert.nlp-waseda-roberta-large-japanese.doublet', 100
     elif mode == 'rinna-japanese-gpt-1b':
         return 'rinna/japanese-gpt-1b', '../../results/wsc_sbert.rinna-japanese-gpt-1b.doublet', 100
-    elif mode == 'xlm-roberta-large':
-        return 'xlm-roberta-large', '../../results/xlm-roberta-large.doublet', 100
-    elif mode == 'xlm-roberta-base':
-        return 'xlm-roberta-base', '../../results/xlm-roberta-base.doublet', 100
-
 
 def get_datasets(path):
     with Path(path).open('r') as f:
         texts = f.readlines()
     texts = [text.strip().split('\t') for text in texts]
-    s1, s2, l = [], [], []
+    s1, s2, s3, l = [], [], [], []
     for text in texts:
         t1 = random.choice([text[1], text[2]])
         if t1 == text[1]:
@@ -59,7 +53,35 @@ def get_datasets(path):
             s1.append(text[2])
             s2.append(text[1])
             l.append(1)
-    return s1, s2, l
+        s3.append(text[0])
+    return s1, s2, s3, l
+
+def get_jfckb_datasets_for_filtering(path):
+    with Path(path).open('r') as f:
+        texts = f.readlines()
+    texts = [text.strip().split('\t') for text in texts]
+    lines = [int(text[0][8:])-1 for text in texts]
+    sentences = [text[1][6:] + text[2][6:] for text in texts]
+    return lines,sentences
+
+def split_by_filter(sentences1, sentences2, sentences3, labels, filter):
+    filter = set(filter)
+    in_filter_s1, in_filter_s2, in_filter_s3, in_filter_l = [], [], [], []
+    not_in_filter_s1, not_in_filter_s2, not_in_filter_s3, not_in_filter_l = [], [], [], []
+    for s1, s2, s3, l in zip(sentences1, sentences2, sentences3, labels):
+        if s3 in filter:
+            in_filter_s1.append(s1)
+            in_filter_s2.append(s2)
+            in_filter_s3.append(s3)
+            in_filter_l.append(l)
+        else:
+            not_in_filter_s1.append(s1)
+            not_in_filter_s2.append(s2)
+            not_in_filter_s3.append(s3)
+            not_in_filter_l.append(l)
+    return {'in_filter': [in_filter_s1, in_filter_s2, in_filter_s3, in_filter_l],
+            'not_in_filter': [not_in_filter_s1, not_in_filter_s2, not_in_filter_s3, not_in_filter_l]}
+
 
 def allocate_data_to_device(data, device='cpu'):
     if device != 'cpu':
@@ -70,13 +92,13 @@ def allocate_data_to_device(data, device='cpu'):
 def train_model(run_mode='rinna-gpt2'):
     BATCH_SIZE = 32
     WARMUP_STEPS = int(1000 // BATCH_SIZE * 0.1)
-    DEVICE = 'cuda:0'
+    DEVICE = 'cuda:0' # 'cuda:0'
     with_activation_function = False
     with_print_logits = False
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+    os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 
     model_name, OUTPUT_PATH, NUM_EPOCHS = get_properties(run_mode)
-    OUTPUT_PATH = OUTPUT_PATH + '.220625.0'
+    OUTPUT_PATH = OUTPUT_PATH + '.220527'
     Path(OUTPUT_PATH).mkdir(exist_ok=True)
     print(run_mode)
     print(OUTPUT_PATH)
@@ -99,14 +121,40 @@ def train_model(run_mode='rinna-gpt2'):
         tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = allocate_data_to_device(model, DEVICE)
 
-    train_sentence1, train_sentence2, train_labels = get_datasets('/clwork/keigo/JapanesePASAasaSequencePointingTask/data/Winograd-Schema-Challenge-Ja-master/fixed/train-triplet.txt')
-    dev_sentence1, dev_sentence2, dev_labels = get_datasets('/clwork/keigo/JapanesePASAasaSequencePointingTask/data/Winograd-Schema-Challenge-Ja-master/fixed/dev-triplet.txt')
-    test_sentence1, test_sentence2, test_labels = get_datasets('/clwork/keigo/JapanesePASAasaSequencePointingTask/data/Winograd-Schema-Challenge-Ja-master/fixed/test-triplet.txt')
+    train_sentence1, train_sentence2, train_sentence3, train_labels = get_datasets('/clwork/keigo/JapanesePASAasaSequencePointingTask/data/Winograd-Schema-Challenge-Ja-master/fixed/train-triplet.txt')
+    dev_sentence1, dev_sentence2, dev_sentence3, dev_labels = get_datasets('/clwork/keigo/JapanesePASAasaSequencePointingTask/data/Winograd-Schema-Challenge-Ja-master/fixed/dev-triplet.txt')
+    test_sentence1, test_sentence2, test_sentence3, test_labels = get_datasets('/clwork/keigo/JapanesePASAasaSequencePointingTask/data/Winograd-Schema-Challenge-Ja-master/fixed/test-triplet.txt')
+
+    sentences1 = train_sentence1 + dev_sentence1 + test_sentence1
+    sentences2 = train_sentence2 + dev_sentence2 + test_sentence2
+    sentences3 = train_sentence3 + dev_sentence3 + test_sentence3
+    labels = train_labels + dev_labels + test_labels
+
+    test_ids, test_sentences = get_jfckb_datasets_for_filtering('/clwork/keigo/JapanesePASAasaSequencePointingTask/data/WSC-kawahara/JWSC-LREC2018-JFCKB.tsv')
+
+    test_sentence1, test_sentence2, test_sentence3, test_labels = [], [], [], []
+    for test_sentence in test_sentences:
+        if test_sentence in sentences3:
+            test_id = sentences3.index(test_sentence)
+            test_sentence1.append(sentences1[test_id])
+            test_sentence2.append(sentences2[test_id])
+            test_sentence3.append(sentences3[test_id])
+            test_labels.append(labels[test_id])
+        else:
+            print(test_sentence)
+
+    sentences1 = [sentence1 for i, sentence1 in enumerate(sentences1) if sentences3[i] not in set(test_sentences)]
+    sentences2 = [sentence2 for i, sentence2 in enumerate(sentences2) if sentences3[i] not in set(test_sentences)]
+    labels = [label for i, label in enumerate(labels) if sentences3[i] not in set(test_sentences)]
+    sentences3 = [sentence3 for i, sentence3 in enumerate(sentences3) if sentences3[i] not in set(test_sentences)]
+
+    train_sentence1, train_sentence2, train_sentence3, train_labels = sentences1[:1000], sentences2[:1000], sentences3[:1000], labels[:1000]
+    dev_sentence1, dev_sentence2, dev_sentence3, dev_labels = sentences1[1000:], sentences2[1000:], sentences3[1000:], labels[1000:]
 
     output_layer = allocate_data_to_device(torch.nn.Linear(model.config.hidden_size, 1), DEVICE)
     activation_function = torch.nn.SELU()
-    optimizer = AdamW(params=list(model.parameters()) + list(output_layer.parameters()), lr=2e-6, weight_decay=0.01)
-    # optimizer = AdamW(params=list(output_layer.parameters()), lr=2e-5, weight_decay=0.01)
+    optimizer = AdamW(params=list(model.parameters()) + list(output_layer.parameters()), lr=2e-5, weight_decay=0.01)
+    # optimizer = AdamW(params=list(output_layer.parameters()), lr=1e-4, weight_decay=0.01)
     loss_func = torch.nn.CrossEntropyLoss()
     # loss_func = torch.nn.BCEWithLogitsLoss()
     vw = ValueWatcher()
@@ -253,12 +301,12 @@ def train_model(run_mode='rinna-gpt2'):
 
 
 if __name__ == '__main__':
-    is_single = False
-    run_modes = ['rinna-gpt2', 'tohoku-bert', 't5-base', 'rinna-roberta', 'nlp-waseda-roberta-base-japanese', 'nlp-waseda-roberta-large-japanese', 'rinna-japanese-gpt-1b', 'xlm-roberta-large', 'xlm-roberta-base']
+    is_single = True
+    run_modes = ['rinna-gpt2', 'tohoku-bert', 't5-base', 'rinna-roberta', 'nlp-waseda-roberta-base-japanese', 'nlp-waseda-roberta-large-japanese', 'rinna-japanese-gpt-1b']
     if is_single:
-        train_model(run_modes[-1])
+        train_model(run_modes[0])
     else:
-        for run_mode in run_modes[3:]:
+        for run_mode in run_modes:
             train_model(run_mode)
 
 

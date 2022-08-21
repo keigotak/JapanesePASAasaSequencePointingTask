@@ -1,9 +1,7 @@
 import os
 import random
 
-import numpy as np
-import torch
-import torch.nn as nn
+import torch.nn
 
 random.seed(0)
 torch.manual_seed(0)
@@ -15,7 +13,7 @@ transformers.trainer_utils.set_seed(0)
 
 from transformers import T5Tokenizer, T5Model
 from transformers import AdamW
-from transformers import AutoTokenizer, AutoModel, AutoModelForMaskedLM
+from transformers import AutoTokenizer, AutoModel
 # from transformers import MBart50TokenizerFast, MBartForConditionalGeneration
 from transformers import BertModel
 from BertJapaneseTokenizerFast import BertJapaneseTokenizerFast
@@ -38,17 +36,12 @@ def get_properties(mode):
         return 'nlp-waseda/roberta-large-japanese', '../../results/wsc_sbert.nlp-waseda-roberta-large-japanese.doublet', 100
     elif mode == 'rinna-japanese-gpt-1b':
         return 'rinna/japanese-gpt-1b', '../../results/wsc_sbert.rinna-japanese-gpt-1b.doublet', 100
-    elif mode == 'xlm-roberta-large':
-        return 'xlm-roberta-large', '../../results/xlm-roberta-large.doublet', 100
-    elif mode == 'xlm-roberta-base':
-        return 'xlm-roberta-base', '../../results/xlm-roberta-base.doublet', 100
-
 
 def get_datasets(path):
     with Path(path).open('r') as f:
         texts = f.readlines()
     texts = [text.strip().split('\t') for text in texts]
-    s1, s2, l = [], [], []
+    s1, s2, s3, l = [], [], [], []
     for text in texts:
         t1 = random.choice([text[1], text[2]])
         if t1 == text[1]:
@@ -59,7 +52,35 @@ def get_datasets(path):
             s1.append(text[2])
             s2.append(text[1])
             l.append(1)
-    return s1, s2, l
+        s3.append(text[0])
+    return s1, s2, s3, l
+
+def get_multilingual_datasets_for_filtering(path):
+    with Path(path).open('r') as f:
+        texts = f.readlines()
+    # texts = [text.strip().split('\t')[3] for text in texts[2408: 3367]] # all set of Japanese dataset
+    texts = [text.strip().split('\t')[3] for text in texts[2408: 2681]] # only test set of Japanese dataset
+    # texts = [text.strip().split('\t')[3] for text in texts[2682: 3367]] # only train set of Japanese dataset
+    return texts
+
+def split_by_filter(sentences1, sentences2, sentences3, labels, filter):
+    filter = set(filter)
+    in_filter_s1, in_filter_s2, in_filter_s3, in_filter_l = [], [], [], []
+    not_in_filter_s1, not_in_filter_s2, not_in_filter_s3, not_in_filter_l = [], [], [], []
+    for s1, s2, s3, l in zip(sentences1, sentences2, sentences3, labels):
+        if s3 in filter:
+            in_filter_s1.append(s1)
+            in_filter_s2.append(s2)
+            in_filter_s3.append(s3)
+            in_filter_l.append(l)
+        else:
+            not_in_filter_s1.append(s1)
+            not_in_filter_s2.append(s2)
+            not_in_filter_s3.append(s3)
+            not_in_filter_l.append(l)
+    return {'in_filter': [in_filter_s1, in_filter_s2, in_filter_s3, in_filter_l],
+            'not_in_filter': [not_in_filter_s1, not_in_filter_s2, not_in_filter_s3, not_in_filter_l]}
+
 
 def allocate_data_to_device(data, device='cpu'):
     if device != 'cpu':
@@ -70,13 +91,13 @@ def allocate_data_to_device(data, device='cpu'):
 def train_model(run_mode='rinna-gpt2'):
     BATCH_SIZE = 32
     WARMUP_STEPS = int(1000 // BATCH_SIZE * 0.1)
-    DEVICE = 'cuda:0'
+    DEVICE = 'cpu' # 'cuda:0'
     with_activation_function = False
     with_print_logits = False
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+    os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 
     model_name, OUTPUT_PATH, NUM_EPOCHS = get_properties(run_mode)
-    OUTPUT_PATH = OUTPUT_PATH + '.220625.0'
+    OUTPUT_PATH = OUTPUT_PATH + '.220523'
     Path(OUTPUT_PATH).mkdir(exist_ok=True)
     print(run_mode)
     print(OUTPUT_PATH)
@@ -99,14 +120,21 @@ def train_model(run_mode='rinna-gpt2'):
         tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = allocate_data_to_device(model, DEVICE)
 
-    train_sentence1, train_sentence2, train_labels = get_datasets('/clwork/keigo/JapanesePASAasaSequencePointingTask/data/Winograd-Schema-Challenge-Ja-master/fixed/train-triplet.txt')
-    dev_sentence1, dev_sentence2, dev_labels = get_datasets('/clwork/keigo/JapanesePASAasaSequencePointingTask/data/Winograd-Schema-Challenge-Ja-master/fixed/dev-triplet.txt')
-    test_sentence1, test_sentence2, test_labels = get_datasets('/clwork/keigo/JapanesePASAasaSequencePointingTask/data/Winograd-Schema-Challenge-Ja-master/fixed/test-triplet.txt')
+    train_sentence1, train_sentence2, train_sentence3, train_labels = get_datasets('/clwork/keigo/JapanesePASAasaSequencePointingTask/data/Winograd-Schema-Challenge-Ja-master/fixed/train-triplet.txt')
+    dev_sentence1, dev_sentence2, dev_sentence3, dev_labels = get_datasets('/clwork/keigo/JapanesePASAasaSequencePointingTask/data/Winograd-Schema-Challenge-Ja-master/fixed/dev-triplet.txt')
+    test_sentence1, test_sentence2, test_sentence3, test_labels = get_datasets('/clwork/keigo/JapanesePASAasaSequencePointingTask/data/Winograd-Schema-Challenge-Ja-master/fixed/test-triplet.txt')
+
+    within_test = get_multilingual_datasets_for_filtering('/clwork/keigo/JapanesePASAasaSequencePointingTask/data/WSC-yandex/datasets.txt')
+
+    train_filter_split = split_by_filter(train_sentence1, train_sentence2, train_sentence3, train_labels, within_test)
+    dev_filter_split = split_by_filter(dev_sentence1, dev_sentence2, dev_sentence3, dev_labels, within_test)
+    test_filter_split = split_by_filter(test_sentence1, test_sentence2, test_sentence3, test_labels, within_test)
+    test_sentence1, test_sentence2, test_sentence3, test_labels = test_filter_split['not_in_filter']
 
     output_layer = allocate_data_to_device(torch.nn.Linear(model.config.hidden_size, 1), DEVICE)
     activation_function = torch.nn.SELU()
-    optimizer = AdamW(params=list(model.parameters()) + list(output_layer.parameters()), lr=2e-6, weight_decay=0.01)
-    # optimizer = AdamW(params=list(output_layer.parameters()), lr=2e-5, weight_decay=0.01)
+    optimizer = AdamW(params=list(model.parameters()) + list(output_layer.parameters()), lr=2e-5, weight_decay=0.01)
+    # optimizer = AdamW(params=list(output_layer.parameters()), lr=1e-4, weight_decay=0.01)
     loss_func = torch.nn.CrossEntropyLoss()
     # loss_func = torch.nn.BCEWithLogitsLoss()
     vw = ValueWatcher()
@@ -253,12 +281,12 @@ def train_model(run_mode='rinna-gpt2'):
 
 
 if __name__ == '__main__':
-    is_single = False
-    run_modes = ['rinna-gpt2', 'tohoku-bert', 't5-base', 'rinna-roberta', 'nlp-waseda-roberta-base-japanese', 'nlp-waseda-roberta-large-japanese', 'rinna-japanese-gpt-1b', 'xlm-roberta-large', 'xlm-roberta-base']
+    is_single = True
+    run_modes = ['rinna-gpt2', 'tohoku-bert', 't5-base', 'rinna-roberta', 'nlp-waseda-roberta-base-japanese', 'nlp-waseda-roberta-large-japanese', 'rinna-japanese-gpt-1b']
     if is_single:
-        train_model(run_modes[-1])
+        train_model(run_modes[1])
     else:
-        for run_mode in run_modes[3:]:
+        for run_mode in run_modes:
             train_model(run_mode)
 
 

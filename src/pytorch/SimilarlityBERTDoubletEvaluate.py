@@ -1,9 +1,7 @@
 import os
 import random
 
-import numpy as np
-import torch
-import torch.nn as nn
+import torch.nn
 
 random.seed(0)
 torch.manual_seed(0)
@@ -15,7 +13,7 @@ transformers.trainer_utils.set_seed(0)
 
 from transformers import T5Tokenizer, T5Model
 from transformers import AdamW
-from transformers import AutoTokenizer, AutoModel, AutoModelForMaskedLM
+from transformers import AutoTokenizer, AutoModel
 # from transformers import MBart50TokenizerFast, MBartForConditionalGeneration
 from transformers import BertModel
 from BertJapaneseTokenizerFast import BertJapaneseTokenizerFast
@@ -23,26 +21,19 @@ from ValueWatcher import ValueWatcher
 
 def get_properties(mode):
     if mode == 'rinna-gpt2':
-        return 'rinna/japanese-gpt2-medium', '../../results/wsc_sbert.rinna-japanese-gpt2-medium.doublet', 100
+        return 'rinna/japanese-gpt2-medium', '../../results/wsc_sbert.rinna-japanese-gpt2-medium.doublet', 34
     elif mode == 'tohoku-bert':
-        return 'cl-tohoku/bert-base-japanese-whole-word-masking', '../../results/wsc_sbert.bert-base-japanese-whole-word-masking.doublet', 100
+        return 'cl-tohoku/bert-base-japanese-whole-word-masking', '../../results/wsc_sbert.bert-base-japanese-whole-word-masking.doublet', 18
     elif mode == 'mbart':
         return 'facebook/mbart-large-cc25', '../../results/wsc_sbert.mbart-large-cc25.doublet', 100
     elif mode == 't5-base':
-        return 'megagonlabs/t5-base-japanese-web', '../../results/wsc_sbert.t5-base-japanese-web.doublet', 100
+        return 'megagonlabs/t5-base-japanese-web', '../../results/wsc_sbert.t5-base-japanese-web.doublet', 99
     elif mode =='rinna-roberta':
-        return 'rinna/japanese-roberta-base', '../../results/wsc_sbert.rinna-japanese-roberta-base.doublet', 100
+        return 'rinna/japanese-roberta-base', '../../results/wsc_sbert.rinna-japanese-roberta-base.doublet', 70
     elif mode == 'nlp-waseda-roberta-base-japanese':
-        return 'nlp-waseda/roberta-base-japanese', '../../results/wsc_sbert.nlp-waseda-roberta-base-japanese.doublet', 100
-    elif mode == 'nlp-waseda-roberta-large-japanese':
-        return 'nlp-waseda/roberta-large-japanese', '../../results/wsc_sbert.nlp-waseda-roberta-large-japanese.doublet', 100
+        return 'nlp-waseda/roberta-base-japanese', '../../results/wsc_sbert.nlp-waseda-roberta-base-japanese.doublet', 34
     elif mode == 'rinna-japanese-gpt-1b':
-        return 'rinna/japanese-gpt-1b', '../../results/wsc_sbert.rinna-japanese-gpt-1b.doublet', 100
-    elif mode == 'xlm-roberta-large':
-        return 'xlm-roberta-large', '../../results/xlm-roberta-large.doublet', 100
-    elif mode == 'xlm-roberta-base':
-        return 'xlm-roberta-base', '../../results/xlm-roberta-base.doublet', 100
-
+        return 'rinna/japanese-gpt-1b', '../../results/wsc_sbert.rinna-japanese-gpt-1b.doublet', 3
 
 def get_datasets(path):
     with Path(path).open('r') as f:
@@ -70,17 +61,20 @@ def allocate_data_to_device(data, device='cpu'):
 def train_model(run_mode='rinna-gpt2'):
     BATCH_SIZE = 32
     WARMUP_STEPS = int(1000 // BATCH_SIZE * 0.1)
-    DEVICE = 'cuda:0'
+    DEVICE = 'cuda:0' # 'cuda:0'
     with_activation_function = False
     with_print_logits = False
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+    os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
     model_name, OUTPUT_PATH, NUM_EPOCHS = get_properties(run_mode)
-    OUTPUT_PATH = OUTPUT_PATH + '.220625.0'
+    OUTPUT_PATH = OUTPUT_PATH + '.220317'
     Path(OUTPUT_PATH).mkdir(exist_ok=True)
     print(run_mode)
     print(OUTPUT_PATH)
 
+    weight_path = Path(OUTPUT_PATH + f'/{model_name.replace("/", ".")}.{NUM_EPOCHS}.pt')
+    # with weight_path.open('rb') as f:
+    #     weights = torch.load(f)
     if 'gpt2' in model_name:
         model = AutoModel.from_pretrained(model_name)
         tokenizer = T5Tokenizer.from_pretrained(model_name)
@@ -97,168 +91,86 @@ def train_model(run_mode='rinna-gpt2'):
     else:
         model = AutoModel.from_pretrained(model_name)
         tokenizer = AutoTokenizer.from_pretrained(model_name)
+    # model.load_state_dict(weights['model'], strict=True)
     model = allocate_data_to_device(model, DEVICE)
+    output_layer = torch.nn.Linear(model.config.hidden_size, 1)
+    # output_layer.load_state_dict(weights['output_layer'], strict=True)
+    output_layer = allocate_data_to_device(output_layer, DEVICE)
 
-    train_sentence1, train_sentence2, train_labels = get_datasets('/clwork/keigo/JapanesePASAasaSequencePointingTask/data/Winograd-Schema-Challenge-Ja-master/fixed/train-triplet.txt')
-    dev_sentence1, dev_sentence2, dev_labels = get_datasets('/clwork/keigo/JapanesePASAasaSequencePointingTask/data/Winograd-Schema-Challenge-Ja-master/fixed/dev-triplet.txt')
+    # train_sentence1, train_sentence2, train_labels = get_datasets('/clwork/keigo/JapanesePASAasaSequencePointingTask/data/Winograd-Schema-Challenge-Ja-master/fixed/train-triplet.txt')
+    # dev_sentence1, dev_sentence2, dev_labels = get_datasets('/clwork/keigo/JapanesePASAasaSequencePointingTask/data/Winograd-Schema-Challenge-Ja-master/fixed/dev-triplet.txt')
     test_sentence1, test_sentence2, test_labels = get_datasets('/clwork/keigo/JapanesePASAasaSequencePointingTask/data/Winograd-Schema-Challenge-Ja-master/fixed/test-triplet.txt')
 
-    output_layer = allocate_data_to_device(torch.nn.Linear(model.config.hidden_size, 1), DEVICE)
+    # output_layer = allocate_data_to_device(torch.nn.Linear(model.config.hidden_size, 1), DEVICE)
     activation_function = torch.nn.SELU()
-    optimizer = AdamW(params=list(model.parameters()) + list(output_layer.parameters()), lr=2e-6, weight_decay=0.01)
-    # optimizer = AdamW(params=list(output_layer.parameters()), lr=2e-5, weight_decay=0.01)
-    loss_func = torch.nn.CrossEntropyLoss()
-    # loss_func = torch.nn.BCEWithLogitsLoss()
-    vw = ValueWatcher()
+    # optimizer = AdamW(params=list(model.parameters()) + list(output_layer.parameters()), lr=2e-5, weight_decay=0.01)
+    # loss_func = torch.nn.CrossEntropyLoss()
+    # vw = ValueWatcher()
 
-    result_lines = []
-    for e in range(100):
-        train_total_loss, running_loss = [], []
-        model.train()
-        output_layer.train()
-        for s1, s2, l in zip(train_sentence1, train_sentence2, train_labels):
-            inputs = tokenizer(s1, return_tensors='pt')
-            inputs = {k: allocate_data_to_device(inputs[k], DEVICE) for k in inputs.keys() if k != 'offset_mapping'}
-            outputs = model(**inputs, output_hidden_states=True, decoder_input_ids=inputs['input_ids']) if 'mbart' in model_name or 't5' in model_name else model(**inputs, output_hidden_states=True)
-            h1 = outputs.encoder_last_hidden_state if 'mbart' in model_name else outputs.last_hidden_state
-            # h1 = outputs.encoder_last_hidden_state if 'mbart' in model_name or 't5' in model_name else outputs.last_hidden_state
-            h1 = torch.mean(h1, dim=1)
-            o1 = output_layer(h1)
-            o1 = activation_function(o1) if with_activation_function else o1
+    model.eval()
+    output_layer.eval()
+    # TEST
+    lines = []
+    test_tt, test_ff = 0, 0
+    for i, (s1, s2, l) in enumerate(zip(test_sentence1, test_sentence2, test_labels)):
+        inputs = tokenizer(s1, return_tensors='pt')
+        inputs = {k: allocate_data_to_device(inputs[k], DEVICE) for k in inputs.keys() if k != 'offset_mapping'}
+        outputs = model(**inputs, output_hidden_states=True, decoder_input_ids=inputs['input_ids']) if 'mbart' in model_name or 't5' in model_name else model(**inputs, output_hidden_states=True)
+        h1 = outputs.encoder_last_hidden_state if 'mbart' in model_name or 't5' in model_name else outputs.last_hidden_state
+        h1 = torch.mean(h1, dim=1)
+        o1 = output_layer(h1)
+        o1 = activation_function(o1) if with_activation_function else o1
 
-            inputs = tokenizer(s2, return_tensors='pt')
-            inputs = {k: allocate_data_to_device(inputs[k], DEVICE) for k in inputs.keys() if k != 'offset_mapping'}
-            outputs = model(**inputs, output_hidden_states=True, decoder_input_ids=inputs['input_ids']) if 'mbart' in model_name or 't5' in model_name else model(**inputs, output_hidden_states=True)
-            h2 = outputs.encoder_last_hidden_state if 'mbart' in model_name else outputs.last_hidden_state
-            # h2 = outputs.encoder_last_hidden_state if 'mbart' in model_name or 't5' in model_name else outputs.last_hidden_state
-            h2 = torch.mean(h2, dim=1)
-            o2 = output_layer(h2)
-            o2 = activation_function(o2) if with_activation_function else o2
+        inputs = tokenizer(s2, return_tensors='pt')
+        inputs = {k: allocate_data_to_device(inputs[k], DEVICE) for k in inputs.keys() if k != 'offset_mapping'}
+        outputs = model(**inputs, output_hidden_states=True, decoder_input_ids=inputs['input_ids']) if 'mbart' in model_name or 't5' in model_name else model(**inputs, output_hidden_states=True)
+        h2 = outputs.encoder_last_hidden_state if 'mbart' in model_name or 't5' in model_name else outputs.last_hidden_state
+        h2 = torch.mean(h2, dim=1)
+        o2 = output_layer(h2)
+        o2 = activation_function(o2) if with_activation_function else o2
 
-            loss = loss_func(torch.cat([o1, o2], dim=1), torch.as_tensor([l], dtype=torch.long, device=DEVICE))
-            train_total_loss.append(loss.item())
-            running_loss.append(loss)
-            if len(running_loss) >= BATCH_SIZE:
-                running_loss = torch.mean(torch.stack(running_loss), dim=0)
-                optimizer.zero_grad(set_to_none=True)
-                running_loss.backward()
-                optimizer.step()
-                running_loss = []
-        train_total_loss = sum(train_total_loss) / len(train_total_loss)
-        if len(running_loss) > 0:
-            running_loss = torch.mean(torch.stack(running_loss), dim=0)
-            optimizer.zero_grad(set_to_none=True)
-            running_loss.backward()
-            optimizer.step()
-            running_loss = []
+        # loss = loss_func(torch.cat([o1, o2], dim=1), allocate_data_to_device(torch.LongTensor([l]), DEVICE))
+        # test_total_loss.append(loss.item())
 
-        # DEV
-        model.eval()
-        output_layer.eval()
-        dev_total_loss = []
-        dev_tt, dev_ff = 0, 0
-        for s1, s2, l in zip(dev_sentence1, dev_sentence2, dev_labels):
-            inputs = tokenizer(s1, return_tensors='pt')
-            inputs = {k: allocate_data_to_device(inputs[k], DEVICE) for k in inputs.keys() if k != 'offset_mapping'}
-            outputs = model(**inputs, output_hidden_states=True, decoder_input_ids=inputs['input_ids']) if 'mbart' in model_name or 't5' in model_name else model(**inputs, output_hidden_states=True)
-            h1 = outputs.encoder_last_hidden_state if 'mbart' in model_name else outputs.last_hidden_state
-            # h1 = outputs.encoder_last_hidden_state if 'mbart' in model_name or 't5' in model_name else outputs.last_hidden_state
-            h1 = torch.mean(h1, dim=1)
-            o1 = output_layer(h1)
-            o1 = activation_function(o1) if with_activation_function else o1
+        if o1 > o2:
+            predict_label = 0
+        else:
+            predict_label = 1
 
-            inputs = tokenizer(s2, return_tensors='pt')
-            inputs = {k: allocate_data_to_device(inputs[k], DEVICE) for k in inputs.keys() if k != 'offset_mapping'}
-            outputs = model(**inputs, output_hidden_states=True, decoder_input_ids=inputs['input_ids']) if 'mbart' in model_name or 't5' in model_name else model(**inputs, output_hidden_states=True)
-            h2 = outputs.encoder_last_hidden_state if 'mbart' in model_name else outputs.last_hidden_state
-            # h2 = outputs.encoder_last_hidden_state if 'mbart' in model_name or 't5' in model_name else outputs.last_hidden_state
-            h2 = torch.mean(h2, dim=1)
-            o2 = output_layer(h2)
-            o2 = activation_function(o2) if with_activation_function else o2
+        if predict_label == l:
+            test_tt += 1
+        else:
+            test_ff += 1
 
-            loss = loss_func(torch.cat([o1, o2], dim=1), allocate_data_to_device(torch.LongTensor([l]), DEVICE))
-            dev_total_loss.append(loss.item())
+        lines.append([i, s1, s2, l, predict_label, h1[0].tolist(), h2[0].tolist(), float(o1), float(o2)])
 
-            if o1 > o2:
-                predict_label = 0
-            else:
-                predict_label = 1
+        # if with_print_logits:
+        #     print(f'{o1.item()}, {o2.item()}, {l}, {predict_label}')
 
-            if predict_label == l:
-                dev_tt += 1
-            else:
-                dev_ff += 1
+    # test_total_loss = sum(test_total_loss) / len(test_total_loss)
+    test_acc = test_tt / (test_tt + test_ff)
 
-            if with_print_logits:
-                print(f'{o1.item()}, {o2.item()}, {l}, {predict_label}')
+    # print(f'e: {e}, train_loss: {train_total_loss}, dev_loss: {dev_total_loss}, dev_acc: {dev_acc}, test_loss: {test_total_loss}, test_acc: {test_acc}')
+    info = [test_acc, model_name, str(weight_path)]
 
-        dev_total_loss = sum(dev_total_loss) / len(dev_total_loss)
-        dev_acc = dev_tt / (dev_tt + dev_ff)
-
-        vw.update(dev_acc)
-        if vw.is_updated():
-            with Path(f'{OUTPUT_PATH}/{model_name.replace("/", ".")}.{e}.pt').open('wb') as f:
-                torch.save({'model': model.state_dict(), 'output_layer': output_layer.state_dict()}, f)
-
-        # TEST
-        test_total_loss = []
-        test_tt, test_ff = 0, 0
-        for s1, s2, l in zip(test_sentence1, test_sentence2, test_labels):
-            inputs = tokenizer(s1, return_tensors='pt')
-            inputs = {k: allocate_data_to_device(inputs[k], DEVICE) for k in inputs.keys() if k != 'offset_mapping'}
-            outputs = model(**inputs, output_hidden_states=True, decoder_input_ids=inputs['input_ids']) if 'mbart' in model_name or 't5' in model_name else model(**inputs, output_hidden_states=True)
-            h1 = outputs.encoder_last_hidden_state if 'mbart' in model_name else outputs.last_hidden_state
-            # h1 = outputs.encoder_last_hidden_state if 'mbart' in model_name or 't5' in model_name else outputs.last_hidden_state
-            h1 = torch.mean(h1, dim=1)
-            o1 = output_layer(h1)
-            o1 = activation_function(o1) if with_activation_function else o1
-
-            inputs = tokenizer(s2, return_tensors='pt')
-            inputs = {k: allocate_data_to_device(inputs[k], DEVICE) for k in inputs.keys() if k != 'offset_mapping'}
-            outputs = model(**inputs, output_hidden_states=True, decoder_input_ids=inputs['input_ids']) if 'mbart' in model_name or 't5' in model_name else model(**inputs, output_hidden_states=True)
-            h2 = outputs.encoder_last_hidden_state if 'mbart' in model_name else outputs.last_hidden_state
-            # h2 = outputs.encoder_last_hidden_state if 'mbart' in model_name or 't5' in model_name else outputs.last_hidden_state
-            h2 = torch.mean(h2, dim=1)
-            o2 = output_layer(h2)
-            o2 = activation_function(o2) if with_activation_function else o2
-
-            loss = loss_func(torch.cat([o1, o2], dim=1), allocate_data_to_device(torch.LongTensor([l]), DEVICE))
-            test_total_loss.append(loss.item())
-
-            if o1 > o2:
-                predict_label = 0
-            else:
-                predict_label = 1
-
-            if predict_label == l:
-                test_tt += 1
-            else:
-                test_ff += 1
-
-            if with_print_logits:
-                print(f'{o1.item()}, {o2.item()}, {l}, {predict_label}')
-
-        test_total_loss = sum(test_total_loss) / len(test_total_loss)
-        test_acc = test_tt / (test_tt + test_ff)
-
-        print(f'e: {e}, train_loss: {train_total_loss}, dev_loss: {dev_total_loss}, dev_acc: {dev_acc}, test_loss: {test_total_loss}, test_acc: {test_acc}')
-        result_lines.append([e, train_total_loss, dev_total_loss, dev_acc, test_total_loss, test_acc])
-
-    with Path(f'{OUTPUT_PATH}/result.doublet.{model_name.replace("/", ".")}.csv').open('w') as f:
-        f.write(','.join(['epoch', 'train_loss', 'dev_loss', 'dev_acc', 'test_loss', 'test_acc']))
+    with Path(f'{OUTPUT_PATH}/details.results.doublet.{model_name.replace("/", ".")}.csv').open('w') as f:
+        f.write(','.join(['index', 'sentence1', 'sentence2', 'label', 'predicted_label', 'score1', 'score2']))
         f.write('\n')
-        for line in result_lines:
-            f.write(','.join(map(str, line)))
+        for line in lines:
+            f.write(','.join(map(str, [item for item in line if type(item) != list])))
             f.write('\n')
+
+    with Path(f'{OUTPUT_PATH}/details.results.doublet.{model_name.replace("/", ".")}.raw.pt').open('wb') as f:
+        torch.save({'results': lines, 'info': info}, f)
 
 
 if __name__ == '__main__':
     is_single = False
-    run_modes = ['rinna-gpt2', 'tohoku-bert', 't5-base', 'rinna-roberta', 'nlp-waseda-roberta-base-japanese', 'nlp-waseda-roberta-large-japanese', 'rinna-japanese-gpt-1b', 'xlm-roberta-large', 'xlm-roberta-base']
+    run_modes = ['rinna-gpt2', 'tohoku-bert', 't5-base', 'rinna-roberta', 'nlp-waseda-roberta-base-japanese', 'rinna-japanese-gpt-1b']
     if is_single:
-        train_model(run_modes[-1])
+        train_model(run_modes[1])
     else:
-        for run_mode in run_modes[3:]:
+        for run_mode in run_modes:
             train_model(run_mode)
 
 

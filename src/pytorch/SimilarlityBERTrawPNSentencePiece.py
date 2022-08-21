@@ -10,8 +10,7 @@ random.seed(0)
 torch.manual_seed(0)
 
 from pathlib import Path
-import ipadic
-import MeCab
+import sentencepiece as spm
 
 class PointerNetworks(nn.Module):
     def __init__(self, hyper_parameters={}):
@@ -81,7 +80,7 @@ class PointerNetworks(nn.Module):
 
 def get_properties(mode):
     if mode == 'raw':
-        return '', '../../results/wsc_sbert.raw.search', 100
+        return '', '../../results/wsc_sbert.raw.sp.search', 100
 
 def get_datasets(path):
     with Path(path).open('r') as f:
@@ -109,6 +108,7 @@ def get_aggregated_label(tokens, labels):
     aggregated_labels = []
     offsets, current = [], 0
     for t in tokens:
+        t = t.replace('▁', '')
         offsets.append((current, current + len(t)))
         current += len(t)
 
@@ -197,7 +197,7 @@ def train_model():
 
     run_mode = 'raw'
     model_name, OUTPUT_PATH, NUM_EPOCHS = get_properties(run_mode)
-    OUTPUT_PATH = OUTPUT_PATH + '.rawpn.220422'
+    OUTPUT_PATH = OUTPUT_PATH + '.rawpn.sentp.220422'
     Path(OUTPUT_PATH).mkdir(exist_ok=True)
     print(run_mode)
     print(OUTPUT_PATH)
@@ -210,19 +210,13 @@ def train_model():
     dev_negative_labels = train_datasets['negative_labels'][1000:]
     test_negative_labels = test_datasets['negative_labels']
 
-    vocab = set([])
-    tagger = MeCab.Tagger(ipadic.MECAB_ARGS)
-    for sentence in train_datasets['sentences']:
-        words = tagger.parse(sentence)
-        vocab = vocab | set([w.split('\t')[0] for w in words.split('\n')][:-2])
+    sp = spm.SentencePieceProcessor()
+    sp.load('m.220422.model')
 
-    tokenizer = Indexer()
-    tokenizer.fit(vocab)
-    # model = RawEmbeddingGRU(vocab_size=len(tokenizer), embedding_dim=300)
-    # model.to(DEVICE)
+    vocab_size = 3754
     hyper_parameters = {
         'embedding_dim': 768,
-        'vocab_size': len(tokenizer),
+        'vocab_size': vocab_size,
         'with_use_rnn_repeatedly': False,
         'num_layers': 3,
         'num_heads': 1
@@ -239,8 +233,8 @@ def train_model():
         train_total_loss, running_loss = [], []
         model.train()
         for s, l in zip(train_sentences, train_labels):
-            words = [w.split('\t')[0] for w in tagger.parse(s).split('\n')][:-2]
-            inputs = tokenizer(words)
+            words = sp.encode_as_pieces(s)
+            inputs = sp.encode_as_ids(s)
             # index = get_label(words, l)
             index = get_aggregated_label(words, l)
 
@@ -268,8 +262,8 @@ def train_model():
         dev_total_loss = []
         dev_tt, dev_ff = 0, 0
         for s, l, neg_l in zip(dev_sentences, dev_labels, dev_negative_labels):
-            words = [w.split('\t')[0] for w in tagger.parse(s).split('\n')][:-2]
-            inputs = tokenizer(words)
+            words = sp.encode_as_pieces(s)
+            inputs = sp.encode_as_ids(s)
             # index = get_label(words, l)
             # neg_index = get_label(words, neg_l)
             pos_index = get_aggregated_label(words, l)
@@ -296,8 +290,8 @@ def train_model():
         test_total_loss = []
         test_tt, test_ff = 0, 0
         for s, l, neg_l in zip(test_sentences, test_labels, test_negative_labels):
-            words = [w.split('\t')[0] for w in tagger.parse(s).split('\n')][:-2]
-            inputs = tokenizer(words)
+            words = sp.encode_as_pieces(s)
+            inputs = sp.encode_as_ids(s)
             # index = get_label(words, l)
             # neg_index = get_label(words, neg_l)
             pos_index = get_aggregated_label(words, l)
