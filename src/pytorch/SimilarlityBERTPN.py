@@ -148,10 +148,10 @@ def train_model(run_mode='rinna-gpt2'):
     DEVICE = 'cuda:0'
     with_activation_function = False
     with_print_logits = False
-    os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+    os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 
     model_name, OUTPUT_PATH, NUM_EPOCHS = get_properties(run_mode)
-    OUTPUT_PATH = OUTPUT_PATH + '.220823.1'
+    OUTPUT_PATH = OUTPUT_PATH + '.220823.1.encoder'
     Path(OUTPUT_PATH).mkdir(exist_ok=True)
     print(run_mode)
     print(OUTPUT_PATH)
@@ -175,8 +175,8 @@ def train_model(run_mode='rinna-gpt2'):
         embedding_dim = model.config.hidden_size
     else:
         model = AutoModel.from_pretrained(model_name)
-        tokenizer = AutoTokenizerFas.from_pretrained(model_name)
-        if model_name in set(['rinna-japanese-gpt-1b']):
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        if model_name in set(['rinna/japanese-gpt-1b']):
             embedding_dim = model.embed_dim
         elif model_name in set(['rinna/japanese-roberta-base', 'nlp-waseda/roberta-base-japanese', 'nlp-waseda/roberta-large-japanese', 'xlm-roberta-large', 'xlm-roberta-base']):
             embedding_dim = model.config.hidden_size
@@ -224,7 +224,8 @@ def train_model(run_mode='rinna-gpt2'):
             if 'mbart' in model_name:
                 h1 = outputs.encoder_last_hidden_state
             elif 't5' in model_name:
-                h1 = outputs.last_hidden_state
+                h1 = outputs.encoder_last_hidden_state
+                # h1 = outputs.last_hidden_state
             else:
                 h1 = outputs.last_hidden_state
             # h1 = outputs.encoder_last_hidden_state if 'mbart' in model_name or 't5' in model_name else outputs.last_hidden_state
@@ -266,7 +267,8 @@ def train_model(run_mode='rinna-gpt2'):
             if 'mbart' in model_name:
                 h1 = outputs.encoder_last_hidden_state
             elif 't5' in model_name:
-                h1 = outputs.last_hidden_state
+                h1 = outputs.encoder_last_hidden_state
+                # h1 = outputs.last_hidden_state
             else:
                 h1 = outputs.last_hidden_state
             # h1 = outputs.encoder_last_hidden_state if 'mbart' in model_name or 't5' in model_name else outputs.last_hidden_state
@@ -304,7 +306,8 @@ def train_model(run_mode='rinna-gpt2'):
             if 'mbart' in model_name:
                 h1 = outputs.encoder_last_hidden_state
             elif 't5' in model_name:
-                h1 = outputs.last_hidden_state
+                h1 = outputs.encoder_last_hidden_state
+                # h1 = outputs.last_hidden_state
             else:
                 h1 = outputs.last_hidden_state
             # h1 = outputs.encoder_last_hidden_state if 'mbart' in model_name or 't5' in model_name else outputs.last_hidden_state
@@ -338,12 +341,12 @@ def train_model(run_mode='rinna-gpt2'):
 
 
 if __name__ == '__main__':
-    is_single = False
+    is_single = True
     run_modes = ['rinna-gpt2', 'tohoku-bert', 't5-base', 'rinna-roberta', 'nlp-waseda-roberta-base-japanese', 'nlp-waseda-roberta-large-japanese', 'rinna-japanese-gpt-1b', 'xlm-roberta-large', 'xlm-roberta-base']
     if is_single:
-        train_model(run_modes[-2])
+        train_model(run_modes[2])
     else:
-        for run_mode in run_modes:
+        for run_mode in run_modes[-3:]:
             train_model(run_mode)
 
 

@@ -81,7 +81,7 @@ class PointerNetworks(nn.Module):
 
 def get_properties(mode):
     if mode == 'raw':
-        return '', '../../results/wsc_sbert.raw.search', 100
+        return 'raw.mecab', '../../results/wsc_sbert.raw.search', 100
 
 def get_datasets(path):
     with Path(path).open('r') as f:

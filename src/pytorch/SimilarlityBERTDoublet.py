@@ -76,7 +76,7 @@ def train_model(run_mode='rinna-gpt2'):
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
     model_name, OUTPUT_PATH, NUM_EPOCHS = get_properties(run_mode)
-    OUTPUT_PATH = OUTPUT_PATH + '.220823.1'
+    OUTPUT_PATH = OUTPUT_PATH + '.220823.1.encoder'
     Path(OUTPUT_PATH).mkdir(exist_ok=True)
     print(run_mode)
     print(OUTPUT_PATH)
@@ -120,8 +120,8 @@ def train_model(run_mode='rinna-gpt2'):
             inputs = tokenizer(s1, return_tensors='pt')
             inputs = {k: allocate_data_to_device(inputs[k], DEVICE) for k in inputs.keys() if k != 'offset_mapping'}
             outputs = model(**inputs, output_hidden_states=True, decoder_input_ids=inputs['input_ids']) if 'mbart' in model_name or 't5' in model_name else model(**inputs, output_hidden_states=True)
-            h1 = outputs.encoder_last_hidden_state if 'mbart' in model_name else outputs.last_hidden_state
-            # h1 = outputs.encoder_last_hidden_state if 'mbart' in model_name or 't5' in model_name else outputs.last_hidden_state
+            # h1 = outputs.encoder_last_hidden_state if 'mbart' in model_name else outputs.last_hidden_state
+            h1 = outputs.encoder_last_hidden_state if 'mbart' in model_name or 't5' in model_name else outputs.last_hidden_state
             h1 = torch.mean(h1, dim=1)
             o1 = output_layer(h1)
             o1 = activation_function(o1) if with_activation_function else o1
@@ -129,8 +129,8 @@ def train_model(run_mode='rinna-gpt2'):
             inputs = tokenizer(s2, return_tensors='pt')
             inputs = {k: allocate_data_to_device(inputs[k], DEVICE) for k in inputs.keys() if k != 'offset_mapping'}
             outputs = model(**inputs, output_hidden_states=True, decoder_input_ids=inputs['input_ids']) if 'mbart' in model_name or 't5' in model_name else model(**inputs, output_hidden_states=True)
-            h2 = outputs.encoder_last_hidden_state if 'mbart' in model_name else outputs.last_hidden_state
-            # h2 = outputs.encoder_last_hidden_state if 'mbart' in model_name or 't5' in model_name else outputs.last_hidden_state
+            # h2 = outputs.encoder_last_hidden_state if 'mbart' in model_name else outputs.last_hidden_state
+            h2 = outputs.encoder_last_hidden_state if 'mbart' in model_name or 't5' in model_name else outputs.last_hidden_state
             h2 = torch.mean(h2, dim=1)
             o2 = output_layer(h2)
             o2 = activation_function(o2) if with_activation_function else o2
@@ -161,8 +161,8 @@ def train_model(run_mode='rinna-gpt2'):
             inputs = tokenizer(s1, return_tensors='pt')
             inputs = {k: allocate_data_to_device(inputs[k], DEVICE) for k in inputs.keys() if k != 'offset_mapping'}
             outputs = model(**inputs, output_hidden_states=True, decoder_input_ids=inputs['input_ids']) if 'mbart' in model_name or 't5' in model_name else model(**inputs, output_hidden_states=True)
-            h1 = outputs.encoder_last_hidden_state if 'mbart' in model_name else outputs.last_hidden_state
-            # h1 = outputs.encoder_last_hidden_state if 'mbart' in model_name or 't5' in model_name else outputs.last_hidden_state
+            # h1 = outputs.encoder_last_hidden_state if 'mbart' in model_name else outputs.last_hidden_state
+            h1 = outputs.encoder_last_hidden_state if 'mbart' in model_name or 't5' in model_name else outputs.last_hidden_state
             h1 = torch.mean(h1, dim=1)
             o1 = output_layer(h1)
             o1 = activation_function(o1) if with_activation_function else o1
@@ -170,8 +170,8 @@ def train_model(run_mode='rinna-gpt2'):
             inputs = tokenizer(s2, return_tensors='pt')
             inputs = {k: allocate_data_to_device(inputs[k], DEVICE) for k in inputs.keys() if k != 'offset_mapping'}
             outputs = model(**inputs, output_hidden_states=True, decoder_input_ids=inputs['input_ids']) if 'mbart' in model_name or 't5' in model_name else model(**inputs, output_hidden_states=True)
-            h2 = outputs.encoder_last_hidden_state if 'mbart' in model_name else outputs.last_hidden_state
-            # h2 = outputs.encoder_last_hidden_state if 'mbart' in model_name or 't5' in model_name else outputs.last_hidden_state
+            # h2 = outputs.encoder_last_hidden_state if 'mbart' in model_name else outputs.last_hidden_state
+            h2 = outputs.encoder_last_hidden_state if 'mbart' in model_name or 't5' in model_name else outputs.last_hidden_state
             h2 = torch.mean(h2, dim=1)
             o2 = output_layer(h2)
             o2 = activation_function(o2) if with_activation_function else o2
@@ -207,8 +207,8 @@ def train_model(run_mode='rinna-gpt2'):
             inputs = tokenizer(s1, return_tensors='pt')
             inputs = {k: allocate_data_to_device(inputs[k], DEVICE) for k in inputs.keys() if k != 'offset_mapping'}
             outputs = model(**inputs, output_hidden_states=True, decoder_input_ids=inputs['input_ids']) if 'mbart' in model_name or 't5' in model_name else model(**inputs, output_hidden_states=True)
-            h1 = outputs.encoder_last_hidden_state if 'mbart' in model_name else outputs.last_hidden_state
-            # h1 = outputs.encoder_last_hidden_state if 'mbart' in model_name or 't5' in model_name else outputs.last_hidden_state
+            # h1 = outputs.encoder_last_hidden_state if 'mbart' in model_name else outputs.last_hidden_state
+            h1 = outputs.encoder_last_hidden_state if 'mbart' in model_name or 't5' in model_name else outputs.last_hidden_state
             h1 = torch.mean(h1, dim=1)
             o1 = output_layer(h1)
             o1 = activation_function(o1) if with_activation_function else o1
@@ -216,8 +216,8 @@ def train_model(run_mode='rinna-gpt2'):
             inputs = tokenizer(s2, return_tensors='pt')
             inputs = {k: allocate_data_to_device(inputs[k], DEVICE) for k in inputs.keys() if k != 'offset_mapping'}
             outputs = model(**inputs, output_hidden_states=True, decoder_input_ids=inputs['input_ids']) if 'mbart' in model_name or 't5' in model_name else model(**inputs, output_hidden_states=True)
-            h2 = outputs.encoder_last_hidden_state if 'mbart' in model_name else outputs.last_hidden_state
-            # h2 = outputs.encoder_last_hidden_state if 'mbart' in model_name or 't5' in model_name else outputs.last_hidden_state
+            # h2 = outputs.encoder_last_hidden_state if 'mbart' in model_name else outputs.last_hidden_state
+            h2 = outputs.encoder_last_hidden_state if 'mbart' in model_name or 't5' in model_name else outputs.last_hidden_state
             h2 = torch.mean(h2, dim=1)
             o2 = output_layer(h2)
             o2 = activation_function(o2) if with_activation_function else o2
@@ -253,12 +253,12 @@ def train_model(run_mode='rinna-gpt2'):
 
 
 if __name__ == '__main__':
-    is_single = False
+    is_single = True
     run_modes = ['rinna-gpt2', 'tohoku-bert', 't5-base', 'rinna-roberta', 'nlp-waseda-roberta-base-japanese', 'nlp-waseda-roberta-large-japanese', 'rinna-japanese-gpt-1b', 'xlm-roberta-large', 'xlm-roberta-base']
     if is_single:
-        train_model(run_modes[-2])
+        train_model(run_modes[2])
     else:
-        for run_mode in run_modes:
+        for run_mode in run_modes[1:]:
             train_model(run_mode)
 
 
